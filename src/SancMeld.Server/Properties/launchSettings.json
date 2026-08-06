@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "SancMeld.Server": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:63452;http://localhost:63453"
+    }
+  }
+}

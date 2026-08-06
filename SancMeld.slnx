@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/SancMeld.Api/SancMeld.Api.csproj" />
+    <Project Path="src/SancMeld.Connectors.EuFsf/SancMeld.Connectors.EuFsf.csproj" />
+    <Project Path="src/SancMeld.Core/SancMeld.Core.csproj" />
+    <Project Path="src/SancMeld.Server/SancMeld.Server.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SancMeld.Core.Tests/SancMeld.Core.Tests.csproj" />
+  </Folder>
+</Solution>

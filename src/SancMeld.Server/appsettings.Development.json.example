@@ -1,0 +1,17 @@
+{
+  "//": [
+    "Copy to appsettings.Development.json and fill in. That file is git-ignored.",
+    "Prefer user-secrets if you would rather keep the password out of the working tree:",
+    "  dotnet user-secrets set \"ConnectionStrings:SancMeld\" \"Host=localhost;...\""
+  ],
+
+  "ConnectionStrings": {
+    "SancMeld": "Host=localhost;Port=55432;Database=sancmeld;Username=sancmeld;Password=CHANGE_ME"
+  },
+
+  "Logging": {
+    "LogLevel": {
+      "Default": "Debug"
+    }
+  }
+}

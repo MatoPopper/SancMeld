@@ -1,0 +1,14 @@
+# Normalise to LF in the repository regardless of each contributor's
+# core.autocrlf. CI runs on Linux; a CRLF that slips into a shell script or a
+# SQL file fails there and nowhere else, which is a miserable thing to debug.
+* text=auto eol=lf
+
+# Windows-only tooling that expects CRLF.
+*.sln    text eol=crlf
+*.slnx   text eol=crlf
+*.props  text eol=crlf
+*.csproj text eol=crlf
+
+# Downloaded sanctions samples are compared byte-for-byte against parser
+# expectations. Any transformation would break the fixtures.
+fixtures/** -text

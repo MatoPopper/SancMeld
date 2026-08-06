@@ -1,0 +1,26 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: sancmeld
+      POSTGRES_PASSWORD: sancmeld        # local development only
+      POSTGRES_DB: sancmeld
+    # Deliberately not 5432. Anyone who already runs PostgreSQL locally would
+    # otherwise have their own server answer on localhost:5432 and see an
+    # authentication failure that looks like a SancMeld bug.
+    ports:
+      - "55432:5432"
+    volumes:
+      - sancmeld-data:/var/lib/postgresql/data
+      # The database starts empty on purpose. The schema is created by
+      #   dotnet ef database update --project src/SancMeld.Core
+      # so that there is exactly one way a SancMeld database comes into existence,
+      # whether it runs here or on a managed instance you already own.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sancmeld -d sancmeld"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  sancmeld-data:

@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>SancMeld.Connectors.EuFsf</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../SancMeld.Core/SancMeld.Core.csproj" />
+  </ItemGroup>
+
+</Project>

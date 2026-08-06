@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <RootNamespace>SancMeld.Server</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <!-- Enables: dotnet user-secrets set "ConnectionStrings:SancMeld" "..." -->
+    <UserSecretsId>sancmeld-server-3f7a2c91</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../SancMeld.Api/SancMeld.Api.csproj" />
+  </ItemGroup>
+
+</Project>
