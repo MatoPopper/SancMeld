@@ -94,7 +94,7 @@ var app = builder.Build();
 
 // Run one import and exit:
 //
-//   dotnet run --project src/SancMeld.Server -- import EU_FSF
+//   dotnet run --project src/SancMeld.Server -- import EU_FSF [--force]
 //
 // The same call the scheduled job makes, for a first run or a manual re-import. It shares
 // the whole service graph with the web host, so cron and API cannot drift apart.
@@ -103,7 +103,11 @@ if (args is ["import", var sourceCode, ..])
     using var scope = app.Services.CreateScope();
     var importer = scope.ServiceProvider.GetRequiredService<SanctionsImportService>();
 
-    var outcome = await importer.RunAsync(sourceCode, CancellationToken.None);
+    // --force re-processes the current file even when nothing changed. Needed after a
+    // mapping change: the publisher is still serving the same bytes, so an ordinary run
+    // correctly does nothing and the fix never lands.
+    var force = args.Contains("--force");
+    var outcome = await importer.RunAsync(sourceCode, force, CancellationToken.None);
 
     Console.WriteLine($"{outcome.SourceCode}: {outcome.Status} in {outcome.Duration.TotalSeconds:N1}s");
     Console.WriteLine($"  seen {outcome.RecordsSeen}, new {outcome.Inserted}, changed {outcome.Updated}, " +

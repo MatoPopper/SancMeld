@@ -25,7 +25,19 @@ public sealed class SanctionsImportService(
     private const int StagingBatchSize = 500;
     private const int CommitBatchSize = 250;
 
-    public async Task<ImportOutcome> RunAsync(string sourceCode, CancellationToken ct)
+    public Task<ImportOutcome> RunAsync(string sourceCode, CancellationToken ct) =>
+        RunAsync(sourceCode, force: false, ct);
+
+    /// <summary>
+    /// Runs an import. With <c>force</c>, re-processes the current file even when nothing
+    /// about it has changed.
+    ///
+    /// Forcing is for when the mapping changed rather than the data: a new field, a
+    /// corrected parse. The publisher is still serving the same bytes, so an ordinary run
+    /// correctly decides there is nothing to do — and the fix never lands. Without this,
+    /// shipping a parser change means waiting for the EU to republish.
+    /// </summary>
+    public async Task<ImportOutcome> RunAsync(string sourceCode, bool force, CancellationToken ct)
     {
         var started = Stopwatch.StartNew();
         var connector = connectors.FirstOrDefault(c => c.SourceCode == sourceCode)
@@ -52,7 +64,7 @@ public sealed class SanctionsImportService(
 
         try
         {
-            return await ExecuteAsync(connector, source, run, started, ct).ConfigureAwait(false);
+            return await ExecuteAsync(connector, source, run, started, force, ct).ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -76,11 +88,19 @@ public sealed class SanctionsImportService(
         SanctionsSource source,
         ImportRun run,
         Stopwatch started,
+        bool force,
         CancellationToken ct)
     {
         // --- DiscoverEndpoint -------------------------------------------------
         var discovery = await connector.DiscoverAsync(ct).ConfigureAwait(false);
-        var conditional = await BuildConditionalStateAsync(source.Id, ct).ConfigureAwait(false);
+        var conditional = force
+            ? new ConditionalRequestState(null, null, null)
+            : await BuildConditionalStateAsync(source.Id, ct).ConfigureAwait(false);
+
+        if (force)
+        {
+            logger.LogInformation("{SourceCode}: forced run, re-processing whatever the publisher serves.", source.Code);
+        }
 
         logger.LogInformation(
             "{SourceCode}: discovered version {Version} at {Url}.",
