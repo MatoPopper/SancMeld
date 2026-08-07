@@ -295,6 +295,9 @@ namespace SancMeld.Core.Data.Migrations
 
                     NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("RawRecord"), "gin");
 
+                    b.HasIndex("SnapshotId")
+                        .HasDatabaseName("ix_designation_snapshot_id");
+
                     b.HasIndex("SourceId", "SourceRecordKey")
                         .IsUnique()
                         .HasDatabaseName("designation_current_uq")
@@ -1589,12 +1592,21 @@ namespace SancMeld.Core.Data.Migrations
 
             modelBuilder.Entity("SancMeld.Core.Data.Designation", b =>
                 {
+                    b.HasOne("SancMeld.Core.Data.SourceSnapshot", "Snapshot")
+                        .WithMany()
+                        .HasForeignKey("SnapshotId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_designation_source_snapshot_snapshot_id");
+
                     b.HasOne("SancMeld.Core.Data.SanctionsSource", "Source")
                         .WithMany()
                         .HasForeignKey("SourceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_designation_sanctions_source_source_id");
+
+                    b.Navigation("Snapshot");
 
                     b.Navigation("Source");
                 });

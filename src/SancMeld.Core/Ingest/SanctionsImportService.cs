@@ -339,6 +339,7 @@ public sealed class SanctionsImportService(
             .ConfigureAwait(false);
 
         var programmes = await LoadProgrammesAsync(source.Id, ct).ConfigureAwait(false);
+        var legalInstruments = await LoadLegalInstrumentsAsync(source.JurisdictionId, ct).ConfigureAwait(false);
 
         var seen = new HashSet<string>(current.Count, StringComparer.Ordinal);
         var unchangedIds = new List<Guid>();
@@ -406,6 +407,7 @@ public sealed class SanctionsImportService(
                     contentSha256: staging.ContentSha256);
 
                 AttachProgrammes(revision, parsed.Programmes, source.Id, programmes);
+                AttachLegalBasis(revision, parsed.LegalBasis, source.JurisdictionId, legalInstruments);
                 revisions.Add(revision);
             }
 
@@ -511,11 +513,58 @@ public sealed class SanctionsImportService(
         }
     }
 
+    private async Task<Dictionary<string, Guid>> LoadLegalInstrumentsAsync(Guid jurisdictionId, CancellationToken ct) =>
+        await db.LegalInstruments
+            .Where(i => i.JurisdictionId == jurisdictionId)
+            .ToDictionaryAsync(i => i.InstrumentType + "|" + i.InstrumentNumber, i => i.Id, StringComparer.Ordinal, ct)
+            .ConfigureAwait(false);
+
     private async Task<Dictionary<string, Guid>> LoadProgrammesAsync(Guid sourceId, CancellationToken ct) =>
         await db.Programmes
             .Where(p => p.SourceId == sourceId)
             .ToDictionaryAsync(p => p.Code, p => p.Id, StringComparer.Ordinal, ct)
             .ConfigureAwait(false);
+
+    /// <summary>
+    /// Acts are shared: 6 234 subjects cite 462 distinct regulations, so they are stored
+    /// once and linked, keyed the way the unique index is — jurisdiction, type, number.
+    /// </summary>
+    private void AttachLegalBasis(
+        Designation revision,
+        IReadOnlyList<ParsedLegalInstrument> basis,
+        Guid jurisdictionId,
+        Dictionary<string, Guid> known)
+    {
+        foreach (var act in basis)
+        {
+            var key = $"{act.InstrumentType}|{act.InstrumentNumber}";
+
+            if (!known.TryGetValue(key, out var instrumentId))
+            {
+                instrumentId = Guid.CreateVersion7();
+                known[key] = instrumentId;
+
+                db.LegalInstruments.Add(new LegalInstrument
+                {
+                    Id = instrumentId,
+                    JurisdictionId = jurisdictionId,
+                    InstrumentType = act.InstrumentType,
+                    InstrumentNumber = act.InstrumentNumber,
+                    Title = act.Title,
+                    PublicationDate = act.PublicationDate,
+                    EffectiveDate = act.EffectiveDate,
+                    OfficialUrl = act.OfficialUrl,
+                    CelexNumber = act.CelexNumber,
+                });
+            }
+
+            revision.LegalInstruments.Add(new DesignationLegalInstrument
+            {
+                LegalInstrumentId = instrumentId,
+                Relation = act.Relation,
+            });
+        }
+    }
 
     private void AttachProgrammes(
         Designation revision,

@@ -230,5 +230,26 @@ public sealed class DesignationQueryService(SancMeldDbContext db, IOptions<SancM
             CrossReferences = d.CrossReferences
                 .Select(x => new CrossReferenceView(x.Kind, x.TargetSourceCode, x.TargetExternalId))
                 .ToList(),
+
+            LegalBasis = d.LegalInstruments
+                .OrderBy(l => l.Relation)
+                .Select(l => new LegalBasisView(
+                    l.Relation,
+                    l.LegalInstrument!.InstrumentType,
+                    l.LegalInstrument.InstrumentNumber,
+                    l.LegalInstrument.Title,
+                    l.LegalInstrument.PublicationDate,
+                    l.LegalInstrument.EffectiveDate,
+                    l.LegalInstrument.OfficialUrl,
+                    l.LegalInstrument.CelexNumber))
+                .ToList(),
+
+            Provenance = new ProvenanceView(
+                d.Source.Name,
+                d.Source.Publisher,
+                d.Source.LandingPageUrl,
+                d.Snapshot!.RetrievedAt,
+                d.Snapshot.Sha256,
+                d.Snapshot.ExternalVersion),
         });
 }

@@ -252,6 +252,63 @@ public class EuFsfXmlParserTests : IAsyncLifetime
     }
 
     [Fact]
+    public void EveryListingCitesTheActItStandsUnder()
+    {
+        // All 6 234 subjects carry a regulation, and all of them carry a URL. Without it a
+        // hit is an assertion; with it, it is a citation.
+        //
+        // Not asserting the host: the links point at four different official domains —
+        // eur-lex.europa.eu (6 210), data.europa.eu ELI (15), press.un.org (7) and
+        // docs.un.org (2) — and 668 of them are http rather than https. The URLs are the
+        // publisher's, and rewriting them to look tidier would be falsifying a citation.
+        Assert.All(_subjects, d =>
+        {
+            var act = Assert.Single(d.LegalBasis);
+
+            Assert.NotNull(act.OfficialUrl);
+            Assert.True(Uri.TryCreate(act.OfficialUrl, UriKind.Absolute, out var url));
+            Assert.Contains(url!.Scheme, new[] { "http", "https" });
+            Assert.NotNull(act.InstrumentNumber);
+        });
+    }
+
+    [Fact]
+    public void AmendmentIsRecordedAsAnAmendmentNotAsTheOriginalListing()
+    {
+        // 6 071 of the 6 234 regulation elements are amendments. The element names the act
+        // that last touched the entry, so claiming it listed the subject would be wrong.
+        var act = Assert.Single(Subject("54").LegalBasis);
+
+        Assert.Equal("regulation", act.InstrumentType);
+        Assert.Equal("LISTED_BY", act.Relation);
+        Assert.Equal("1210/2003", act.InstrumentNumber);
+        Assert.Equal("1210/2003 (OJ L169)", act.Title);
+        Assert.Equal(new DateOnly(2003, 7, 8), act.PublicationDate);
+        Assert.Equal(new DateOnly(2003, 7, 7), act.EffectiveDate);
+    }
+
+    [Fact]
+    public void CelexIsTakenFromTheUrlOnlyWhereTheUrlCarriesOne()
+    {
+        // Older acts are addressed by CELEX, newer ones by an OJ reference. The identifier
+        // is worth extracting where it exists and worth not inventing where it does not.
+        var withCelex = _subjects
+            .SelectMany(d => d.LegalBasis)
+            .Where(a => a.CelexNumber is not null)
+            .ToList();
+
+        Assert.All(withCelex, a =>
+        {
+            Assert.Contains("CELEX", a.OfficialUrl!, StringComparison.OrdinalIgnoreCase);
+            Assert.Matches(@"^\d{5}[A-Z]\d{4}$", a.CelexNumber!);
+        });
+
+        Assert.All(
+            _subjects.SelectMany(d => d.LegalBasis).Where(a => a.CelexNumber is null),
+            a => Assert.DoesNotContain("CELEX", a.OfficialUrl ?? string.Empty, StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
     public void ProgrammeComesFromTheRegulation()
     {
         Assert.Equal(["IRQ"], Subject("54").Programmes);

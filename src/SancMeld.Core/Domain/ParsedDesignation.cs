@@ -36,6 +36,12 @@ public sealed record ParsedDesignation
     public IReadOnlyList<ParsedXref> CrossReferences { get; init; } = [];
 
     /// <summary>
+    /// The acts this listing rests on. Without them a hit is an assertion; with them it
+    /// carries the citation a compliance officer has to produce anyway.
+    /// </summary>
+    public IReadOnlyList<ParsedLegalInstrument> LegalBasis { get; init; } = [];
+
+    /// <summary>
     /// Verbatim source fragment. Lets a mapping bug be fixed retroactively without
     /// re-downloading, and preserves fields not yet modelled.
     /// </summary>
@@ -130,6 +136,34 @@ public sealed record ParsedNationality
 {
     public string? CountryIso2 { get; init; }
     public required string CountryOriginal { get; init; }
+}
+
+/// <summary>
+/// A legal act a listing cites — the regulation, the amendment that last touched it, or
+/// the act implementing a UN designation.
+///
+/// The URL matters more than it looks: it is the difference between "our system says this
+/// person is sanctioned" and "this person is sanctioned by Regulation 2022/1529, here is
+/// the Official Journal text". Only the second survives a supervisor asking why.
+/// </summary>
+public sealed record ParsedLegalInstrument
+{
+    /// <summary>LISTED_BY | AMENDED_BY | DELISTED_BY | IMPLEMENTED_BY.</summary>
+    public required string Relation { get; init; }
+
+    /// <summary>The publisher's own wording: regulation, amendment, repealing, decision.</summary>
+    public required string InstrumentType { get; init; }
+
+    /// <summary>"2022/1529". Together with the type it identifies the act.</summary>
+    public string? InstrumentNumber { get; init; }
+
+    public string? Title { get; init; }
+    public DateOnly? PublicationDate { get; init; }
+    public DateOnly? EffectiveDate { get; init; }
+    public string? OfficialUrl { get; init; }
+
+    /// <summary>EUR-Lex identifier where the URL carries one, e.g. 32022R1529.</summary>
+    public string? CelexNumber { get; init; }
 }
 
 /// <summary>

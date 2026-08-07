@@ -175,7 +175,14 @@ public class Designation
 
     public Guid FirstSeenRunId { get; set; }
     public Guid LastSeenRunId { get; set; }
+
+    /// <summary>
+    /// The exact published file this revision was read from. A real foreign key, because a
+    /// designation pointing at a snapshot that does not exist is a broken audit trail, and
+    /// the audit trail is the point.
+    /// </summary>
     public Guid SnapshotId { get; set; }
+    public SourceSnapshot? Snapshot { get; set; }
 
     /// <summary>Verbatim source fragment, so a mapping bug can be fixed without re-downloading.</summary>
     public required string RawRecord { get; set; }

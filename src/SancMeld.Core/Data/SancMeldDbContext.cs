@@ -140,6 +140,11 @@ public class SancMeldDbContext(DbContextOptions<SancMeldDbContext> options) : Db
                 "designation_validity_ck", "valid_to IS NULL OR valid_to > valid_from"));
 
             e.Property(x => x.ValidFrom).HasDefaultValueSql("now()");
+
+            // Restrict, not cascade: deleting the artefact a decision was based on must
+            // not take the decision with it.
+            e.HasOne(x => x.Snapshot).WithMany()
+             .HasForeignKey(x => x.SnapshotId).OnDelete(DeleteBehavior.Restrict);
             e.Property(x => x.RawRecord).HasColumnType("jsonb");
             e.Property(x => x.ContentSha256).HasMaxLength(64).IsFixedLength();
 

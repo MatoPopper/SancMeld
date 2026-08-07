@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
 using SancMeld.Core.Abstractions;
@@ -19,7 +20,7 @@ namespace SancMeld.Connectors.EuFsf;
 /// Silently dropping sanctioned subjects is the worst possible failure here, and
 /// refusing the whole import is cheap — the previously published list stays live.
 /// </summary>
-internal static class EuFsfXmlParser
+internal static partial class EuFsfXmlParser
 {
     private static readonly XNamespace Ns = "http://eu.europa.ec/fpi/fsd/export";
 
@@ -100,6 +101,7 @@ internal static class EuFsfXmlParser
             Nationalities = MapNationalities(e),
             Programmes = MapProgrammes(e),
             CrossReferences = MapCrossReferences(e),
+            LegalBasis = MapLegalBasis(e),
 
             // FSF carries no measure element. What it does carry is its own scope: it is
             // the consolidated list of subjects whose funds and economic resources are
@@ -449,6 +451,73 @@ internal static class EuFsfXmlParser
         return programme is null ? [] : [programme];
     }
 
+    /// <summary>
+    /// The act the listing currently stands under, with its Official Journal link.
+    /// Every one of the 6 234 subjects carries one, and all of them carry a URL.
+    ///
+    /// Note what the type actually says: 6 071 of them are amendments, not original
+    /// listings. The element is the act that last touched this entry, so it is recorded as
+    /// AMENDED_BY rather than claimed as the act that first listed the subject.
+    /// </summary>
+    private static List<ParsedLegalInstrument> MapLegalBasis(XElement e)
+    {
+        var regulation = e.Element(Ns + "regulation");
+        if (regulation is null)
+        {
+            return [];
+        }
+
+        var type = Value(regulation.Attribute("regulationType"));
+        var url = Value(regulation.Element(Ns + "publicationUrl")?.Value);
+        var numberTitle = Value(regulation.Attribute("numberTitle"));
+
+        return
+        [
+            new ParsedLegalInstrument
+            {
+                Relation = type switch
+                {
+                    "regulation" => "LISTED_BY",
+
+                    // "repealing" means this act repealed an earlier regulation, not that
+                    // the subject was delisted — they are all still listed. Calling it
+                    // DELISTED_BY would be a legal claim the data does not make.
+                    "amendment" or "repealing" => "AMENDED_BY",
+                    _ => "IMPLEMENTED_BY",
+                },
+                InstrumentType = type ?? "regulation",
+
+                // "2022/1529 (OJ L239)" — the act number is the part before the journal
+                // reference, and it is what the unique index keys on.
+                InstrumentNumber = numberTitle?.Split(' ', 2)[0],
+                Title = numberTitle,
+                PublicationDate = ParseIsoDate(Value(regulation.Attribute("publicationDate"))),
+                EffectiveDate = ParseIsoDate(Value(regulation.Attribute("entryIntoForceDate"))),
+                OfficialUrl = url,
+                CelexNumber = ExtractCelex(url),
+            },
+        ];
+    }
+
+    /// <summary>
+    /// EUR-Lex links carry the CELEX number in the query string on some acts and not on
+    /// others — the newer ones use an OJ reference instead. Pulled out where present
+    /// because it is the stable identifier of an act; the URL format is not.
+    /// </summary>
+    private static string? ExtractCelex(string? url)
+    {
+        if (url is null)
+        {
+            return null;
+        }
+
+        var match = CelexPattern().Match(url);
+        return match.Success ? match.Groups[1].Value : null;
+    }
+
+    [GeneratedRegex(@"CELEX[:%3A]+(\d{5}[A-Z]\d{4})", RegexOptions.IgnoreCase)]
+    private static partial Regex CelexPattern();
+
     private static List<ParsedXref> MapCrossReferences(XElement e)
     {
         var unId = Value(e.Attribute("unitedNationId"));
@@ -489,9 +558,11 @@ internal static class EuFsfXmlParser
         return (iso2, description);
     }
 
-    private static string? Value(XAttribute? attribute)
+    private static string? Value(XAttribute? attribute) => Value(attribute?.Value);
+
+    private static string? Value(string? raw)
     {
-        var value = attribute?.Value.Trim();
+        var value = raw?.Trim();
         return string.IsNullOrEmpty(value) ? null : value;
     }
 

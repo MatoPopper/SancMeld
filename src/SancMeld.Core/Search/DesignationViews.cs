@@ -37,7 +37,40 @@ public sealed record DesignationView
     public IReadOnlyList<MeasureType> Measures { get; init; } = [];
     public IReadOnlyList<string> Programmes { get; init; } = [];
     public IReadOnlyList<CrossReferenceView> CrossReferences { get; init; } = [];
+
+    /// <summary>
+    /// The acts this listing rests on, each with its Official Journal link. This is the
+    /// difference between "our system says this person is sanctioned" and "this person is
+    /// sanctioned by Regulation 2022/1529, here is the text" — only the second is an
+    /// answer to a supervisor.
+    /// </summary>
+    public IReadOnlyList<LegalBasisView> LegalBasis { get; init; } = [];
+
+    /// <summary>Which published file this record came from, and when it was fetched.</summary>
+    public required ProvenanceView Provenance { get; init; }
 }
+
+public sealed record LegalBasisView(
+    string Relation,
+    string InstrumentType,
+    string? Number,
+    string? Title,
+    DateOnly? PublicationDate,
+    DateOnly? EffectiveDate,
+    string? Url,
+    string? Celex);
+
+/// <summary>
+/// Where the record came from. The checksum and the retrieval time are what make a past
+/// decision reconstructible: the exact bytes are kept, and this says which ones they were.
+/// </summary>
+public sealed record ProvenanceView(
+    string SourceName,
+    string Publisher,
+    string SourceUrl,
+    DateTimeOffset RetrievedAt,
+    string FileSha256,
+    string? PublisherVersion);
 
 public sealed record NameView(string Value, NameType Kind, string? LanguageCode, bool IsWeak);
 
