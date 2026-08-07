@@ -98,6 +98,19 @@ if (args is ["import", var sourceCode, ..])
     return outcome.Status is ImportStatus.Success or ImportStatus.SkippedUnchanged ? 0 : 1;
 }
 
+// Opt-in, and off by default: a process that rewrites the schema it happens to find is
+// the wrong default for anyone running more than one instance. For a single-container
+// deployment it is the difference between one command and shipping the .NET SDK to the
+// server just to run dotnet-ef.
+if (builder.Configuration.GetValue("SancMeld:Database:AutoMigrate", defaultValue: false))
+{
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<SancMeldDbContext>();
+
+    app.Logger.LogInformation("Applying migrations.");
+    await db.Database.MigrateAsync();
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.UseCors();
