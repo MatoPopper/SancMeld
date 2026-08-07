@@ -11,4 +11,23 @@
     <ProjectReference Include="../SancMeld.Api/SancMeld.Api.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Hangfire.AspNetCore" Version="1.8.24" />
+    <PackageReference Include="Hangfire.PostgreSql" Version="1.21.1" />
+
+    <!-- Swashbuckle rather than the built-in Microsoft.AspNetCore.OpenApi: that package
+         pins Microsoft.OpenApi 2.0.0, which carries GHSA-v5pm-xwqc-g5wc, and the advisory
+         is only fixed in a 3.x its own source generator will not compile against. -->
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
+  </ItemGroup>
+
+  <!-- A direct reference only to lift a transitive version with a known advisory:
+       Hangfire.Core still depends on Newtonsoft.Json 11.0.1 (GHSA-5crp-9r3c-p9vr), which
+       nothing here uses directly. Compliance buyers run dependency scans before they run
+       the software, so this is not something to leave for later. NU1903 is an error in
+       this repository, which is how it surfaced. -->
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
 </Project>

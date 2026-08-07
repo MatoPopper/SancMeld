@@ -46,7 +46,19 @@ public sealed record SourceDiscoveryResult(
     string? ExternalVersion,
     IReadOnlyDictionary<string, string>? Headers = null);
 
-public sealed record ConditionalRequestState(string? ETag, string? LastModified, string? PreviousSha256);
+public sealed record ConditionalRequestState(string? ETag, string? LastModified, string? PreviousSha256)
+{
+    /// <summary>
+    /// <see cref="SourceDiscoveryResult.ExternalVersion"/> from the previous successful
+    /// import.
+    ///
+    /// Not every publisher honours conditional requests. EU FSF answers
+    /// If-Modified-Since with 200 and the full 25 MB (verified 2026-08-06), so the only
+    /// cheap way to tell whether anything changed is the version its catalogue
+    /// advertises. A connector that has one compares it here and skips the download.
+    /// </summary>
+    public string? PreviousExternalVersion { get; init; }
+}
 
 public sealed record DownloadResult(
     Stream Content,

@@ -91,6 +91,28 @@ public class ImportRun
 }
 
 /// <summary>Immutable record of exactly what was downloaded.</summary>
+/// <summary>
+/// One parsed record, held between Parse and Commit.
+///
+/// Staging exists so an import never has to choose between holding the whole dataset in
+/// memory and comparing it against the live list record by record. It is written by the
+/// streaming parser, the diff is a single join against it, and it is emptied once the
+/// run has committed — nothing here is ever visible to a screening query.
+/// </summary>
+public class ImportStagingRecord
+{
+    public Guid ImportRunId { get; set; }
+    public ImportRun? ImportRun { get; set; }
+
+    public required string SourceRecordKey { get; set; }
+
+    /// <summary>Hash of the mapped content, so the diff never compares field by field.</summary>
+    public required string ContentSha256 { get; set; }
+
+    /// <summary>The serialised ParsedDesignation, so Commit does not have to parse again.</summary>
+    public required string Payload { get; set; }
+}
+
 public class SourceSnapshot
 {
     public Guid Id { get; set; }

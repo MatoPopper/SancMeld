@@ -61,6 +61,20 @@ Implement `ISanctionsConnector`. Four methods, deliberately separated:
 - Deleting and reinserting instead of versioning
 - Any credential, token or connection string in the repository
 
+## Running the tests
+
+Unit tests need nothing. The ingest tests need a real PostgreSQL, because the behaviour
+they check — one open revision per record, jsonb staging, `ExecuteUpdate` — is enforced by
+the database rather than by C#.
+
+```bash
+docker compose up -d db     # they create and migrate their own sancmeld_tests database
+dotnet test
+```
+
+Point them elsewhere with `SANCMELD_TEST_CONNECTION`. They never touch the development
+database, only one of their own.
+
 ## Code style
 
 - `dotnet format` before pushing; warnings are errors

@@ -24,6 +24,7 @@ public class SancMeldDbContext(DbContextOptions<SancMeldDbContext> options) : Db
     public DbSet<SanctionsSource> Sources => Set<SanctionsSource>();
     public DbSet<ImportRun> ImportRuns => Set<ImportRun>();
     public DbSet<SourceSnapshot> Snapshots => Set<SourceSnapshot>();
+    public DbSet<ImportStagingRecord> ImportStaging => Set<ImportStagingRecord>();
 
     public DbSet<Designation> Designations => Set<Designation>();
     public DbSet<DesignationName> Names => Set<DesignationName>();
@@ -60,6 +61,16 @@ public class SancMeldDbContext(DbContextOptions<SancMeldDbContext> options) : Db
             e.ToTable("jurisdiction");
             e.HasIndex(x => x.Code).IsUnique();
             e.Property(x => x.Iso2).HasMaxLength(2);
+
+            e.HasData(new Jurisdiction
+            {
+                Id = WellKnownIds.EuJurisdiction,
+                Code = "EU",
+                Name = "European Union",
+                Kind = "EU",
+                ResearchStatus = "CONFIRMED",
+                ResearchEvidenceUrl = "https://data.europa.eu/data/datasets/consolidated-list-of-persons-groups-and-entities-subject-to-eu-financial-sanctions",
+            });
         });
 
         b.Entity<SanctionsSource>(e =>
@@ -69,6 +80,31 @@ public class SancMeldDbContext(DbContextOptions<SancMeldDbContext> options) : Db
             e.HasOne(x => x.Jurisdiction).WithMany(x => x.Sources).HasForeignKey(x => x.JurisdictionId);
             e.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
             e.Property(x => x.UpdatedAt).HasDefaultValueSql("now()");
+
+            // Seeded rather than left to the operator: a source row is what an import run,
+            // a snapshot and every designation hang off, so a fresh database that cannot
+            // import anything until someone hand-writes a UUID is not a usable one.
+            e.HasData(new SanctionsSource
+            {
+                Id = WellKnownIds.EuFsfSource,
+                JurisdictionId = WellKnownIds.EuJurisdiction,
+                Code = "EU_FSF",
+                Name = "EU Consolidated Financial Sanctions List",
+                Publisher = "European Commission",
+                LegalEffect = LegalEffect.Binding,
+                Format = "XML",
+                LandingPageUrl = "https://data.europa.eu/data/datasets/consolidated-list-of-persons-groups-and-entities-subject-to-eu-financial-sanctions",
+                RequiresUserAgent = true,
+                IsActive = true,
+                ParserKey = "EU_FSF",
+
+                // The list is republished irregularly and the connector detects that from
+                // a 3.9 kB feed, so checking daily costs almost nothing.
+                CronExpression = "0 4 * * *",
+                MinExpectedRecords = 4000,
+                CreatedAt = WellKnownIds.SeededAt,
+                UpdatedAt = WellKnownIds.SeededAt,
+            });
         });
 
         b.Entity<ImportRun>(e =>
@@ -86,6 +122,16 @@ public class SancMeldDbContext(DbContextOptions<SancMeldDbContext> options) : Db
             e.Property(x => x.RetrievedAt).HasDefaultValueSql("now()");
             e.Property(x => x.HttpHeadersJson).HasColumnType("jsonb");
             e.HasIndex(x => new { x.SourceId, x.Sha256 }).IsUnique();
+        });
+
+        b.Entity<ImportStagingRecord>(e =>
+        {
+            e.ToTable("import_staging");
+            e.HasKey(x => new { x.ImportRunId, x.SourceRecordKey });
+            e.HasOne(x => x.ImportRun).WithMany()
+             .HasForeignKey(x => x.ImportRunId).OnDelete(DeleteBehavior.Cascade);
+            e.Property(x => x.ContentSha256).HasMaxLength(64).IsFixedLength();
+            e.Property(x => x.Payload).HasColumnType("jsonb");
         });
 
         b.Entity<Designation>(e =>
@@ -231,6 +277,21 @@ public class SancMeldDbContext(DbContextOptions<SancMeldDbContext> options) : Db
             e.Property(x => x.Parameters).HasColumnType("jsonb");
             e.Property(x => x.ModelSha256).HasMaxLength(64).IsFixedLength();
             e.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
+
+            // Every screening decision names the algorithm that produced it, so there has
+            // to be one from the first query. Rules today; a model becomes a second row
+            // with its own version, never an edit to this one — otherwise past decisions
+            // start pointing at something that no longer exists.
+            e.HasData(new MatchAlgorithm
+            {
+                Id = WellKnownIds.RulesAlgorithm,
+                Code = "RULES",
+                Version = "1.0.0",
+                NameNormVersion = 1,
+                FeatureSetVersion = 1,
+                IsActive = true,
+                CreatedAt = WellKnownIds.SeededAt,
+            });
         });
 
         b.Entity<ScreeningRequest>(e =>

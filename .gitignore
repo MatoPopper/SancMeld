@@ -431,8 +431,9 @@ FodyWeavers.xsd
 # ---------------------------------------------------------------------
 # SancMeld: never commit credentials.
 #
-# appsettings.json IS tracked and holds non-secret defaults only.
-# Anything that can carry a connection string stays out of the repository.
+# appsettings.json IS tracked. Its connection string points at the throwaway
+# development container from docker-compose.yml and is a convenience, not a secret.
+# Anything that can carry a REAL connection string stays out of the repository.
 # The old CamlSync project had a production database password committed;
 # these rules exist so that cannot happen again.
 # ---------------------------------------------------------------------
@@ -440,7 +441,6 @@ appsettings.Development.json
 appsettings.Production.json
 appsettings.Local.json
 appsettings.*.local.json
-!appsettings.Development.json.example
 
 # Downloaded sanctions snapshots (large, and may contain personal data)
 .snapshots/

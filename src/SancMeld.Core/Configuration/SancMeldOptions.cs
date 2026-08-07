@@ -59,6 +59,18 @@ public sealed class MatchingOptions
     public int MaxCandidates { get; set; } = 100;
 
     /// <summary>
+    /// Score at or above which a candidate is presented as a hit.
+    ///
+    /// A different question from SimilarityThreshold, and the two must not be conflated:
+    /// that one decides what the database retrieves, this one decides what an analyst is
+    /// asked to look at. Candidates below it are still recorded — they are the negative
+    /// half of any future training set, and a system that never stores them can only ever
+    /// learn from what it already shows.
+    /// </summary>
+    [Range(0.0, 1.0)]
+    public double MatchThreshold { get; set; } = 0.50;
+
+    /// <summary>
     /// Whether generic aliases ("Abu Ahmad") take part in primary scoring.
     /// Off by default, matching OFAC's own guidance: weak aliases are meant to
     /// corroborate a hit raised by other evidence, not to raise one.

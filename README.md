@@ -41,7 +41,7 @@ for each source are documented in the connector project that implements it.
 
 | Source | Effect in EU | Format | Records | Status |
 |---|---|---|---:|---|
-| **EU** Consolidated Financial Sanctions (FSF) | binding | XML / CSV | 6 234 subjects | planned |
+| **EU** Consolidated Financial Sanctions (FSF) | binding | XML | 6 234 subjects | **implemented** |
 | **UN** Security Council Consolidated List | binding | XML | 736 persons + 275 entities | planned |
 | **FR** Registre national des gels (DG Trésor) | binding | **JSON API** | 6 574 records | planned |
 | **PL** Lista osób i podmiotów (MSWiA) | binding | XLSX | ~738 rows | planned |
@@ -70,10 +70,22 @@ docker compose up -d db
 dotnet tool install --global dotnet-ef
 dotnet ef database update --project src/SancMeld.Core
 
-# build and run
+# build, then import the EU list
 dotnet build
+dotnet run --project src/SancMeld.Server -- import EU_FSF
+
+# or serve the API
 dotnet run --project src/SancMeld.Server
 ```
+
+| | |
+|---|---|
+| `/swagger` | try the endpoints |
+| `/jobs` | scheduled imports (Hangfire), local requests only |
+
+The first import fetches roughly 25 MB and publishes about 6 200 subjects. Later runs cost
+4 kB when the Commission has published nothing new, because the connector compares the
+version its RSS feed advertises before downloading anything.
 
 EF Core migrations are the only way a SancMeld schema is created — there is no
 second, hand-maintained SQL file to drift away from them. To point the migration at
@@ -85,30 +97,100 @@ edition; see [Open core](#open-core) below.
 
 ---
 
+## API
+
+| | |
+|---|---|
+| `GET /designations` | every current listing, cursor-paged |
+| `GET /designations/{id}` | one listing in full |
+| `GET /designations/search?q=` | trigram search over every recorded spelling |
+| `POST /screen` | a name plus whatever else is known, scored and recorded |
+
+The first three are reads. `POST /screen` also writes: the query, every candidate it
+considered and the evidence behind each score are stored, because a compliance decision
+that cannot be reconstructed is not one anyone can stand behind.
+
+Nothing is filtered out for being sparse. Of the 6 234 subjects on the EU list, 2 364 carry
+no date of birth and 4 245 carry no identifier at all — an incomplete listing is not a
+lesser listing, and the subject is sanctioned either way.
+
+That is also why `/screen` answers each qualifier separately rather than folding it into
+one number:
+
+```jsonc
+{ "score": 0.525, "aboveThreshold": true,
+  "explanation": {
+    "nameScore": 0.875,
+    "identifierMatch": false,
+    "birthYear": "Contradicts",       // agrees · contradicts · unknownOnRecord · notProvided
+    "country": "NotProvided",
+    "subjectType": "NotProvided",
+    "notes": ["None of the 3 recorded years of birth matches the one supplied."] } }
+```
+
+`UnknownOnRecord` and `NotProvided` both score zero. Treating "the list does not say" as
+"the list disagrees" would push exactly the subjects nobody knows much about below the
+threshold, and a missed match is a legal breach where a false positive is an hour of work.
+
+Scoring is rule-based today. The weights sit behind `IScoringStrategy`, and every screening
+stores the feature vector they were applied to, so a trained model can arrive as a second
+implementation and a second row in `match_algorithm` — never as an edit to the one that
+past decisions point at.
+
+---
+
+## Scheduled imports
+
+One recurring job per sanctions list, driven by the `sanctions_source` rows rather than by
+a list in code: the cron expression sits on the source next to the endpoint it fetches, so
+adding a connector never means editing the host.
+
+Hangfire keeps its own tables in a `hangfire` schema alongside the data, and the dashboard
+at `/jobs` accepts local requests only — it can trigger and delete jobs, and this host has
+no authentication of its own to put in front of it.
+
+The whole scheduler is about thirty lines in `SancMeld.Server`, on purpose. Job storage,
+retention and dashboard access are exactly the things a deployment will have opinions
+about, and the job itself is one call into `SanctionsImportService` — the same call
+`-- import EU_FSF` makes. Replace the host, keep the libraries.
+
+---
+
 ## Configuration
 
-You do not have to use the bundled PostgreSQL. Point SancMeld at any PostgreSQL 16+
-instance — your own server, a managed service, or the Docker one above.
+> **You need a database before anything runs.** `appsettings.json` ships pointing at the
+> development container in `docker-compose.yml`, but the container is not part of the
+> build — start it and apply the migrations, or point SancMeld at a PostgreSQL 16+
+> instance you already have.
+>
+> ```bash
+> docker compose up -d db
+> dotnet ef database update --project src/SancMeld.Core
+> ```
 
-`appsettings.json` is committed and holds **non-secret defaults only**. The connection
-string is deliberately **not in it**, so a password can never be committed by accident.
-Supply it in one of three ways:
+The committed connection string is deliberately throwaway — user `sancmeld`, password
+`sancmeld`, port 55432 — and every one of those values is already published in
+`docker-compose.yml`. It is a convenience, not a credential.
+
+To use your own database, override it from outside the repository. Any of these wins over
+`appsettings.json`, so nothing has to be edited or deleted:
 
 ```bash
 # development — stored outside the repository entirely
 dotnet user-secrets set "ConnectionStrings:SancMeld" \
-  "Host=localhost;Port=55432;Database=sancmeld;Username=sancmeld;Password=..." \
+  "Host=db.internal;Database=sancmeld;Username=app;Password=..." \
   --project src/SancMeld.Server
 
 # docker / production
 export ConnectionStrings__SancMeld="Host=db.example.com;Database=sancmeld;Username=app;Password=..."
-
-# local file — git-ignored
-cp src/SancMeld.Server/appsettings.Development.json.example \
-   src/SancMeld.Server/appsettings.Development.json
 ```
 
-Starting without a connection string fails immediately with a message explaining all three.
+Or drop a git-ignored `src/SancMeld.Server/appsettings.Development.json` next to the
+committed one, holding nothing but the `ConnectionStrings` section.
+
+Port 55432 rather than 5432 is deliberate: anyone already running PostgreSQL locally would
+otherwise have their own server answer on `localhost:5432` and see an authentication
+failure that looks like a SancMeld bug.
 
 | Setting | Default | Notes |
 |---|---|---|
@@ -120,9 +202,10 @@ Starting without a connection string fails immediately with a message explaining
 Sanctions sources are configured in the `sanctions_source` table, not in `appsettings.json`,
 so imports and snapshots can reference them by key.
 
-> **Never put credentials in `appsettings.json`.** The predecessor of this project had a
-> production database password committed to git. `.gitignore` and a CI secret scan are set
-> up to stop that recurring.
+> **Never edit `appsettings.json` to hold a real credential.** A local container's
+> throwaway password is one thing; a production password reaching a tracked file is in the
+> history for good. The predecessor of this project shipped exactly that. `.gitignore` and
+> a CI secret scan are set up to stop it recurring — use one of the three overrides above.
 
 ---
 

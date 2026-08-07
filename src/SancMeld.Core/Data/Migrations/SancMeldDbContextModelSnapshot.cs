@@ -861,6 +861,34 @@ namespace SancMeld.Core.Data.Migrations
                     b.ToTable("import_run", (string)null);
                 });
 
+            modelBuilder.Entity("SancMeld.Core.Data.ImportStagingRecord", b =>
+                {
+                    b.Property<Guid>("ImportRunId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("import_run_id");
+
+                    b.Property<string>("SourceRecordKey")
+                        .HasColumnType("text")
+                        .HasColumnName("source_record_key");
+
+                    b.Property<string>("ContentSha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character(64)")
+                        .HasColumnName("content_sha256")
+                        .IsFixedLength();
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("payload");
+
+                    b.HasKey("ImportRunId", "SourceRecordKey")
+                        .HasName("pk_import_staging");
+
+                    b.ToTable("import_staging", (string)null);
+                });
+
             modelBuilder.Entity("SancMeld.Core.Data.Jurisdiction", b =>
                 {
                     b.Property<Guid>("Id")
@@ -913,6 +941,17 @@ namespace SancMeld.Core.Data.Migrations
                         .HasDatabaseName("ix_jurisdiction_code");
 
                     b.ToTable("jurisdiction", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("0195a1f0-0000-7000-8000-000000000001"),
+                            Code = "EU",
+                            Kind = "EU",
+                            Name = "European Union",
+                            ResearchEvidenceUrl = "https://data.europa.eu/data/datasets/consolidated-list-of-persons-groups-and-entities-subject-to-eu-financial-sanctions",
+                            ResearchStatus = "CONFIRMED"
+                        });
                 });
 
             modelBuilder.Entity("SancMeld.Core.Data.LegalInstrument", b =>
@@ -1022,6 +1061,18 @@ namespace SancMeld.Core.Data.Migrations
                         .HasDatabaseName("ix_match_algorithm_code_version");
 
                     b.ToTable("match_algorithm", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("0195a1f0-0000-7000-8000-000000000201"),
+                            Code = "RULES",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            FeatureSetVersion = (short)1,
+                            IsActive = true,
+                            NameNormVersion = (short)1,
+                            Version = "1.0.0"
+                        });
                 });
 
             modelBuilder.Entity("SancMeld.Core.Data.SanctionProgramme", b =>
@@ -1146,6 +1197,26 @@ namespace SancMeld.Core.Data.Migrations
                         .HasDatabaseName("ix_sanctions_source_jurisdiction_id");
 
                     b.ToTable("sanctions_source", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("0195a1f0-0000-7000-8000-000000000101"),
+                            Code = "EU_FSF",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CronExpression = "0 4 * * *",
+                            Format = "XML",
+                            IsActive = true,
+                            JurisdictionId = new Guid("0195a1f0-0000-7000-8000-000000000001"),
+                            LandingPageUrl = "https://data.europa.eu/data/datasets/consolidated-list-of-persons-groups-and-entities-subject-to-eu-financial-sanctions",
+                            LegalEffect = "binding",
+                            MinExpectedRecords = 4000,
+                            Name = "EU Consolidated Financial Sanctions List",
+                            ParserKey = "EU_FSF",
+                            Publisher = "European Commission",
+                            RequiresUserAgent = true,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        });
                 });
 
             modelBuilder.Entity("SancMeld.Core.Data.ScreeningCandidate", b =>
@@ -1664,6 +1735,18 @@ namespace SancMeld.Core.Data.Migrations
                         .HasConstraintName("fk_import_run_sanctions_source_source_id");
 
                     b.Navigation("Source");
+                });
+
+            modelBuilder.Entity("SancMeld.Core.Data.ImportStagingRecord", b =>
+                {
+                    b.HasOne("SancMeld.Core.Data.ImportRun", "ImportRun")
+                        .WithMany()
+                        .HasForeignKey("ImportRunId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_import_staging_import_runs_import_run_id");
+
+                    b.Navigation("ImportRun");
                 });
 
             modelBuilder.Entity("SancMeld.Core.Data.LegalInstrument", b =>

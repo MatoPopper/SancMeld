@@ -72,6 +72,14 @@ public sealed record ParsedBirth
     public short? YearTo { get; init; }
     public DatePrecision Precision { get; init; } = DatePrecision.Unknown;
     public string? City { get; init; }
+    public string? Region { get; init; }
+
+    /// <summary>
+    /// The locality as the source names it when it is not a city: a district, a village,
+    /// a camp. Kept separate from City so a place name is never mistaken for one.
+    /// </summary>
+    public string? PlaceOriginal { get; init; }
+
     public string? CountryIso2 { get; init; }
 
     /// <summary>Keep the source wording: USSR, Yugoslavia, Kosovo, occupied territories.</summary>
@@ -84,17 +92,38 @@ public sealed record ParsedIdentifier
     public required string ValueOriginal { get; init; }
     public required string ValueNormalized { get; init; }
     public string? IssuingCountry { get; init; }
+    public DateOnly? IssuedAt { get; init; }
+    public DateOnly? ExpiresAt { get; init; }
     public bool? IsDiplomatic { get; init; }
+
+    /// <summary>
+    /// The publisher says the document is a forgery. It stays a match surface — a fake
+    /// passport is still the one the subject travels on — but it must not corroborate.
+    /// </summary>
+    public bool? IsKnownFalse { get; init; }
+
+    public bool? IsExpired { get; init; }
+    public string? Note { get; init; }
 }
 
 public sealed record ParsedAddress
 {
     public string? Street { get; init; }
+    public string? PoBox { get; init; }
     public string? City { get; init; }
     public string? PostalCode { get; init; }
     public string? Region { get; init; }
     public string? CountryIso2 { get; init; }
     public string? CountryOriginal { get; init; }
+
+    /// <summary>Phone, fax, email and web, as the source published them.</summary>
+    public string? ContactInfo { get; init; }
+
+    /// <summary>
+    /// Nothing more precise than a country. Such an address cannot corroborate a hit —
+    /// "somewhere in Russia" is true of a great many people.
+    /// </summary>
+    public bool IsPartial { get; init; }
 }
 
 public sealed record ParsedNationality

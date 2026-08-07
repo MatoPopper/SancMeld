@@ -1,9 +1,17 @@
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using SancMeld.Connectors.EuFsf;
+using SancMeld.Core.Abstractions;
 using SancMeld.Core.Configuration;
+using SancMeld.Core.Data;
+using SancMeld.Core.Ingest;
+using SancMeld.Core.Search;
 
 namespace SancMeld.Api;
 
@@ -45,9 +53,9 @@ public static class SancMeldExtensions
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
-        // Fail fast and explain how to fix it. A missing connection string is the
-        // single most common first-run problem, and the default framework error
-        // ("Value cannot be null") tells the reader nothing.
+        // Fail fast and explain how to fix it. The default framework error for this
+        // ("Value cannot be null") tells the reader nothing, and a host without a
+        // database is the single most common first-run problem.
         var connectionString = configuration.GetConnectionString(ConnectionStringName);
         if (string.IsNullOrWhiteSpace(connectionString))
         {
@@ -55,8 +63,9 @@ public static class SancMeldExtensions
                 $"""
                  Connection string '{ConnectionStringName}' is not configured.
 
-                 It is intentionally absent from appsettings.json so that a database
-                 password can never be committed by accident. Supply it in one of:
+                 appsettings.json ships one pointing at the development database in
+                 docker-compose.yml, so this means it was removed or overridden. Either
+                 restore it, or supply your own — any of these wins over appsettings.json:
 
                    development   dotnet user-secrets set "ConnectionStrings:{ConnectionStringName}" \
                                      "Host=localhost;Database=sancmeld;Username=sancmeld;Password=..."
@@ -70,10 +79,27 @@ public static class SancMeldExtensions
                  """);
         }
 
-        // TODO: register data access, connectors, matching engine and ingest jobs.
-        // The DbContext must be registered through SancMeldDbContextOptions.UseSancMeld() —
-        // it carries the snake_case naming and the migrations history table that the
-        // migrated schema depends on.
+        // UseSancMeld and nothing else: it carries the snake_case naming and the migrations
+        // history table the migrated schema depends on.
+        services.AddDbContext<SancMeldDbContext>(o => o.UseSancMeld(connectionString));
+
+        services.TryAddSingleton(TimeProvider.System);
+        services.AddSingleton<ISnapshotStore, FileSystemSnapshotStore>();
+        services.AddScoped<SanctionsImportService>();
+
+        services.AddScoped<DesignationQueryService>();
+        services.AddScoped<IScoringStrategy, RulesScoringStrategy>();
+        services.AddScoped<ScreeningService>();
+
+        // Enums as text, matching how the database stores them. "legalEffect": 0 tells a
+        // consumer nothing, and worse, silently changes meaning if a member is ever
+        // inserted into the middle of an enum.
+        services.ConfigureHttpJsonOptions(json =>
+            json.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+
+        services.AddEuFsfConnector(configuration);
+
+        // TODO: adjudication capture, and scheduled runs of the import.
         // Defaults are single-tenant and unauthenticated by design; the hosted
         // edition overrides ITenantResolver, IScoringStrategy and IQuotaPolicy.
         return services;
@@ -86,7 +112,10 @@ public static class SancMeldExtensions
         endpoints.MapGet("/health", () => Results.Ok(new { status = "ok" }))
                  .WithName("Health");
 
-        // TODO: /screen, /designations/{id}, /sources, /adjudications
+        endpoints.MapDesignations();
+        endpoints.MapScreening();
+
+        // TODO: /sources, /adjudications
         return endpoints;
     }
 }
