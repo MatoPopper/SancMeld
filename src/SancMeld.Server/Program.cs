@@ -22,24 +22,33 @@ builder.Services.AddSancMeld(builder.Configuration);
 //
 // Hangfire keeps its own tables in a "hangfire" schema alongside ours, created on first
 // run. The job itself is nothing but a call into SanctionsImportService.
+//
+// Turn the whole scheduler off with SancMeld:Jobs:Enabled=false. A deployment that only
+// serves the API wants nothing to do with job storage, and an instance importing on a
+// schedule nobody asked for is worse than one that does not import at all.
 var connectionString = builder.Configuration.GetConnectionString(SancMeldExtensions.ConnectionStringName);
+var jobsEnabled = builder.Configuration.GetValue("SancMeld:Jobs:Enabled", defaultValue: true);
 
-builder.Services.AddHangfire(hangfire => hangfire
-    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
-    .UseSimpleAssemblyNameTypeSerializer()
-    .UseRecommendedSerializerSettings()
-    .UsePostgreSqlStorage(postgres => postgres.UseNpgsqlConnection(connectionString)));
-
-builder.Services.AddHangfireServer(o =>
+if (jobsEnabled)
 {
-    // Imports are IO-bound, run daily and must not overlap; one worker is plenty and
-    // keeps two runs of the same source from racing each other into the diff.
-    o.WorkerCount = 1;
-});
+    builder.Services.AddHangfire(hangfire => hangfire
+        .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+        .UseSimpleAssemblyNameTypeSerializer()
+        .UseRecommendedSerializerSettings()
+        .UsePostgreSqlStorage(postgres => postgres.UseNpgsqlConnection(connectionString)));
+
+    builder.Services.AddHangfireServer(o =>
+    {
+        // Imports are IO-bound, run daily and must not overlap; one worker is plenty and
+        // keeps two runs of the same source from racing each other into the diff.
+        o.WorkerCount = 1;
+    });
+}
 
 // Swashbuckle rather than the built-in AddOpenApi(): Microsoft.AspNetCore.OpenApi 10.0.10
 // pins Microsoft.OpenApi 2.0.0, which carries GHSA-v5pm-xwqc-g5wc, and the fix is only in
 // a 3.x that its source generator does not compile against. Swashbuckle restores clean.
+
 // A separate front end runs on its own origin, and without this the browser blocks every
 // call before it leaves the machine. Development only and deliberately wide open: this
 // host has no authentication, so a permissive policy in production would hand the API to
@@ -103,11 +112,14 @@ app.UseSwaggerUI(swagger =>
     swagger.RoutePrefix = "swagger";
 });
 
-// Local requests only, by default and on purpose: the dashboard can trigger and delete
-// jobs, and this host has no authentication of its own to put in front of it.
-app.UseHangfireDashboard("/jobs");
+if (jobsEnabled)
+{
+    // Local requests only, by default and on purpose: the dashboard can trigger and
+    // delete jobs, and this host has no authentication of its own to put in front of it.
+    app.UseHangfireDashboard("/jobs");
 
-await ScheduleImportsAsync(app);
+    await ScheduleImportsAsync(app);
+}
 
 await app.RunAsync();
 return 0;

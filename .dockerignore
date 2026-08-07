@@ -1,0 +1,23 @@
+# Keep the build context small and, more importantly, keep host state out of the image:
+# a local bin/ or obj/ from a Windows build will happily overwrite the container's and
+# produce an image that only works on the machine that built it.
+**/bin/
+**/obj/
+**/.vs/
+.git/
+.github/
+
+# Not needed to build or run the API.
+tests/
+ml/
+fixtures/
+docs/
+*.md
+docker-compose*.yml
+
+# Never, under any circumstances.
+**/appsettings.Development.json
+**/appsettings.Production.json
+**/appsettings.Local.json
+**/.snapshots/
+**/*.user
