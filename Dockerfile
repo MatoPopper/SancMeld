@@ -22,6 +22,14 @@ RUN dotnet publish src/SancMeld.Server/SancMeld.Server.csproj -c Release -o /app
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
+# libgssapi-krb5-2 is not used — the database uses password authentication — but Npgsql
+# probes for it on every start and logs "Cannot load library" and "Error:" when it is
+# absent. Two scary lines at the top of every log, on a tool whose logs someone will one
+# day read looking for a real failure, are worth a megabyte.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libgssapi-krb5-2 \
+    && rm -rf /var/lib/apt/lists/*
+
 # Non-root: the API needs no privileges, and a compliance tool running as root is the
 # first thing a security review asks about.
 RUN useradd --create-home --shell /usr/sbin/nologin sancmeld \

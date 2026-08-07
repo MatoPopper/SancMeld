@@ -204,8 +204,8 @@ so imports and snapshots can reference them by key.
 
 > **Never edit `appsettings.json` to hold a real credential.** A local container's
 > throwaway password is one thing; a production password reaching a tracked file is in the
-> history for good. The predecessor of this project shipped exactly that. `.gitignore` and
-> a CI secret scan are set up to stop it recurring — use one of the three overrides above.
+> history for good. The predecessor of this project shipped exactly that. `.gitignore` is set
+> up to stop it recurring — use one of the three overrides above.
 
 ---
 

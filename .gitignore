@@ -435,7 +435,8 @@ FodyWeavers.xsd
 # development container from docker-compose.yml and is a convenience, not a secret.
 # Anything that can carry a REAL connection string stays out of the repository.
 # The old CamlSync project had a production database password committed;
-# these rules exist so that cannot happen again.
+# these rules exist so that cannot happen again. Note there is no CI secret
+# scan any more, so they are the only thing standing in the way.
 # ---------------------------------------------------------------------
 appsettings.Development.json
 appsettings.Production.json

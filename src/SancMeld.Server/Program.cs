@@ -49,17 +49,38 @@ if (jobsEnabled)
 // pins Microsoft.OpenApi 2.0.0, which carries GHSA-v5pm-xwqc-g5wc, and the fix is only in
 // a 3.x that its source generator does not compile against. Swashbuckle restores clean.
 
-// A separate front end runs on its own origin, and without this the browser blocks every
-// call before it leaves the machine. Development only and deliberately wide open: this
-// host has no authentication, so a permissive policy in production would hand the API to
-// any page the user happens to have open.
-if (builder.Environment.IsDevelopment())
+// A front end on its own origin gets every call blocked by the browser without this.
+//
+// In development any loopback origin is allowed, so a dev server on whatever port Vite
+// picks just works. Outside development nothing is allowed unless it is named:
+//
+//   SancMeld__Cors__AllowedOrigins__0=https://sancmeld.example
+//
+// Never a wildcard here. This host has no authentication, so allowing any origin would
+// hand the whole API to any page the user happens to have open.
+var allowedOrigins = builder.Configuration
+    .GetSection("SancMeld:Cors:AllowedOrigins")
+    .Get<string[]>() ?? [];
+
+builder.Services.AddCors(cors => cors.AddDefaultPolicy(policy =>
 {
-    builder.Services.AddCors(cors => cors.AddDefaultPolicy(policy => policy
-        .SetIsOriginAllowed(origin => new Uri(origin).IsLoopback)
-        .AllowAnyHeader()
-        .AllowAnyMethod()));
-}
+    if (builder.Environment.IsDevelopment())
+    {
+        policy.SetIsOriginAllowed(origin => new Uri(origin).IsLoopback);
+    }
+    else if (allowedOrigins.Length > 0)
+    {
+        policy.WithOrigins(allowedOrigins);
+    }
+    else
+    {
+        // No origin matches, so the browser blocks cross-origin calls — which is the
+        // right answer for an API nobody has said should be reachable from a page.
+        policy.SetIsOriginAllowed(_ => false);
+    }
+
+    policy.AllowAnyHeader().AllowAnyMethod();
+}));
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(swagger => swagger.SwaggerDoc("v1", new()
@@ -111,10 +132,7 @@ if (builder.Configuration.GetValue("SancMeld:Database:AutoMigrate", defaultValue
     await db.Database.MigrateAsync();
 }
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseCors();
-}
+app.UseCors();
 
 app.MapSancMeld();
 
