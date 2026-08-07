@@ -167,6 +167,12 @@ public class Designation
     public DateOnly? DelistedAt { get; set; }
     public DateTimeOffset? UpdatedAtSource { get; set; }
 
+    /// <summary>Stated role or position — the export's closest field to "why listed".</summary>
+    public string? Function { get; set; }
+
+    /// <summary>Rank or honorific.</summary>
+    public string? Title { get; set; }
+
     public string? Reason { get; set; }
     public string? Remarks { get; set; }
 

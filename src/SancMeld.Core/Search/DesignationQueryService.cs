@@ -195,6 +195,8 @@ public sealed class DesignationQueryService(SancMeldDbContext db, IOptions<SancM
             SubjectType = d.SubjectType,
             Status = d.Status,
             ListedAt = d.ListedAt,
+            Function = d.Function,
+            Title = d.Title,
             Remarks = d.Remarks,
             ValidFrom = d.ValidFrom,
 

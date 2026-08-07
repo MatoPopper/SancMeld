@@ -92,6 +92,13 @@ internal static partial class EuFsfXmlParser
             Status = DesignationStatus.Active,
 
             ListedAt = ParseIsoDate(Value(e.Attribute("designationDate"))),
+
+            // Carried on every nameAlias rather than on the subject, and identical across
+            // them on 4 908 of the 4 965 subjects that have it — so it describes the
+            // subject, not the spelling. Taken from the first alias that states it.
+            Function = FirstAliasAttribute(e, "function"),
+            Title = FirstAliasAttribute(e, "title"),
+
             Remarks = JoinRemarks(e),
 
             Names = MapNames(e),
@@ -127,10 +134,24 @@ internal static partial class EuFsfXmlParser
             _ => SubjectType.Unknown,
         };
 
+    private static string? FirstAliasAttribute(XElement e, string name) =>
+        e.Elements(Ns + "nameAlias")
+            .Select(a => Value(a.Attribute(name)))
+            .FirstOrDefault(v => v is not null);
+
+    /// <summary>
+    /// Everything the publisher attached as free text: the remark elements plus
+    /// designationDetails, which holds UN designation dates on 375 subjects.
+    ///
+    /// Neither is the reason for listing. The export simply does not carry one — the
+    /// narrative justification exists only in the Official Journal, which is why every
+    /// record carries the act's URL in LegalBasis.
+    /// </summary>
     private static string? JoinRemarks(XElement e)
     {
         var remarks = e.Elements(Ns + "remark")
             .Select(r => r.Value.Trim())
+            .Prepend(Value(e.Attribute("designationDetails")) ?? string.Empty)
             .Where(v => v.Length > 0)
             .ToArray();
 

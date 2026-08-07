@@ -229,6 +229,10 @@ namespace SancMeld.Core.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("first_seen_run_id");
 
+                    b.Property<string>("Function")
+                        .HasColumnType("text")
+                        .HasColumnName("function");
+
                     b.Property<Guid>("LastSeenRunId")
                         .HasColumnType("uuid")
                         .HasColumnName("last_seen_run_id");
@@ -272,6 +276,10 @@ namespace SancMeld.Core.Data.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("subject_type");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("text")
+                        .HasColumnName("title");
 
                     b.Property<DateTimeOffset?>("UpdatedAtSource")
                         .HasColumnType("timestamp with time zone")

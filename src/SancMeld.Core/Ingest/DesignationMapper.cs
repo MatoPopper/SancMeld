@@ -33,6 +33,8 @@ internal static class DesignationMapper
             Status = parsed.Status,
             ListedAt = parsed.ListedAt,
             DelistedAt = parsed.DelistedAt,
+            Function = parsed.Function,
+            Title = parsed.Title,
             Reason = parsed.Reason,
             Remarks = parsed.Remarks,
             ValidFrom = validFrom,

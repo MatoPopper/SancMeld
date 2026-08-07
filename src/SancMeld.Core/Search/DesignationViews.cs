@@ -24,6 +24,14 @@ public sealed record DesignationView
     public required SubjectType SubjectType { get; init; }
     public required DesignationStatus Status { get; init; }
     public DateOnly? ListedAt { get; init; }
+
+    /// <summary>
+    /// The role the publisher states. The nearest thing to a reason in the structured
+    /// export; the narrative justification is in the act linked from LegalBasis.
+    /// </summary>
+    public string? Function { get; init; }
+
+    public string? Title { get; init; }
     public string? Remarks { get; init; }
 
     /// <summary>When this revision became current. The listing itself may be far older.</summary>

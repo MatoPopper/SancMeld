@@ -23,6 +23,20 @@ public sealed record ParsedDesignation
 
     public DateOnly? ListedAt { get; init; }
     public DateOnly? DelistedAt { get; init; }
+
+    /// <summary>
+    /// The role the publisher states — "Co-founder and co-owner of the Svetofor Group",
+    /// "Oversaw Special Republican Guard".
+    ///
+    /// The closest thing to a reason that the machine-readable export carries. The
+    /// narrative justification exists only in the Official Journal text, which is why
+    /// every record links to the act.
+    /// </summary>
+    public string? Function { get; init; }
+
+    /// <summary>Rank or honorific: "Col", "Dr", "Brigadier General".</summary>
+    public string? Title { get; init; }
+
     public string? Reason { get; init; }
     public string? Remarks { get; init; }
 

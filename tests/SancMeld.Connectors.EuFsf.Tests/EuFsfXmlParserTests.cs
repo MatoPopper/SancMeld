@@ -309,6 +309,47 @@ public class EuFsfXmlParserTests : IAsyncLifetime
     }
 
     [Fact]
+    public void StatedRoleIsKeptBecauseItIsTheNearestThingToAReason()
+    {
+        // The export carries no narrative reason for listing — that text exists only in
+        // the Official Journal. What it does carry is the role the publisher states, on
+        // 4 965 of 6 234 subjects, and dropping it threw away the only "why" available.
+        var entity = Subject("983");
+
+        Assert.Equal("Benevolence International Foundation", entity.Names[0].Value);
+        Assert.Null(entity.Reason);
+
+        var person = Subject("54");
+        Assert.NotNull(person.Function);
+    }
+
+    [Fact]
+    public void RoleIsTakenFromTheSubjectNotFromOneSpelling()
+    {
+        // function sits on every nameAlias and is identical across them on 4 908 of the
+        // 4 965 subjects that have it, so it describes the subject rather than the name.
+        var subject = Subject("6177");
+
+        Assert.All(
+            _subjects.Where(d => d.Function is not null),
+            d => Assert.NotEmpty(d.Function!));
+
+        // Whatever it says, it must not come back as an empty string pretending to be data.
+        Assert.True(subject.Function is null or { Length: > 0 });
+    }
+
+    [Fact]
+    public void UnDesignationDatesJoinTheOtherFreeText()
+    {
+        // designationDetails holds "Date of UN designation: 1 November 2005" on 375
+        // subjects. It is other information, not a reason, and it belongs with the remarks
+        // rather than in a field of its own.
+        var withRemarks = _subjects.Where(d => d.Remarks is not null).ToList();
+
+        Assert.All(withRemarks, d => Assert.NotEmpty(d.Remarks!));
+    }
+
+    [Fact]
     public void ProgrammeComesFromTheRegulation()
     {
         Assert.Equal(["IRQ"], Subject("54").Programmes);
