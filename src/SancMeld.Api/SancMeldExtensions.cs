@@ -12,6 +12,7 @@ using SancMeld.Core.Abstractions;
 using SancMeld.Core.Configuration;
 using SancMeld.Core.Data;
 using SancMeld.Core.Ingest;
+using SancMeld.Core.Learning;
 using SancMeld.Core.Search;
 
 namespace SancMeld.Api;
@@ -92,6 +93,7 @@ public static class SancMeldExtensions
         services.AddScoped<IScoringStrategy, RulesScoringStrategy>();
         services.AddScoped<ScreeningService>();
         services.AddScoped<ComplianceCheckService>();
+        services.AddScoped<AdjudicationService>();
 
         // Enums as text, matching how the database stores them. "legalEffect": 0 tells a
         // consumer nothing, and worse, silently changes meaning if a member is ever
@@ -117,8 +119,10 @@ public static class SancMeldExtensions
 
         endpoints.MapDesignations();
         endpoints.MapScreening();
+        endpoints.MapAdjudications();
+        endpoints.MapTrainingData();
 
-        // TODO: /sources, /adjudications
+        // TODO: /sources
         return endpoints;
     }
 }

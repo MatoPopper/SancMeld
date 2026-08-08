@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 using SancMeld.Core.Domain;
+using SancMeld.Core.Learning;
 using SancMeld.Core.Search;
 
 namespace SancMeld.Api;
@@ -109,6 +110,83 @@ internal static class SancMeldEndpoints
             "the name search could not reach is pulled in when a cross-reference points at it.");
 
         endpoints.MapScreeningDiagnostics();
+
+        return endpoints;
+    }
+
+    /// <summary>
+    /// Capturing what the analyst decided, and handing the corpus out for training.
+    ///
+    /// Two endpoints, not three. Recording a decision belongs to the compliance workflow;
+    /// exporting the corpus is a different job with a different consumer. Training itself
+    /// is deliberately NOT an endpoint — a model that can be retrained by an HTTP call is
+    /// a model nobody can audit. It is an offline job producing a versioned artefact,
+    /// which arrives here as a new row in match_algorithm.
+    /// </summary>
+    public static IEndpointRouteBuilder MapAdjudications(this IEndpointRouteBuilder endpoints)
+    {
+        var group = endpoints.MapGroup("/adjudications").WithTags("Adjudications");
+
+        group.MapGet("/reasons", async (AdjudicationService adjudications, CancellationToken ct) =>
+            TypedResults.Ok(await adjudications.ReasonsAsync(ct)))
+        .WithName("GetAdjudicationReasons")
+        .WithSummary("The reasons an analyst can give for a decision.")
+        .WithDescription(
+            "Show these as the choices. Free text cannot be counted, and 'why not' is both " +
+            "the part a supervisor asks about and the part a model learns from.");
+
+        group.MapPost("/", async Task<Results<Ok<AdjudicationResult>, BadRequest<string>>> (
+            AdjudicationService adjudications, AdjudicationRequest request, CancellationToken ct) =>
+        {
+            if (request is null || request.Decisions.Count == 0)
+            {
+                return TypedResults.BadRequest("Supply at least one decision.");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.DecidedBy))
+            {
+                return TypedResults.BadRequest("Supply who decided. An unattributed decision is not an audit trail.");
+            }
+
+            try
+            {
+                return TypedResults.Ok(await adjudications.RecordAsync(request, ct));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return TypedResults.BadRequest(ex.Message);
+            }
+        })
+        .WithName("RecordAdjudication")
+        .WithSummary("Record what the analyst decided about a check.")
+        .WithDescription(
+            "One call per review, carrying every decision made in it — a half-recorded review " +
+            "is exactly the state nobody can reconstruct. Decisions are per listing, not per " +
+            "subject: a person on the EU and the UN lists is two listings and two legal facts. " +
+            "Undecided and NeedsMoreData are recorded but not labelled; the analyst did not say " +
+            "no, they said they could not tell. Corrections are new rows carrying 'supersedes'.");
+
+        return endpoints;
+    }
+
+    /// <summary>
+    /// The labelled corpus, for training a model outside this system. Carries feature
+    /// vectors and labels, never a name or a query — a training set is copied to wherever
+    /// the training happens, and it must not become a copy of somebody's customer file.
+    /// </summary>
+    public static IEndpointRouteBuilder MapTrainingData(this IEndpointRouteBuilder endpoints)
+    {
+        endpoints.MapGet("/training/samples", async (
+            AdjudicationService adjudications, long? afterId, int? limit, string? origin, CancellationToken ct) =>
+            TypedResults.Ok(await adjudications.SamplesAsync(afterId ?? 0, limit ?? 1000, origin, ct)))
+        .WithTags("Adjudications")
+        .WithName("GetTrainingSamples")
+        .WithSummary("The labelled comparisons, for training a model elsewhere.")
+        .WithDescription(
+            "Paged by id — pass the last id back as afterId — so an export can be resumed and " +
+            "repeated without missing or duplicating a row. Filter by origin: ADJUDICATION for " +
+            "analyst decisions, PUBLIC_LIST_XREF for pairs derived from publishers' own " +
+            "cross-references. No personal data is included, by design.");
 
         return endpoints;
     }
