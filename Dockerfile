@@ -7,17 +7,16 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-# Project files first, so a change to source code does not invalidate the restore layer.
-# Restoring is the slow part and it only depends on these.
+# The textbook form copies each .csproj first so that a source-only change reuses the
+# restore layer. It was here and it is gone on purpose: it names every project explicitly,
+# so adding a connector meant a Dockerfile line nobody remembers, and the build failed at
+# deploy time with "assets file not found" rather than anywhere useful.
+#
+# Restore takes about four seconds. Six more connectors are planned. The layer was not
+# worth the trap.
 COPY Directory.Build.props ./
-COPY src/SancMeld.Core/SancMeld.Core.csproj                     src/SancMeld.Core/
-COPY src/SancMeld.Api/SancMeld.Api.csproj                       src/SancMeld.Api/
-COPY src/SancMeld.Connectors.EuFsf/SancMeld.Connectors.EuFsf.csproj src/SancMeld.Connectors.EuFsf/
-COPY src/SancMeld.Server/SancMeld.Server.csproj                 src/SancMeld.Server/
-RUN dotnet restore src/SancMeld.Server/SancMeld.Server.csproj
-
 COPY src/ src/
-RUN dotnet publish src/SancMeld.Server/SancMeld.Server.csproj -c Release -o /app --no-restore
+RUN dotnet publish src/SancMeld.Server/SancMeld.Server.csproj -c Release -o /app
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
