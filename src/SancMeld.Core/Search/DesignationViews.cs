@@ -31,6 +31,10 @@ public sealed record DesignationView
     /// </summary>
     public string? Function { get; init; }
 
+    /// <summary>
+    /// Usually a rank or honorific, but on 122 subjects the publisher puts the role here
+    /// instead — sometimes the only one. Show both this and Function.
+    /// </summary>
     public string? Title { get; init; }
     public string? Remarks { get; init; }
 

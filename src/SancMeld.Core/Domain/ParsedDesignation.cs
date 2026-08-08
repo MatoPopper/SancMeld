@@ -34,7 +34,13 @@ public sealed record ParsedDesignation
     /// </summary>
     public string? Function { get; init; }
 
-    /// <summary>Rank or honorific: "Col", "Dr", "Brigadier General".</summary>
+    /// <summary>
+    /// Usually a rank or honorific — "Col", "(a) Maulavi, (b) Mullah" — but the publisher
+    /// is not consistent: on 122 subjects it holds the role instead, and sometimes the
+    /// only role, as with "Co-founder and co-owner of the Svetofor Group".
+    ///
+    /// A consumer showing "what is this person" has to read both this and Function.
+    /// </summary>
     public string? Title { get; init; }
 
     public string? Reason { get; init; }
