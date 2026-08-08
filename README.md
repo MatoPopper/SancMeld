@@ -42,7 +42,7 @@ for each source are documented in the connector project that implements it.
 | Source | Effect in EU | Format | Records | Status |
 |---|---|---|---:|---|
 | **EU** Consolidated Financial Sanctions (FSF) | binding | XML | 6 234 subjects | **implemented** |
-| **UN** Security Council Consolidated List | binding | XML | 736 persons + 275 entities | planned |
+| **UN** Security Council Consolidated List | binding | XML | 736 persons + 275 entities | **implemented** |
 | **FR** Registre national des gels (DG Trésor) | binding | **JSON API** | 6 574 records | planned |
 | **PL** Lista osób i podmiotów (MSWiA) | binding | XLSX | ~738 rows | planned |
 | **NL** Nationale terrorismelijst | binding | ODS | small | planned |

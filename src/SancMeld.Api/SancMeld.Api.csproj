@@ -11,6 +11,7 @@
   <ItemGroup>
     <ProjectReference Include="../SancMeld.Core/SancMeld.Core.csproj" />
     <ProjectReference Include="../SancMeld.Connectors.EuFsf/SancMeld.Connectors.EuFsf.csproj" />
+    <ProjectReference Include="../SancMeld.Connectors.UnSc/SancMeld.Connectors.UnSc.csproj" />
   </ItemGroup>
 
 </Project>

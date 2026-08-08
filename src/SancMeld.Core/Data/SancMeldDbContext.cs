@@ -62,15 +62,25 @@ public class SancMeldDbContext(DbContextOptions<SancMeldDbContext> options) : Db
             e.HasIndex(x => x.Code).IsUnique();
             e.Property(x => x.Iso2).HasMaxLength(2);
 
-            e.HasData(new Jurisdiction
-            {
-                Id = WellKnownIds.EuJurisdiction,
-                Code = "EU",
-                Name = "European Union",
-                Kind = "EU",
-                ResearchStatus = "CONFIRMED",
-                ResearchEvidenceUrl = "https://data.europa.eu/data/datasets/consolidated-list-of-persons-groups-and-entities-subject-to-eu-financial-sanctions",
-            });
+            e.HasData(
+                new Jurisdiction
+                {
+                    Id = WellKnownIds.EuJurisdiction,
+                    Code = "EU",
+                    Name = "European Union",
+                    Kind = "EU",
+                    ResearchStatus = "CONFIRMED",
+                    ResearchEvidenceUrl = "https://data.europa.eu/data/datasets/consolidated-list-of-persons-groups-and-entities-subject-to-eu-financial-sanctions",
+                },
+                new Jurisdiction
+                {
+                    Id = WellKnownIds.UnJurisdiction,
+                    Code = "UN",
+                    Name = "United Nations Security Council",
+                    Kind = "UN",
+                    ResearchStatus = "CONFIRMED",
+                    ResearchEvidenceUrl = "https://www.un.org/securitycouncil/content/un-sc-consolidated-list",
+                });
         });
 
         b.Entity<SanctionsSource>(e =>
@@ -102,6 +112,33 @@ public class SancMeldDbContext(DbContextOptions<SancMeldDbContext> options) : Db
                 // a 3.9 kB feed, so checking daily costs almost nothing.
                 CronExpression = "0 4 * * *",
                 MinExpectedRecords = 4000,
+                CreatedAt = WellKnownIds.SeededAt,
+                UpdatedAt = WellKnownIds.SeededAt,
+            });
+
+            // Adding a source is a row, not a code change: the scheduler reads its jobs
+            // from this table, so this seed is also what creates the recurring import.
+            e.HasData(new SanctionsSource
+            {
+                Id = WellKnownIds.UnScSource,
+                JurisdictionId = WellKnownIds.UnJurisdiction,
+                Code = "UN_SC",
+                Name = "UN Security Council Consolidated List",
+                Publisher = "United Nations Security Council",
+
+                // Binding inside the EU, which implements UN designations through its own
+                // regulations — not advisory the way a third country's list is.
+                LegalEffect = LegalEffect.Binding,
+                Format = "XML",
+                LandingPageUrl = "https://www.un.org/securitycouncil/content/un-sc-consolidated-list",
+                RequiresUserAgent = true,
+                IsActive = true,
+                ParserKey = "UN_SC",
+
+                // The file is regenerated nightly at 23:00 UTC; an hour later is safe, and
+                // an unchanged release costs one 304 with no payload.
+                CronExpression = "0 1 * * *",
+                MinExpectedRecords = 700,
                 CreatedAt = WellKnownIds.SeededAt,
                 UpdatedAt = WellKnownIds.SeededAt,
             });

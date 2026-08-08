@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using SancMeld.Connectors.EuFsf;
+using SancMeld.Connectors.UnSc;
 using SancMeld.Core.Abstractions;
 using SancMeld.Core.Configuration;
 using SancMeld.Core.Data;
@@ -98,6 +99,7 @@ public static class SancMeldExtensions
             json.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
         services.AddEuFsfConnector(configuration);
+        services.AddUnScConnector(configuration);
 
         // TODO: adjudication capture, and scheduled runs of the import.
         // Defaults are single-tenant and unauthenticated by design; the hosted

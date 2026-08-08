@@ -962,6 +962,15 @@ namespace SancMeld.Core.Data.Migrations
                             Name = "European Union",
                             ResearchEvidenceUrl = "https://data.europa.eu/data/datasets/consolidated-list-of-persons-groups-and-entities-subject-to-eu-financial-sanctions",
                             ResearchStatus = "CONFIRMED"
+                        },
+                        new
+                        {
+                            Id = new Guid("0195a1f0-0000-7000-8000-000000000002"),
+                            Code = "UN",
+                            Kind = "UN",
+                            Name = "United Nations Security Council",
+                            ResearchEvidenceUrl = "https://www.un.org/securitycouncil/content/un-sc-consolidated-list",
+                            ResearchStatus = "CONFIRMED"
                         });
                 });
 
@@ -1225,6 +1234,24 @@ namespace SancMeld.Core.Data.Migrations
                             Name = "EU Consolidated Financial Sanctions List",
                             ParserKey = "EU_FSF",
                             Publisher = "European Commission",
+                            RequiresUserAgent = true,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("0195a1f0-0000-7000-8000-000000000102"),
+                            Code = "UN_SC",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CronExpression = "0 1 * * *",
+                            Format = "XML",
+                            IsActive = true,
+                            JurisdictionId = new Guid("0195a1f0-0000-7000-8000-000000000002"),
+                            LandingPageUrl = "https://www.un.org/securitycouncil/content/un-sc-consolidated-list",
+                            LegalEffect = "binding",
+                            MinExpectedRecords = 700,
+                            Name = "UN Security Council Consolidated List",
+                            ParserKey = "UN_SC",
+                            Publisher = "United Nations Security Council",
                             RequiresUserAgent = true,
                             UpdatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         });
