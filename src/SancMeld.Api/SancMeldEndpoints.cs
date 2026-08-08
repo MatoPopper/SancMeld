@@ -84,6 +84,41 @@ internal static class SancMeldEndpoints
 
     public static IEndpointRouteBuilder MapScreening(this IEndpointRouteBuilder endpoints)
     {
+        endpoints.MapPost("/check", async Task<Results<Ok<CheckResult>, BadRequest<string>>> (
+            ComplianceCheckService check, CheckQuery query, CancellationToken ct) =>
+        {
+            if (query is null || string.IsNullOrWhiteSpace(query.Name))
+            {
+                return TypedResults.BadRequest("Supply at least a name.");
+            }
+
+            return TypedResults.Ok(await check.CheckAsync(query, ct));
+        })
+        .WithTags("Screening")
+        .WithName("Check")
+        .WithSummary("Screen a name and get an answer a compliance officer can act on.")
+        .WithDescription(
+            "The same evidence as /screen, presented as a decision rather than a score. A " +
+            "percentage is not something anyone can sign off on; what is actionable is which " +
+            "of four situations you are in — a document number matched exactly, the details " +
+            "you gave agree with the listing, the listing knows nothing that could confirm or " +
+            "rule it out, or the listing states something that disagrees. " +
+            "The third is the common case and the honest one: most listings carry no date of " +
+            "birth and no document, so the list cannot settle it and your own records have to. " +
+            "Subjects appearing on several lists are gathered into one entry, and a listing " +
+            "the name search could not reach is pulled in when a cross-reference points at it.");
+
+        endpoints.MapScreeningDiagnostics();
+
+        return endpoints;
+    }
+
+    /// <summary>
+    /// The raw form: scores, feature vectors, and every candidate considered. Kept for the
+    /// audit trail and for whoever is tuning the matcher — not for the person signing off.
+    /// </summary>
+    private static IEndpointRouteBuilder MapScreeningDiagnostics(this IEndpointRouteBuilder endpoints)
+    {
         endpoints.MapPost("/screen", async Task<Results<Ok<ScreeningResult>, BadRequest<string>>> (
             ScreeningService screening, ScreeningQuery query, CancellationToken ct) =>
         {

@@ -68,6 +68,28 @@ public sealed class DesignationQueryService(SancMeldDbContext db, IOptions<SancM
         return new Page<DesignationView>(items, hasMore ? items[^1].Id : null);
     }
 
+    /// <summary>
+    /// Current listings addressed the way one publisher refers to another's: by source
+    /// code and the publisher's own reference. Used to follow a cross-reference to a
+    /// listing the name search never reached.
+    /// </summary>
+    public async Task<IReadOnlyList<DesignationView>> GetByExternalIdAsync(
+        IReadOnlyList<string> externalIds,
+        IReadOnlyList<string> sourceCodes,
+        CancellationToken ct = default)
+    {
+        if (externalIds.Count == 0 || sourceCodes.Count == 0)
+        {
+            return [];
+        }
+
+        return await Hydrate(CurrentRevisions()
+                .Where(d => sourceCodes.Contains(d.Source!.Code))
+                .Where(d => d.ExternalId != null && externalIds.Contains(d.ExternalId)))
+            .ToListAsync(ct)
+            .ConfigureAwait(false);
+    }
+
     public async Task<DesignationView?> GetAsync(Guid id, CancellationToken ct = default) =>
         await Hydrate(CurrentRevisions().Where(d => d.Id == id))
             .FirstOrDefaultAsync(ct)
