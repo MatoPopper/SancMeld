@@ -8,6 +8,14 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
+  <!-- The only thing needed to accept a Google sign-in: verify the ID token's signature
+       against Google's published keys. Notably NOT Microsoft.AspNetCore.Authentication.Google,
+       which implements the OAuth code flow and would require a client secret — and a client
+       secret would need somewhere to live outside this public repository. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.3" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="../SancMeld.Core/SancMeld.Core.csproj" />
     <ProjectReference Include="../SancMeld.Connectors.EuFsf/SancMeld.Connectors.EuFsf.csproj" />

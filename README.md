@@ -105,6 +105,7 @@ edition; see [Open core](#open-core) below.
 | `GET /designations/{id}` | one listing in full |
 | `GET /designations/search?q=` | trigram search over every recorded spelling |
 | `POST /screen` | a name plus whatever else is known, scored and recorded |
+| `GET /auth/me` · `GET /admins` · … | who may administer this instance — only when a sign-in is configured |
 
 The first three are reads. `POST /screen` also writes: the query, every candidate it
 considered and the evidence behind each score are stored, because a compliance decision
@@ -156,6 +157,54 @@ about, and the job itself is one call into `SanctionsImportService` — the same
 
 ---
 
+## Signing in
+
+Off by default: with no client id configured the host is entirely unauthenticated, which is
+what the open-source edition is for, and `/auth` and `/admins` are not mapped at all.
+
+Turning it on guards one thing — the endpoints that hand out access. Reading the aggregate
+stays open, because it is a published sanctions list and a login in front of it would
+protect nothing that is not already on the publishers' own websites.
+
+```bash
+# 1. an OAuth client id from Google Cloud Console (Web application)
+export SancMeld__Auth__GoogleClientId=1234-abcd.apps.googleusercontent.com
+
+# 2. the first entry on the allow list, from a shell — /admins requires being on it already
+dotnet run --project src/SancMeld.Server -- admin add you@example.com --name "Your Name"
+
+# and afterwards
+dotnet run --project src/SancMeld.Server -- admin list [--all]
+dotnet run --project src/SancMeld.Server -- admin revoke someone@example.com
+```
+
+**There is no client secret, here or anywhere else.** The API is a resource server: it
+verifies Google's ID token against Google's published signing keys and never calls Google
+at all, so no secret exists that could be leaked or would have to be kept out of this
+repository. Obtaining the token is the client's job, and a browser needs only the client
+id to do it. Open `/login.html` to get one before a front end exists — it signs in and
+shows the token, which goes into Swagger's *Authorize* box or an `Authorization: Bearer`
+header.
+
+Two questions are kept separate, and both are answered by `GET /auth/me`:
+
+- **Who are you.** Google settles this, for anybody in the world with an account.
+- **Are you anyone here.** The `admin` table settles this, and it is checked on every
+  request rather than baked into the token — revoking access takes effect at once, where a
+  Google ID token stays valid for an hour after it was issued.
+
+The allow list is a table rather than configuration for the same reason: adding a colleague
+should not mean editing a file and restarting the API. Revoking keeps the entry, marked
+with who withdrew it and when. The last remaining administrator cannot be revoked — that
+would leave the admin API reachable only from a shell.
+
+> **Google requires an `https` origin.** `http://localhost` is the single exception it
+> makes. A deployment served over plain http can accept tokens perfectly well, but no
+> browser on it will be able to produce one, so put TLS in front before enabling this
+> anywhere but a development machine.
+
+---
+
 ## Configuration
 
 > **You need a database before anything runs.** `appsettings.json` ships pointing at the
@@ -198,6 +247,7 @@ failure that looks like a SancMeld bug.
 | `SancMeld:Ingest:SnapshotStoragePath` | `./.snapshots` | Raw downloads, git-ignored |
 | `SancMeld:Matching:SimilarityThreshold` | `0.35` | Lower = wider net = higher recall |
 | `SancMeld:Matching:ScoreWeakAliases` | `false` | Generic aliases corroborate, they do not raise hits |
+| `SancMeld:Auth:GoogleClientId` | *empty* | Empty = no sign-in, `/auth` and `/admins` unmapped. Public value, not a secret |
 
 Sanctions sources are configured in the `sanctions_source` table, not in `appsettings.json`,
 so imports and snapshots can reference them by key.

@@ -2,7 +2,9 @@ using Hangfire;
 using Hangfire.PostgreSql;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.OpenApi;
 using SancMeld.Api;
+using SancMeld.Core.Access;
 using SancMeld.Core.Data;
 using SancMeld.Core.Ingest;
 
@@ -15,6 +17,21 @@ using SancMeld.Core.Ingest;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSancMeld(builder.Configuration);
+
+// Sign-in with Google, off unless SancMeld:Auth:GoogleClientId is set.
+//
+// It guards one thing: the endpoints that hand out access. The aggregate stays readable
+// without a token, because it is a published sanctions list and a login in front of it
+// would protect nothing that is not already on the publishers' own websites.
+//
+// No client secret is involved anywhere. The API verifies Google's ID token against
+// Google's published signing keys and never talks to Google itself, which is what lets
+// this repository be public and complete at the same time — there is nothing to keep out
+// of it. The client id is not a secret either, but it differs per deployment, so it is
+// configuration:
+//
+//   SancMeld__Auth__GoogleClientId=1234-abcd.apps.googleusercontent.com
+var authEnabled = builder.Services.AddSancMeldGoogleAuth(builder.Configuration);
 
 // The scheduler is a hosting concern, so it lives here rather than in the libraries, and
 // it is kept obvious rather than clever: most deployments will have opinions about job
@@ -83,12 +100,38 @@ builder.Services.AddCors(cors => cors.AddDefaultPolicy(policy =>
 }));
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(swagger => swagger.SwaggerDoc("v1", new()
+builder.Services.AddSwaggerGen(swagger =>
 {
-    Title = "SancMeld",
-    Version = "v1",
-    Description = "Sanctions list aggregation and screening. Single-tenant and unauthenticated by design.",
-}));
+    swagger.SwaggerDoc("v1", new()
+    {
+        Title = "SancMeld",
+        Version = "v1",
+        Description = authEnabled
+            ? "Sanctions list aggregation and screening. Reading is open; administering access needs a Google sign-in."
+            : "Sanctions list aggregation and screening. Single-tenant and unauthenticated by design.",
+    });
+
+    if (!authEnabled)
+    {
+        return;
+    }
+
+    // Makes Swagger's Authorize button work: paste a Google ID token and the admin
+    // endpoints become callable. Getting the token is what /login.html is for.
+    swagger.AddSecurityDefinition("GoogleIdToken", new OpenApiSecurityScheme
+    {
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Google ID token. Open /login.html to obtain one.",
+    });
+
+    swagger.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+    {
+        [new OpenApiSecuritySchemeReference("GoogleIdToken", document)] = [],
+    });
+});
 
 var app = builder.Build();
 
@@ -123,6 +166,22 @@ if (args is ["import", var sourceCode, ..])
     return outcome.Status is ImportStatus.Success or ImportStatus.SkippedUnchanged ? 0 : 1;
 }
 
+// Managing the allow list from a shell:
+//
+//   dotnet run --project src/SancMeld.Server -- admin list [--all]
+//   dotnet run --project src/SancMeld.Server -- admin add mato@example.com [--name "Mato"] [--note "..."]
+//   dotnet run --project src/SancMeld.Server -- admin revoke mato@example.com
+//
+// This exists because of the obvious chicken and egg: /admins requires being on the allow
+// list, and a fresh database has nobody on it. Solving that with a bootstrap address in
+// configuration would mean an environment variable that grants access to whoever can set
+// it; solving it here means it takes a shell on the server, which is the same thing that
+// already grants access to the database.
+if (args is ["admin", ..])
+{
+    return await RunAdminCommandAsync(app, args);
+}
+
 // Opt-in, and off by default: a process that rewrites the schema it happens to find is
 // the wrong default for anyone running more than one instance. For a single-container
 // deployment it is the difference between one command and shipping the .NET SDK to the
@@ -137,6 +196,18 @@ if (builder.Configuration.GetValue("SancMeld:Database:AutoMigrate", defaultValue
 }
 
 app.UseCors();
+
+if (authEnabled)
+{
+    // A page that can start a Google sign-in and show the resulting token, so the API can
+    // be exercised before any front end exists. Served without authentication on purpose:
+    // it is the thing you use to get authenticated, and it contains nothing but a client
+    // id it fetches from /auth/config.
+    app.UseStaticFiles();
+
+    app.UseAuthentication();
+    app.UseAuthorization();
+}
 
 app.MapSancMeld();
 
@@ -195,5 +266,110 @@ static async Task ScheduleImportsAsync(WebApplication app)
         // to start over it would hide the one instruction that fixes it.
         logger.LogWarning(ex,
             "Could not schedule imports. Run 'dotnet ef database update --project src/SancMeld.Core' and restart.");
+    }
+}
+
+// The allow list from a shell. Works whether or not a sign-in is configured — the list is
+// a table, and being able to fill it before switching authentication on is the point.
+static async Task<int> RunAdminCommandAsync(WebApplication app, string[] args)
+{
+    using var scope = app.Services.CreateScope();
+
+    // Resolved directly rather than through AddSancMeldAdminAccess, which only runs when a
+    // sign-in is configured. Granting the first address has to work on a host that has not
+    // been switched on yet.
+    var db = scope.ServiceProvider.GetRequiredService<SancMeldDbContext>();
+    var clock = scope.ServiceProvider.GetRequiredService<TimeProvider>();
+    var admins = new AdminDirectory(db, clock, scope.ServiceProvider.GetRequiredService<ILogger<AdminDirectory>>());
+
+    // Who did it, in a form that means something six months later. Not an address, because
+    // a shell does not prove one — "somebody with a shell on this machine" is the honest
+    // claim, and it is a different kind of authority from an administrator granting access.
+    var by = $"cli:{Environment.UserName}";
+
+    switch (args)
+    {
+        case ["admin", "list", ..]:
+        {
+            var includeRevoked = args.Contains("--all");
+            var entries = await admins.ListAsync(includeRevoked, CancellationToken.None);
+
+            if (entries.Count == 0)
+            {
+                Console.WriteLine(includeRevoked
+                    ? "No entries."
+                    : "No active entries. Add one with 'admin add <email>', or pass --all to include revoked ones.");
+                return 0;
+            }
+
+            foreach (var entry in entries)
+            {
+                var state = entry.IsActive ? "active " : "revoked";
+                var seen = entry.LastSeenAt is { } at ? $"last seen {at:yyyy-MM-dd}" : "never signed in";
+                Console.WriteLine($"{state}  {entry.Email,-40}  granted by {entry.CreatedBy}, {seen}");
+            }
+
+            return 0;
+        }
+
+        case ["admin", "add", var email, ..]:
+        {
+            try
+            {
+                var granted = await admins.GrantAsync(
+                    email, Flag(args, "--name"), Flag(args, "--note"), by, CancellationToken.None);
+
+                Console.WriteLine($"{granted.Email} may now administer this instance.");
+                return 0;
+            }
+            catch (ArgumentException ex)
+            {
+                Console.Error.WriteLine(ex.Message);
+                return 1;
+            }
+        }
+
+        case ["admin", "revoke", var email, ..]:
+        {
+            var target = await admins.FindActiveAsync(email, CancellationToken.None);
+
+            if (target is null)
+            {
+                Console.Error.WriteLine($"No active entry for {email}.");
+                return 1;
+            }
+
+            var outcome = await admins.RevokeAsync(target.Id, by, CancellationToken.None);
+
+            if (outcome is RevokeOutcome.LastActiveAdmin)
+            {
+                // Not a lockout worth risking by default. Turning the sign-in off entirely
+                // (clear SancMeld:Auth:GoogleClientId) is the way to close the admin API,
+                // and it does not leave a database nobody can administer.
+                Console.Error.WriteLine(
+                    $"{email} is the last active administrator. Grant somebody else first, or turn the "
+                    + "sign-in off with an empty SancMeld:Auth:GoogleClientId.");
+                return 1;
+            }
+
+            Console.WriteLine($"{email} can no longer administer this instance.");
+            return 0;
+        }
+
+        default:
+            Console.Error.WriteLine(
+                """
+                Usage:
+                  admin list [--all]
+                  admin add <email> [--name "Full Name"] [--note "why"]
+                  admin revoke <email>
+                """);
+            return 1;
+    }
+
+    static string? Flag(string[] args, string name)
+    {
+        var at = Array.IndexOf(args, name);
+        return at >= 0 && at + 1 < args.Length ? args[at + 1] : null;
     }
 }

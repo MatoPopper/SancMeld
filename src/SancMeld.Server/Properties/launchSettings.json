@@ -3,9 +3,6 @@
     "SancMeld.Server": {
       "commandName": "Project",
       "launchBrowser": true,
-
-      // The root serves nothing. Swagger is the useful landing page; the Hangfire
-      // dashboard is at /jobs.
       "launchUrl": "swagger",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"

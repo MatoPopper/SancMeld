@@ -122,6 +122,16 @@ public static class SancMeldExtensions
         endpoints.MapAdjudications();
         endpoints.MapTrainingData();
 
+        // Only when a host has configured a sign-in. Mapping /auth and /admins without one
+        // would produce endpoints that fail on every call, because requiring authorisation
+        // against a scheme nobody registered is a 500, not a 401. A host with no sign-in
+        // has no allow list to manage, and 404 says exactly that.
+        if (endpoints.ServiceProvider.GetService<SancMeldAuthMarker>() is not null)
+        {
+            endpoints.MapSancMeldAuth();
+            endpoints.MapAdmins();
+        }
+
         // TODO: /sources
         return endpoints;
     }

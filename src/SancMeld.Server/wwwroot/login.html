@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SancMeld — sign in</title>
+
+  <!--
+    An operator's page, not a product.
+
+    SancMeld's API accepts a Google ID token as a bearer token and never runs an OAuth
+    flow of its own, so obtaining the token is the client's job. Until a front end exists
+    there is no client, and without one the admin endpoints cannot be exercised at all —
+    this page is the smallest thing that closes that gap: it signs in with Google and
+    shows the token, which then goes into Swagger's Authorize box or a curl header.
+
+    It holds no secret. The client id it uses is fetched from /auth/config and is public
+    by construction; the token is the browser's, is valid for an hour, and is not stored.
+
+    Delete this file once a real front end exists.
+
+    Note that Google only permits an application's JavaScript origin to be https, with
+    http://localhost as the single exception. A deployment served over plain http cannot
+    complete a sign-in here no matter how it is configured — that is Google's rule, not
+    this page's.
+  -->
+
+  <style>
+    :root { color-scheme: light dark; }
+
+    body {
+      font: 15px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+      max-width: 46rem;
+      margin: 3rem auto;
+      padding: 0 1.5rem;
+    }
+
+    h1 { font-size: 1.4rem; margin-bottom: .25rem; }
+    p.lede { margin-top: 0; opacity: .75; }
+    section { margin-top: 2rem; }
+    h2 { font-size: .95rem; text-transform: uppercase; letter-spacing: .05em; opacity: .6; }
+
+    textarea, pre {
+      width: 100%;
+      box-sizing: border-box;
+      font: 12px/1.5 ui-monospace, "Cascadia Code", Consolas, monospace;
+      padding: .75rem;
+      border: 1px solid rgba(128, 128, 128, .4);
+      border-radius: 6px;
+      background: rgba(128, 128, 128, .08);
+      overflow-x: auto;
+    }
+
+    textarea { height: 8rem; resize: vertical; }
+    button { font: inherit; padding: .4rem .9rem; border-radius: 6px; cursor: pointer; }
+    .hidden { display: none; }
+    .problem { color: #b3261e; }
+    @media (prefers-color-scheme: dark) { .problem { color: #f2b8b5; } }
+  </style>
+</head>
+
+<body>
+  <h1>SancMeld</h1>
+  <p class="lede">Sign in with Google to get a token for the admin endpoints.</p>
+
+  <div id="status"></div>
+  <div id="button"></div>
+
+  <section id="result" class="hidden">
+    <h2>Bearer token</h2>
+    <p>Paste into Swagger's <em>Authorize</em> box, or send as <code>Authorization: Bearer …</code>. Valid for about an hour.</p>
+    <textarea id="token" readonly></textarea>
+    <p><button id="copy" type="button">Copy</button></p>
+
+    <h2>What this instance says about you</h2>
+    <pre id="me"></pre>
+  </section>
+
+  <script>
+    const status = document.getElementById('status');
+    const result = document.getElementById('result');
+
+    const problem = (text) => { status.innerHTML = `<p class="problem">${text}</p>`; };
+
+    // The token, once Google hands it over. Kept in a variable and nowhere else: storing
+    // it would leave a credential in the browser long after this tab is closed.
+    let idToken = null;
+
+    async function start() {
+      let config;
+
+      try {
+        const response = await fetch('/auth/config');
+
+        if (!response.ok) {
+          throw new Error(`/auth/config returned ${response.status}`);
+        }
+
+        config = await response.json();
+      } catch (error) {
+        problem(`Could not read the sign-in configuration: ${error.message}`);
+        return;
+      }
+
+      if (!config.googleClientId) {
+        problem('No sign-in is configured. Set SancMeld__Auth__GoogleClientId and restart.');
+        return;
+      }
+
+      google.accounts.id.initialize({
+        client_id: config.googleClientId,
+        callback: signedIn,
+        // Google's automatic re-sign-in would hand back a cached token; this page exists
+        // to produce a fresh one on demand.
+        auto_select: false,
+      });
+
+      google.accounts.id.renderButton(document.getElementById('button'), {
+        theme: 'outline',
+        size: 'large',
+        text: 'signin_with',
+      });
+    }
+
+    async function signedIn(response) {
+      idToken = response.credential;
+
+      document.getElementById('token').value = idToken;
+      result.classList.remove('hidden');
+      status.innerHTML = '';
+
+      const me = document.getElementById('me');
+
+      try {
+        const check = await fetch('/auth/me', { headers: { Authorization: `Bearer ${idToken}` } });
+
+        me.textContent = check.ok
+          ? JSON.stringify(await check.json(), null, 2)
+          : `${check.status} ${check.statusText}\n\nThe token is not one this instance accepts. `
+            + 'The usual cause is a client id here that differs from the one the token was issued for.';
+      } catch (error) {
+        me.textContent = `Could not reach /auth/me: ${error.message}`;
+      }
+    }
+
+    document.getElementById('copy').addEventListener('click', async () => {
+      await navigator.clipboard.writeText(idToken ?? '');
+    });
+
+    window.addEventListener('load', start);
+  </script>
+
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</body>
+</html>

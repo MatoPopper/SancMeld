@@ -49,6 +49,8 @@ public class SancMeldDbContext(DbContextOptions<SancMeldDbContext> options) : Db
     public DbSet<Adjudication> Adjudications => Set<Adjudication>();
     public DbSet<TrainingSample> TrainingSamples => Set<TrainingSample>();
 
+    public DbSet<Admin> Admins => Set<Admin>();
+
     protected override void OnModelCreating(ModelBuilder b)
     {
         b.HasPostgresExtension("pg_trgm")        // trigram similarity + GIN index
@@ -394,6 +396,27 @@ public class SancMeldDbContext(DbContextOptions<SancMeldDbContext> options) : Db
             e.Property(x => x.Features).HasColumnType("jsonb");
             e.HasIndex(x => new { x.Origin, x.Label });
             e.HasIndex(x => new { x.FeatureSetVersion, x.NameNormVersion });
+        });
+
+        b.Entity<Admin>(e =>
+        {
+            // The two revocation columns and the flag say the same thing, so the database
+            // is told they have to agree. A row that is inactive with no revocation date
+            // would leave nobody able to answer when access ended.
+            e.ToTable("admin", t => t.HasCheckConstraint(
+                "admin_revocation_ck",
+                "(is_active AND revoked_at IS NULL) OR (NOT is_active AND revoked_at IS NOT NULL)"));
+
+            // Unique on the stored value rather than on lower(email): addresses are
+            // lower-cased before they are written, so the two are the same index and this
+            // one is the one a lookup can use.
+            e.HasIndex(x => x.Email).IsUnique();
+            e.Property(x => x.Email).HasMaxLength(320);   // RFC 5321 local-part + domain
+            e.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
+
+            // No seed row. An allow list that ships with an entry in it is a back door,
+            // and everyone would inherit the same one — the first administrator is added
+            // by 'SancMeld.Server admin add', which requires access to the server.
         });
     }
 

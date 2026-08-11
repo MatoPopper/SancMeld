@@ -562,3 +562,66 @@ public class TrainingSample
     /// <summary>Public-list pairs involve no customer personal data and dominate the corpus.</summary>
     public required string Origin { get; set; }        // PUBLIC_LIST_ALIAS | PUBLIC_LIST_XREF | ADJUDICATION
 }
+
+// ---------------------------------------------------------------------
+// Access control
+//
+// An allow list, and nothing more: this host is single-tenant, so there is
+// nobody to be an administrator *of*. A row here means one Google account may
+// call the endpoints that manage access. The hosted edition replaces this
+// entirely with tenants and roles; it does not extend it.
+// ---------------------------------------------------------------------
+
+/// <summary>
+/// A Google account allowed to administer this instance.
+///
+/// The identity provider proves who somebody is; this table decides whether that
+/// person is anyone here. The two are deliberately separate — anybody in the world
+/// can obtain a valid Google token, and none of them are administrators of this
+/// deployment until an existing one says so.
+/// </summary>
+public class Admin
+{
+    public Guid Id { get; set; }
+
+    /// <summary>
+    /// Lower-cased on the way in, and the only thing matched against the token.
+    /// Google delivers addresses in whatever case the user typed them.
+    /// </summary>
+    public required string Email { get; set; }
+
+    public string? DisplayName { get; set; }
+
+    /// <summary>
+    /// Google's own subject id, recorded on first sign-in and never matched against.
+    ///
+    /// Matching on the address is what an operator can actually administer — nobody
+    /// knows their own 'sub'. Keeping it anyway means a later address change can be
+    /// recognised as the same person rather than guessed at.
+    /// </summary>
+    public string? GoogleSubject { get; set; }
+
+    /// <summary>
+    /// Access is revoked, not deleted, so the row keeps saying who granted it and when.
+    /// Granting again clears the revocation; if a full history of who held access on a
+    /// given day is ever needed, that is a separate append-only table, not more columns
+    /// here. Every grant and revocation is logged in the meantime.
+    /// </summary>
+    public bool IsActive { get; set; } = true;
+
+    public string? Note { get; set; }
+
+    public DateTimeOffset CreatedAt { get; set; }
+
+    /// <summary>Who granted it: another administrator's address, or 'cli:&lt;user&gt;'.</summary>
+    public required string CreatedBy { get; set; }
+
+    public DateTimeOffset? RevokedAt { get; set; }
+    public string? RevokedBy { get; set; }
+
+    /// <summary>
+    /// Last accepted request, updated at most once a minute. This is how an allow list
+    /// gets pruned: an account nobody has used for a year is one nobody needs.
+    /// </summary>
+    public DateTimeOffset? LastSeenAt { get; set; }
+}
