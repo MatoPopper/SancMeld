@@ -55,6 +55,38 @@ public sealed class MatchingOptions
     [Range(0.0, 1.0)]
     public double SimilarityThreshold { get; set; } = 0.35;
 
+    /// <summary>
+    /// pg_trgm word_similarity threshold, applied alongside <see cref="SimilarityThreshold"/>
+    /// rather than instead of it.
+    ///
+    /// similarity() divides shared trigrams by the trigrams of *both* strings, so its
+    /// denominator grows with the length of the recorded name. A surname typed on its own
+    /// therefore scores low against a long entry for no reason having to do with whether
+    /// it is the right person: measured on 200 subjects, searching by surname found 53.5 %
+    /// of them and by a surname clipped by two characters 13.0 %. word_similarity compares
+    /// the query against the best-matching *word*, which does not have that bias — the same
+    /// two searches reach 98.5 % and 98.0 %.
+    ///
+    /// Full names are unaffected (100 % either way, 15.4 vs 15.5 candidates on average),
+    /// because this only ever adds candidates. It cannot lose one the trigram branch finds.
+    ///
+    /// 0.6 is where the measurement stops improving: 0.5 found nothing extra on that sample
+    /// and returned about half again as many candidates.
+    /// </summary>
+    [Range(0.0, 1.0)]
+    public double WordSimilarityThreshold { get; set; } = 0.6;
+
+    /// <summary>
+    /// Shortest query the word_similarity branch runs for.
+    ///
+    /// Below this it stops being a search. "al" matches a word in 1 782 subjects and "li"
+    /// in 343, which is not a candidate set anybody can act on — and with MaxCandidates
+    /// capping the result, the right subject is as likely to be cut as kept. The trigram
+    /// branch still runs at any length.
+    /// </summary>
+    [Range(1, 50)]
+    public int MinWordSimilarityQueryLength { get; set; } = 4;
+
     [Range(1, 1000)]
     public int MaxCandidates { get; set; } = 100;
 

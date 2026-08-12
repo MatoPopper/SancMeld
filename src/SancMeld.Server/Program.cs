@@ -198,6 +198,15 @@ if (args is ["training", "seed-xref", ..])
     var candidates = int.TryParse(Flag(args, "--candidates"), out var parsed) ? parsed : 25;
     var outcome = await seeder.SeedAsync(args.Contains("--replace"), candidates, CancellationToken.None);
 
+    if (outcome.RefusedAsShortfall)
+    {
+        Console.Error.WriteLine(
+            $"Only {outcome.LinksResolved} cross-references resolved, against {outcome.AlreadyPresent} "
+            + "existing samples. That is a collapse, not a smaller result — the lists this derives from "
+            + "are probably missing. Nothing was deleted; re-import the sources and run this again.");
+        return 1;
+    }
+
     if (outcome.AlreadyPresent > 0)
     {
         Console.Error.WriteLine(

@@ -99,10 +99,15 @@ public sealed class XrefTrainingSeederTests(DatabaseFixture fixture) : IAsyncLif
 
         Assert.True(result.PositivesBelowSearchReach >= 1);
 
-        // Recorded, and carrying the similarity it really has — below the search threshold,
-        // which is exactly why the search did not return it.
+        // Recorded, and carrying the similarity it really has. It must sit below the
+        // higher of the two retrieval thresholds: at or above it, one of the branches
+        // would have returned the pair and it would not be in this count at all.
         var positive = Assert.Single(await SamplesAsync(), s => s.Label);
-        Assert.True(ScoreIn(positive.Features) < 0.35, "a pair the search missed cannot be above its threshold");
+        var score = ScoreIn(positive.Features);
+
+        Assert.True(
+            score < new SancMeldOptions().Matching.WordSimilarityThreshold,
+            $"a pair the search missed cannot score at retrieval level, but it was {score}");
     }
 
     [Fact]
@@ -143,15 +148,43 @@ public sealed class XrefTrainingSeederTests(DatabaseFixture fixture) : IAsyncLif
         await ImportAsync(_homeCode, Subject("s1", Named("gregor petrov"), xrefTo: "t1"));
 
         var first = await Seed(replace: true);
-        var second = await Seed();
+        var second = await Seed(fromClean: false);
 
         Assert.True(first.Written > 0);
         Assert.Equal(0, second.Written);
         Assert.True(second.AlreadyPresent > 0);
 
-        var replaced = await Seed(replace: true);
+        var replaced = await Seed(replace: true, fromClean: false);
         Assert.Equal(first.Written, replaced.Written);
         Assert.True(replaced.Replaced > 0);
+    }
+
+    [Fact]
+    public async Task ReplaceIsRefusedWhenTheInputsHaveCollapsed()
+    {
+        // How this was found: a migration rolled back too far took the UN source with it,
+        // and --replace cheerfully deleted 224 samples to write 0. Same rule as an import,
+        // for the same reason — a run that suddenly resolves nothing has lost its inputs,
+        // not found fewer of them.
+        await ImportAsync(_awayCode, Subject("t1", Named("gregor petrov")));
+        await ImportAsync(_homeCode, Subject("s1", Named("gregor petrov"), xrefTo: "t1"));
+
+        var seeded = await Seed(replace: true);
+        Assert.True(seeded.Written > 0);
+
+        // Everything the pairs are derived from, gone. The whole table, because the seed
+        // is a global operation and the fixture database is shared — leaving other tests'
+        // references in place would make what the guard sees depend on test order.
+        await using (var db = fixture.CreateContext())
+        {
+            await db.CrossReferences.ExecuteDeleteAsync();
+        }
+
+        var refused = await Seed(replace: true, fromClean: false);
+
+        Assert.True(refused.RefusedAsShortfall);
+        Assert.Equal(0, refused.Written);
+        Assert.NotEmpty(await SamplesAsync());
     }
 
     [Fact]
@@ -184,10 +217,22 @@ public sealed class XrefTrainingSeederTests(DatabaseFixture fixture) : IAsyncLif
     private static double ScoreIn(string features) =>
         System.Text.Json.JsonDocument.Parse(features).RootElement.GetProperty("NameScore").GetDouble();
 
-    private async Task<XrefSeedResult> Seed(bool replace = false)
+    /// <param name="replace">Passed through to the seeder: rebuild an existing corpus.</param>
+    /// <param name="fromClean">
+    /// Clears the cross-reference corpus first. The seed is a global operation and the
+    /// fixture database is shared, so without this a test sees whatever earlier tests
+    /// left behind — including a sample-to-link ratio that trips the shortfall guard for
+    /// reasons having nothing to do with the test. Only the guard's own test opts out.
+    /// </param>
+    private async Task<XrefSeedResult> Seed(bool replace = false, bool fromClean = true)
     {
         await using var db = fixture.CreateContext();
         var options = Options.Create(new SancMeldOptions());
+
+        if (fromClean)
+        {
+            await db.TrainingSamples.Where(s => s.Origin == XrefTrainingSeeder.Origin).ExecuteDeleteAsync();
+        }
 
         return await new XrefTrainingSeeder(
                 db,

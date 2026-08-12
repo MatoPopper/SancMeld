@@ -40,6 +40,17 @@ public sealed class XrefTrainingSeeder(
 {
     public const string Origin = "PUBLIC_LIST_XREF";
 
+    /// <summary>
+    /// How far the resolved links may fall below what the existing corpus was built from
+    /// before a replace is treated as a collapse rather than a smaller result.
+    ///
+    /// Compared against positives, not samples: one link produces exactly one positive,
+    /// while the negatives per link vary with whatever the search returns. Half is
+    /// generous — the lists change by a handful of entries between releases, never by a
+    /// third.
+    /// </summary>
+    private const int ShortfallFactor = 2;
+
     /// <summary>Matches <see cref="ScreeningService"/> — enum members as text, for the same reason.</summary>
     private static readonly JsonSerializerOptions FeatureFormat = new()
     {
@@ -69,12 +80,32 @@ public sealed class XrefTrainingSeeder(
                 $"No active row in match_algorithm for code '{scoring.AlgorithmCode}'. Every sample names "
                 + "the feature set that produced it, so a strategy without a row cannot seed one.");
 
+        var links = await ResolvedLinksAsync(ct).ConfigureAwait(false);
+
+        // The same rule an import runs under: a run that resolves far fewer links than the
+        // corpus it is about to replace was built from has almost certainly lost its
+        // inputs rather than found fewer of them. Deleting first and discovering that
+        // afterwards leaves nothing to fall back to, so the check happens before the
+        // delete.
+        var existingPositives = await db.TrainingSamples
+            .CountAsync(s => s.Origin == Origin && s.Label, ct)
+            .ConfigureAwait(false);
+
+        if (existingPositives > 0 && links.Count * ShortfallFactor < existingPositives)
+        {
+            return new XrefSeedResult
+            {
+                AlreadyPresent = existing,
+                LinksResolved = links.Count,
+                RefusedAsShortfall = true,
+            };
+        }
+
         if (existing > 0)
         {
             await db.TrainingSamples.Where(s => s.Origin == Origin).ExecuteDeleteAsync(ct).ConfigureAwait(false);
         }
 
-        var links = await ResolvedLinksAsync(ct).ConfigureAwait(false);
         var threshold = options.Value.Matching.MatchThreshold;
         var now = clock.GetUtcNow();
         var period = new DateOnly(now.Year, now.Month, 1);
@@ -239,6 +270,12 @@ public sealed class XrefSeedResult
 {
     /// <summary>Non-zero when the seed refused to run because a corpus was already there.</summary>
     public int AlreadyPresent { get; set; }
+
+    /// <summary>
+    /// Set when --replace was refused because far fewer links resolved than the corpus it
+    /// would have replaced. Nothing was deleted.
+    /// </summary>
+    public bool RefusedAsShortfall { get; set; }
 
     public int Replaced { get; set; }
     public int LinksResolved { get; set; }

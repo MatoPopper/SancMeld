@@ -141,7 +141,17 @@ public sealed class DesignationQueryService(SancMeldDbContext db, IOptions<SancM
             .ExecuteSqlAsync($"SELECT set_config('pg_trgm.similarity_threshold', {threshold}, true)", ct)
             .ConfigureAwait(false);
 
-        var candidateNames = MatchingNames(normalized, matching.ScoreWeakAliases);
+        var byWord = normalized.Length >= matching.MinWordSimilarityQueryLength;
+
+        if (byWord)
+        {
+            var wordThreshold = matching.WordSimilarityThreshold.ToString(CultureInfo.InvariantCulture);
+            await db.Database
+                .ExecuteSqlAsync($"SELECT set_config('pg_trgm.word_similarity_threshold', {wordThreshold}, true)", ct)
+                .ConfigureAwait(false);
+        }
+
+        var candidateNames = MatchingNames(normalized, matching.ScoreWeakAliases, byWord);
 
         if (sourceCode is not null)
         {
@@ -151,13 +161,30 @@ public sealed class DesignationQueryService(SancMeldDbContext db, IOptions<SancM
         // A subject carries up to 145 spellings, so it is ranked by its best one. Grouping
         // in SQL rather than after the fact: taking the top N *names* would return far
         // fewer than N subjects whenever one subject holds several good spellings.
-        var best = await candidateNames
-            .GroupBy(n => n.DesignationId)
-            .Select(g => new
+        //
+        // The two branches are written out rather than sharing a scoring helper, and the
+        // grouping is over the entity rather than a projection. Both are EF translation
+        // constraints, not preferences: a method call inside the projection and a GroupBy
+        // over a custom type each compile and then throw at the first query.
+        var grouped = candidateNames.GroupBy(n => n.DesignationId);
+
+        var ranked = byWord
+            ? grouped.Select(g => new
+            {
+                DesignationId = g.Key,
+                Score = g.Max(n =>
+                    EF.Functions.TrigramsSimilarity(n.NameNormalized!, normalized)
+                        > EF.Functions.TrigramsWordSimilarity(normalized, n.NameNormalized!)
+                        ? EF.Functions.TrigramsSimilarity(n.NameNormalized!, normalized)
+                        : EF.Functions.TrigramsWordSimilarity(normalized, n.NameNormalized!)),
+            })
+            : grouped.Select(g => new
             {
                 DesignationId = g.Key,
                 Score = g.Max(n => EF.Functions.TrigramsSimilarity(n.NameNormalized!, normalized)),
-            })
+            });
+
+        var best = await ranked
             .OrderByDescending(x => x.Score)
             .ThenBy(x => x.DesignationId)
             .Take(take)
@@ -171,14 +198,7 @@ public sealed class DesignationQueryService(SancMeldDbContext db, IOptions<SancM
 
         var ids = best.Select(b => b.DesignationId).ToList();
 
-        var matchedNames = await candidateNames
-            .Where(n => ids.Contains(n.DesignationId))
-            .Select(n => new
-            {
-                n.DesignationId,
-                n.NameOriginal,
-                Score = EF.Functions.TrigramsSimilarity(n.NameNormalized!, normalized),
-            })
+        var matchedNames = await Scored(candidateNames.Where(n => ids.Contains(n.DesignationId)), normalized, byWord)
             .ToListAsync(ct)
             .ConfigureAwait(false);
 
@@ -231,36 +251,69 @@ public sealed class DesignationQueryService(SancMeldDbContext db, IOptions<SancM
             return null;
         }
 
-        var includeWeak = options.Value.Matching.ScoreWeakAliases;
+        var matching = options.Value.Matching;
+        var includeWeak = matching.ScoreWeakAliases;
+        var byWord = normalized.Length >= matching.MinWordSimilarityQueryLength;
 
-        var best = await db.Names
+        var names = db.Names
             .Where(n => n.DesignationId == designationId)
             .Where(n => n.Designation!.ValidTo == null)
-            .Where(n => includeWeak || !n.IsWeak)
-            .Select(n => new
-            {
-                n.NameOriginal,
-                Score = EF.Functions.TrigramsSimilarity(n.NameNormalized!, normalized),
-            })
-            .OrderByDescending(n => n.Score)
-            .FirstOrDefaultAsync(ct)
-            .ConfigureAwait(false);
+            .Where(n => includeWeak || !n.IsWeak);
+
+        // Ordered in memory: one subject carries at most a few dozen spellings, and an
+        // OrderBy over a projected type is another thing EF cannot translate.
+        var scored = await Scored(names, normalized, byWord).ToListAsync(ct).ConfigureAwait(false);
+        var best = scored.Count == 0 ? null : scored.MaxBy(n => n.Score);
 
         return best is null ? null : (best.NameOriginal, best.Score);
     }
 
     /// <summary>
-    /// Names on current revisions that the trigram index considers similar.
+    /// Names on current revisions that either trigram measure considers similar.
     ///
-    /// TrigramsAreSimilar is the % operator, and it is the only form the GIN index can
-    /// serve. Writing the comparison as similarity(...) &gt;= x instead reads the same and
-    /// scans every name in the table.
+    /// TrigramsAreSimilar is the % operator and TrigramsAreWordSimilar is %&gt;; both are
+    /// the only forms the GIN index can serve. Writing either as similarity(...) &gt;= x
+    /// instead reads the same and scans every name in the table.
+    ///
+    /// The two are a union, never a replacement. % compares the query with the whole
+    /// recorded name, so a long entry dilutes it; %&gt; compares it with the best-matching
+    /// word, so a partial name survives. Each reaches subjects the other does not, and
+    /// dropping either loses recall — which in screening is a legal breach, not a
+    /// tuning question.
     /// </summary>
-    private IQueryable<DesignationName> MatchingNames(string normalizedQuery, bool includeWeak) =>
+    private IQueryable<DesignationName> MatchingNames(string normalizedQuery, bool includeWeak, bool byWord) =>
         db.Names
             .Where(n => n.Designation!.ValidTo == null)
             .Where(n => includeWeak || !n.IsWeak)
-            .Where(n => EF.Functions.TrigramsAreSimilar(n.NameNormalized!, normalizedQuery));
+            .Where(n => EF.Functions.TrigramsAreSimilar(n.NameNormalized!, normalizedQuery)
+                || (byWord && EF.Functions.TrigramsAreWordSimilar(normalizedQuery, n.NameNormalized!)));
+
+    /// <summary>
+    /// Names scored by the better of the two measures, as a query the database can run.
+    ///
+    /// The larger of the two is the honest answer: each is a lower bound on the match in
+    /// its own terms, and a candidate retrieved by one measure but scored by the other
+    /// would be ranked on a number that had nothing to do with why it was found.
+    ///
+    /// Written out at each call site rather than shared through a helper method: a method
+    /// call inside a LINQ projection is not something EF can translate. It compiles, and
+    /// then throws on the first query.
+    /// </summary>
+    private static IQueryable<ScoredName> Scored(IQueryable<DesignationName> names, string normalizedQuery, bool byWord) =>
+        byWord
+            ? names.Select(n => new ScoredName(
+                n.DesignationId,
+                n.NameOriginal,
+                EF.Functions.TrigramsSimilarity(n.NameNormalized!, normalizedQuery)
+                    > EF.Functions.TrigramsWordSimilarity(normalizedQuery, n.NameNormalized!)
+                    ? EF.Functions.TrigramsSimilarity(n.NameNormalized!, normalizedQuery)
+                    : EF.Functions.TrigramsWordSimilarity(normalizedQuery, n.NameNormalized!)))
+            : names.Select(n => new ScoredName(
+                n.DesignationId,
+                n.NameOriginal,
+                EF.Functions.TrigramsSimilarity(n.NameNormalized!, normalizedQuery)));
+
+    private sealed record ScoredName(Guid DesignationId, string NameOriginal, double Score);
 
     internal IQueryable<Designation> CurrentRevisions() =>
         db.Designations.AsNoTracking().Where(d => d.ValidTo == null);
