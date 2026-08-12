@@ -74,7 +74,7 @@ public sealed class ScreeningService(
                 .ConfigureAwait(false);
 
         var candidates = await queries
-            .SearchAsync(query.Name, matching.MaxCandidates, ct)
+            .SearchAsync(query.Name, matching.MaxCandidates, ct: ct)
             .ConfigureAwait(false);
 
         // Identifier matches that the name search missed entirely still belong in the
@@ -123,7 +123,15 @@ public sealed class ScreeningService(
         };
     }
 
-    private static MatchExplanation Explain(ScreeningQuery query, SearchHit candidate, bool identifierMatch)
+    /// <summary>
+    /// The feature vector for one query-candidate pair.
+    ///
+    /// Public because training pairs built from cross-source references have to produce
+    /// <em>the same</em> vector as a live screening does. Two producers of the same corpus
+    /// computing features separately is how a model ends up trained on one distribution
+    /// and run on another, and nothing in the data would show it.
+    /// </summary>
+    public static MatchExplanation Explain(ScreeningQuery query, SearchHit candidate, bool identifierMatch)
     {
         var designation = candidate.Designation;
         var notes = new List<string>();

@@ -103,9 +103,19 @@ public sealed class DesignationQueryService(SancMeldDbContext db, IOptions<SancM
     /// pairs on the EU list share no exact token, so a tokenised index cannot reach them
     /// however it is tuned. Measured against the full list, this reaches 100 % recall@10.
     /// </summary>
+    /// <param name="query">The name to search for, in any spelling.</param>
+    /// <param name="limit">How many subjects to return, clamped to the page maximum.</param>
+    /// <param name="sourceCode">
+    /// Restricts candidates to one list. Screening never passes it — a subject is wanted
+    /// whichever publisher named them. It exists for building training pairs, where the
+    /// question is deliberately narrower: which record on <em>that other</em> list is the
+    /// same subject.
+    /// </param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task<IReadOnlyList<SearchHit>> SearchAsync(
         string query,
         int limit = 25,
+        string? sourceCode = null,
         CancellationToken ct = default)
     {
         var normalized = NameNormalizer.Normalize(query);
@@ -132,6 +142,11 @@ public sealed class DesignationQueryService(SancMeldDbContext db, IOptions<SancM
             .ConfigureAwait(false);
 
         var candidateNames = MatchingNames(normalized, matching.ScoreWeakAliases);
+
+        if (sourceCode is not null)
+        {
+            candidateNames = candidateNames.Where(n => n.Designation!.Source!.Code == sourceCode);
+        }
 
         // A subject carries up to 145 spellings, so it is ranked by its best one. Grouping
         // in SQL rather than after the fact: taking the top N *names* would return far
@@ -184,6 +199,54 @@ public sealed class DesignationQueryService(SancMeldDbContext db, IOptions<SancM
                 .Where(b => byId.ContainsKey(b.DesignationId))
                 .Select(b => new SearchHit(byId[b.DesignationId], bestName[b.DesignationId].NameOriginal, b.Score)),
         ];
+    }
+
+    /// <summary>
+    /// The best trigram similarity between a query and one designation's spellings,
+    /// <em>ignoring the threshold</em>.
+    ///
+    /// <see cref="SearchAsync"/> cannot answer this: below the threshold the % operator
+    /// returns nothing, so a pair the index misses would come back as no score at all.
+    /// That case is not an edge case here — the cross-source pairs worth training on are
+    /// exactly the ones string comparison fails to reach (Ch'o'l Cho ↔ CHO IL U), and
+    /// recording their name score as zero would be a lie in the feature vector.
+    ///
+    /// Deliberately not indexed and deliberately not on the screening path: it scans one
+    /// subject's names, which is cheap for one pair and wrong for a search.
+    ///
+    /// It applies the same filters as <see cref="SearchAsync"/> — current revisions, and
+    /// weak aliases only when they are scored — because the point is to answer what the
+    /// search <em>would</em> have scored. Reaching a higher number through a name the
+    /// search deliberately ignores would put a similarity into the feature vector that no
+    /// screening could ever produce.
+    /// </summary>
+    public async Task<(string Name, double Score)?> BestNameMatchAsync(
+        Guid designationId,
+        string query,
+        CancellationToken ct = default)
+    {
+        var normalized = NameNormalizer.Normalize(query);
+        if (normalized.Length == 0)
+        {
+            return null;
+        }
+
+        var includeWeak = options.Value.Matching.ScoreWeakAliases;
+
+        var best = await db.Names
+            .Where(n => n.DesignationId == designationId)
+            .Where(n => n.Designation!.ValidTo == null)
+            .Where(n => includeWeak || !n.IsWeak)
+            .Select(n => new
+            {
+                n.NameOriginal,
+                Score = EF.Functions.TrigramsSimilarity(n.NameNormalized!, normalized),
+            })
+            .OrderByDescending(n => n.Score)
+            .FirstOrDefaultAsync(ct)
+            .ConfigureAwait(false);
+
+        return best is null ? null : (best.NameOriginal, best.Score);
     }
 
     /// <summary>

@@ -65,7 +65,7 @@ internal static class SancMeldEndpoints
                 return TypedResults.BadRequest("Supply a name in 'q'.");
             }
 
-            return TypedResults.Ok(await queries.SearchAsync(q, limit ?? 25, ct));
+            return TypedResults.Ok(await queries.SearchAsync(q, limit ?? 25, ct: ct));
         })
         .WithName("SearchDesignations")
         .WithSummary("Full-text search over every recorded spelling.")

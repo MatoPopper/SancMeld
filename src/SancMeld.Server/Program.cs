@@ -7,6 +7,7 @@ using SancMeld.Api;
 using SancMeld.Core.Access;
 using SancMeld.Core.Data;
 using SancMeld.Core.Ingest;
+using SancMeld.Core.Learning;
 
 // The open-source host is intentionally this short. Everything of substance
 // lives in SancMeld.Api / SancMeld.Core so the hosted edition can reuse it
@@ -180,6 +181,53 @@ if (args is ["import", var sourceCode, ..])
 if (args is ["admin", ..])
 {
     return await RunAdminCommandAsync(app, args);
+}
+
+// Build training pairs from the cross-references publishers declare between their lists:
+//
+//   dotnet run --project src/SancMeld.Server -- training seed-xref [--replace] [--candidates 25]
+//
+// A command rather than an endpoint, and the same reason training itself is not one: a
+// corpus that can be rewritten by an HTTP call cannot be audited. It is also not part of
+// import — importing is what the publisher said, and this is a thing we derive from it.
+if (args is ["training", "seed-xref", ..])
+{
+    using var scope = app.Services.CreateScope();
+    var seeder = scope.ServiceProvider.GetRequiredService<XrefTrainingSeeder>();
+
+    var candidates = int.TryParse(Flag(args, "--candidates"), out var parsed) ? parsed : 25;
+    var outcome = await seeder.SeedAsync(args.Contains("--replace"), candidates, CancellationToken.None);
+
+    if (outcome.AlreadyPresent > 0)
+    {
+        Console.Error.WriteLine(
+            $"{outcome.AlreadyPresent} cross-reference samples already exist. Seeding again would double "
+            + "every pair and weight the corpus towards whatever was seeded twice. Pass --replace to "
+            + "rebuild them.");
+        return 1;
+    }
+
+    Console.WriteLine(
+        $"{outcome.LinksResolved} cross-references resolved, {outcome.Written} samples written "
+        + $"({outcome.Positives} positive, {outcome.Negatives} negative).");
+
+    if (outcome.Replaced > 0)
+    {
+        Console.WriteLine($"  replaced {outcome.Replaced} earlier ones");
+    }
+
+    // The headline number for anyone judging whether a model is worth training: pairs two
+    // publishers agree on that the current matcher does not return at all.
+    Console.WriteLine($"  {outcome.PositivesBelowSearchReach} positives beyond the reach of trigram search");
+
+    if (outcome.SkippedWithoutName + outcome.SkippedUnresolvable > 0)
+    {
+        Console.WriteLine(
+            $"  skipped {outcome.SkippedWithoutName} without a name, "
+            + $"{outcome.SkippedUnresolvable} unresolvable");
+    }
+
+    return 0;
 }
 
 // Opt-in, and off by default: a process that rewrites the schema it happens to find is
@@ -366,10 +414,11 @@ static async Task<int> RunAdminCommandAsync(WebApplication app, string[] args)
                 """);
             return 1;
     }
+}
 
-    static string? Flag(string[] args, string name)
-    {
-        var at = Array.IndexOf(args, name);
-        return at >= 0 && at + 1 < args.Length ? args[at + 1] : null;
-    }
+// The value after a named flag, or null when it was not supplied.
+static string? Flag(string[] args, string name)
+{
+    var at = Array.IndexOf(args, name);
+    return at >= 0 && at + 1 < args.Length ? args[at + 1] : null;
 }

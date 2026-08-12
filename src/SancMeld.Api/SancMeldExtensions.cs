@@ -94,6 +94,7 @@ public static class SancMeldExtensions
         services.AddScoped<ScreeningService>();
         services.AddScoped<ComplianceCheckService>();
         services.AddScoped<AdjudicationService>();
+        services.AddScoped<XrefTrainingSeeder>();
 
         // Enums as text, matching how the database stores them. "legalEffect": 0 tells a
         // consumer nothing, and worse, silently changes meaning if a member is ever
