@@ -2,26 +2,16 @@
 
 **Sanctions list aggregation and screening for the EU.**
 
-SancMeld downloads EU, UN and national sanctions lists every day, normalises them into
-one queryable model, and screens names against them — with an audit trail that lets you
+SancMeld downloads EU, UN and national sanctions lists every day, normalises them into one
+queryable model, and screens names against them — with an audit trail that lets you
 reconstruct any past decision.
 
 Built for the EU: EU and UN designations are treated as legally binding, third-country
 lists such as OFAC are surfaced as red flags only.
 
 ```
-Status: early development. The schema and connectors are being built.
-Not yet suitable for production compliance use.
+Status: early development. Two connectors, working endpoints, no production sign-off.
 ```
-
----
-
-## Why
-
-Most sanctions-screening tooling is either a closed SaaS black box or a scraper that
-silently breaks when a government changes a URL. SancMeld tries to be the third thing:
-an open, auditable pipeline where you can see exactly which file was downloaded, when,
-what its checksum was, and how a name ended up matching.
 
 Three properties drive the design:
 
@@ -30,14 +20,14 @@ Three properties drive the design:
 - **A truncated download cannot empty your list.** Every import passes sanity thresholds
   before anything is published.
 - **Recall beats precision.** A missed match is a legal breach; a false positive costs
-  analyst time. The system is tuned accordingly.
+  analyst time.
 
 ---
 
 ## Sources
 
-Every endpoint below was verified with a live request. Formats, quirks and parsing traps
-for each source are documented in the connector project that implements it.
+Every endpoint was verified with a live request. Formats and parsing traps are documented
+in the connector that implements each one.
 
 | Source | Effect in EU | Format | Records | Status |
 |---|---|---|---:|---|
@@ -57,43 +47,32 @@ That is recorded explicitly per jurisdiction rather than left as an unexplained 
 
 ## Quick start
 
-Requires Docker and the .NET 10 SDK.
+Needs Docker, the .NET 10 SDK, and PostgreSQL 16+ with `pg_trgm`, `unaccent`,
+`fuzzystrmatch`, `pgcrypto` and `btree_gin` (the compose file brings one).
 
 ```bash
 git clone https://github.com/MatoPopper/SancMeld
 cd SancMeld
 
-# PostgreSQL with the extensions SancMeld needs
 docker compose up -d db
-
-# create the schema
 dotnet tool install --global dotnet-ef
 dotnet ef database update --project src/SancMeld.Core
 
-# build, then import the EU list
-dotnet build
-dotnet run --project src/SancMeld.Server -- import EU_FSF
-
-# or serve the API
-dotnet run --project src/SancMeld.Server
+dotnet run --project src/SancMeld.Server -- import EU_FSF   # ~25 MB, ~6 200 subjects
+dotnet run --project src/SancMeld.Server                    # /swagger, /jobs
 ```
 
-| | |
-|---|---|
-| `/swagger` | try the endpoints |
-| `/jobs` | scheduled imports (Hangfire), local requests only |
+Later imports cost 4 kB when the Commission has published nothing new: the connector
+compares the version its RSS feed advertises before downloading anything.
 
-The first import fetches roughly 25 MB and publishes about 6 200 subjects. Later runs cost
-4 kB when the Commission has published nothing new, because the connector compares the
-version its RSS feed advertises before downloading anything.
+EF Core migrations are the only way a SancMeld schema comes into existence — there is no
+second, hand-maintained SQL file to drift away from them. Point them at another database
+with `SANCMELD_DESIGN_CONNECTION`.
 
-EF Core migrations are the only way a SancMeld schema is created — there is no
-second, hand-maintained SQL file to drift away from them. To point the migration at
-a database other than the one in `docker-compose.yml`, set `SANCMELD_DESIGN_CONNECTION`.
-
-`SancMeld.Server` is single-tenant and unauthenticated by design — do not expose it
-directly to the internet. Authentication, multi-tenancy and quotas live in the hosted
-edition; see [Open core](#open-core) below.
+One recurring import job per source, driven by the `sanctions_source` rows rather than a
+list in code, so adding a connector never means editing the host. The scheduler is thirty
+obvious lines of Hangfire in `SancMeld.Server`; the job itself is the same call that
+`-- import EU_FSF` makes. Turn it off with `SancMeld:Jobs:Enabled=false`.
 
 ---
 
@@ -101,26 +80,24 @@ edition; see [Open core](#open-core) below.
 
 | | |
 |---|---|
-| `GET /designations` | every current listing, cursor-paged |
-| `GET /designations/{id}` | one listing in full |
+| `GET /designations` · `/designations/{id}` | every current listing, cursor-paged |
 | `GET /designations/search?q=` | trigram search over every recorded spelling |
-| `POST /screen` | a name plus whatever else is known, scored and recorded — **writes** |
-| `POST /check` · `POST /adjudications` | the same evidence as a decision, and what the analyst concluded — **writes** |
-| `GET /auth/me` · `GET /admins` · … | who may administer this instance — only when a sign-in is configured |
+| `POST /check` | a name plus whatever is known, answered as a decision — **writes** |
+| `POST /screen` | the same evidence as scores and feature vectors — **writes** |
+| `POST /adjudications` | what the analyst concluded — **writes** |
+| `GET /adjudications/reasons` · `/training/samples` | the coded reasons, and the labelled corpus |
+| `GET /auth/me` · `/admins` … | who may administer this instance, when a sign-in is configured |
 
-Where a sign-in is configured, the endpoints marked **writes** require one and the reads do
-not. See [Signing in](#signing-in).
-
-The first three are reads. `POST /screen` also writes: the query, every candidate it
-considered and the evidence behind each score are stored, because a compliance decision
-that cannot be reconstructed is not one anyone can stand behind.
+Reads stay open; the endpoints marked **writes** require a sign-in where one is configured
+(see [Signing in](#signing-in)). They write because a compliance decision that cannot be
+reconstructed is not one anyone can stand behind: the query, every candidate considered and
+the evidence behind each score are all stored.
 
 Nothing is filtered out for being sparse. Of the 6 234 subjects on the EU list, 2 364 carry
-no date of birth and 4 245 carry no identifier at all — an incomplete listing is not a
-lesser listing, and the subject is sanctioned either way.
+no date of birth and 4 245 no identifier at all — an incomplete listing is not a lesser
+listing, and the subject is sanctioned either way.
 
-That is also why `/screen` answers each qualifier separately rather than folding it into
-one number:
+That is why each qualifier is answered separately rather than folded into one number:
 
 ```jsonc
 { "score": 0.525, "aboveThreshold": true,
@@ -129,125 +106,119 @@ one number:
     "identifierMatch": false,
     "birthYear": "Contradicts",       // agrees · contradicts · unknownOnRecord · notProvided
     "country": "NotProvided",
-    "subjectType": "NotProvided",
     "notes": ["None of the 3 recorded years of birth matches the one supplied."] } }
 ```
 
 `UnknownOnRecord` and `NotProvided` both score zero. Treating "the list does not say" as
 "the list disagrees" would push exactly the subjects nobody knows much about below the
-threshold, and a missed match is a legal breach where a false positive is an hour of work.
-
-Scoring is rule-based today. The weights sit behind `IScoringStrategy`, and every screening
-stores the feature vector they were applied to, so a trained model can arrive as a second
-implementation and a second row in `match_algorithm` — never as an edit to the one that
-past decisions point at.
+threshold.
 
 ---
 
-## Scheduled imports
+## Matching, and where ML.NET fits
 
-One recurring job per sanctions list, driven by the `sanctions_source` rows rather than by
-a list in code: the cron expression sits on the source next to the endpoint it fetches, so
-adding a connector never means editing the host.
+Matching runs in layers, cheapest and most certain first:
 
-Hangfire keeps its own tables in a `hangfire` schema alongside the data, and the dashboard
-at `/jobs` accepts local requests only — it can trigger and delete jobs, and this host has
-no authentication of its own to put in front of it.
+1. **Deterministic** — passport, national ID, IMO, LEI, and publisher-declared
+   cross-references (`REFERENCE_UE`, `REFERENCE_ONU`)
+2. **Candidate generation** — `pg_trgm`, deliberately wide, tuned for recall
+3. **Hard filters** — subject-type mismatch, surname-only match
+4. **Scoring and ranking** — rules today, behind `IScoringStrategy`
+5. **Analyst adjudication** — captured as training data
 
-The whole scheduler is about thirty lines in `SancMeld.Server`, on purpose. Job storage,
-retention and dashboard access are exactly the things a deployment will have opinions
-about, and the job itself is one call into `SanctionsImportService` — the same call
-`-- import EU_FSF` makes. Replace the host, keep the libraries.
+Step 2 is why PostgreSQL is not interchangeable here. Sanctions matching is
+character-level, not word-level: 19 % of genuinely similar name pairs on the EU list share
+no exact token, so a tokenised full-text index structurally cannot reach them. Measured on
+real data, `pg_trgm` reaches 100 % recall@10 where MariaDB `FULLTEXT` reaches 84.5 %.
+
+**ML.NET is planned for step 4 only, and that is a result, not a preference.** A LightGBM
+ranker over name pairs was built and measured against the plain trigram index — 200 queries
+against every recorded spelling:
+
+| Ranking | recall@1 | recall@10 | MRR |
+|---|---:|---:|---:|
+| `pg_trgm` alone | **68.0 %** | **100.0 %** | **0.824** |
+| ML.NET LightGBM | 36.0 % | 87.0 % | 0.551 |
+
+The model lost, and it also *lost matches the bare index finds*. An earlier number said the
+opposite — AUC-PR 0.939 against 0.230 — and was invalid: hard negatives had been generated
+as pairs with trigram similarity ≥ 0.45, so the evaluation set was built out of exactly the
+pairs the trigram cannot separate. It measured the construction, not the index.
+
+So names stay with the trigram, and a model is aimed at **weighting the qualifiers** —
+how much a matching birth year, country or document should move a score. That arrives as a
+second `IScoringStrategy` and a second row in `match_algorithm`, never as an edit to the one
+past decisions point at, because a stored decision must keep meaning what it meant.
+
+The labels cannot come from string similarity: 56.3 % of genuinely positive pairs are not
+string-related at all — different script (`Michail GRIB` ↔ `Міхаіл ГРЫБ`), translation
+(`JSC FINAM Investment Bank` ↔ `АО Банк ФИНАМ`), or an unrelated alias. They come from
+analysts through `/adjudications`, and from publishers' own cross-references: of 86 links
+the EU list carries into the UN list, 83 resolve, and they pair spellings no string
+comparison would ever match — `Ch'o'l Cho` ↔ `CHO IL U`.
+
+Status: proof of concept. Nothing is trained in this repository, `/training/samples` hands
+the corpus out for training elsewhere, and a model that could be retrained by an HTTP call
+is one nobody can audit. ML.NET 5.0.0 is stable; `AutoML` is still 0.23.0 and stays out of
+the production path.
 
 ---
 
 ## Signing in
 
-Off by default: with no client id configured the host is entirely unauthenticated, which is
-what the open-source edition is for, and `/auth` and `/admins` are not mapped at all.
+Off by default: with no client id configured the host is entirely unauthenticated — what
+the open-source edition is for — and `/auth` and `/admins` are not mapped at all.
 
-Turning it on guards **the endpoints that write** — `POST /check`, `POST /screen`,
-`POST /adjudications` — and the endpoints that hand out access. Reading the aggregate stays
-open, because it is a published sanctions list and a login in front of it would protect
-nothing that is not already on the publishers' own websites. What a login does protect is
-this database: every screening and every adjudication leaves rows in it, attributed to
-somebody.
-
-Attribution comes from the token, not from the request body. `requestedBy` and `decidedBy`
-still exist for an unauthenticated host, which has no other way to say who asked — but
-where a token is present it wins, because a self-declared identity beside a proven one is
-just a way to file work under a colleague's name.
+Turning it on guards the endpoints that write, and the endpoints that hand out access.
+Reading stays open: it is a published sanctions list, and a login in front of it would
+protect nothing that is not already on the publishers' own websites. What a login protects
+is this database, where every screening leaves rows attributed to somebody.
 
 ```bash
-# 1. an OAuth client id from Google Cloud Console (Web application)
+# an OAuth client id from Google Cloud Console (Web application)
 export SancMeld__Auth__GoogleClientId=1234-abcd.apps.googleusercontent.com
 
-# 2. the first entry on the allow list, from a shell — /admins requires being on it already
+# the first entry on the allow list, from a shell — /admins requires being on it already
 dotnet run --project src/SancMeld.Server -- admin add you@example.com --name "Your Name"
-
-# and afterwards
 dotnet run --project src/SancMeld.Server -- admin list [--all]
 dotnet run --project src/SancMeld.Server -- admin revoke someone@example.com
 ```
 
 **There is no client secret, here or anywhere else.** The API is a resource server: it
-verifies Google's ID token against Google's published signing keys and never calls Google
-at all, so no secret exists that could be leaked or would have to be kept out of this
-repository. Obtaining the token is the client's job, and a browser needs only the client
-id to do it. Open `/login.html` to get one before a front end exists — it signs in and
-shows the token, which goes into Swagger's *Authorize* box or an `Authorization: Bearer`
-header.
+verifies Google's ID token against Google's published signing keys and never calls Google,
+so no secret exists that could leak. Obtaining the token is the client's job — open
+`/login.html` to get one before a front end exists.
 
-Two questions are kept separate, and both are answered by `GET /auth/me`:
+Two questions are kept apart, and `GET /auth/me` answers both. *Who are you* is settled by
+Google, for anybody in the world with an account. *Are you anyone here* is settled by the
+`admin` table, checked on every request rather than baked into the token, so revoking takes
+effect at once where an ID token stays valid for an hour. Attribution follows the same
+rule: `requestedBy` and `decidedBy` exist for an unauthenticated host, but where a token is
+present it wins — a self-declared identity beside a proven one is just a way to file work
+under a colleague's name.
 
-- **Who are you.** Google settles this, for anybody in the world with an account.
-- **Are you anyone here.** The `admin` table settles this, and it is checked on every
-  request rather than baked into the token — revoking access takes effect at once, where a
-  Google ID token stays valid for an hour after it was issued.
-
-The allow list is a table rather than configuration for the same reason: adding a colleague
-should not mean editing a file and restarting the API. Revoking keeps the entry, marked
-with who withdrew it and when. The last remaining administrator cannot be revoked — that
-would leave the admin API reachable only from a shell.
-
-> **Google requires an `https` origin.** `http://localhost` is the single exception it
-> makes. A deployment served over plain http can accept tokens perfectly well, but no
-> browser on it will be able to produce one, so put TLS in front before enabling this
-> anywhere but a development machine.
+> **Google requires an `https` origin**, with `http://localhost` the single exception. A
+> deployment on plain http can accept tokens, but no browser on it can produce one.
 
 ---
 
 ## Configuration
 
-> **You need a database before anything runs.** `appsettings.json` ships pointing at the
-> development container in `docker-compose.yml`, but the container is not part of the
-> build — start it and apply the migrations, or point SancMeld at a PostgreSQL 16+
-> instance you already have.
->
-> ```bash
-> docker compose up -d db
-> dotnet ef database update --project src/SancMeld.Core
-> ```
+`appsettings.json` ships pointing at the development container in `docker-compose.yml`.
+That connection string is deliberately throwaway — user `sancmeld`, password `sancmeld`,
+port 55432, every value already published in the compose file. It is a convenience, not a
+credential, and **it must never be edited to hold a real one**: a production password
+reaching a tracked file is in the history for good, and this project's predecessor shipped
+exactly that.
 
-The committed connection string is deliberately throwaway — user `sancmeld`, password
-`sancmeld`, port 55432 — and every one of those values is already published in
-`docker-compose.yml`. It is a convenience, not a credential.
-
-To use your own database, override it from outside the repository. Any of these wins over
-`appsettings.json`, so nothing has to be edited or deleted:
+Override it from outside the repository instead — each of these wins over
+`appsettings.json`, so nothing has to be deleted first:
 
 ```bash
-# development — stored outside the repository entirely
-dotnet user-secrets set "ConnectionStrings:SancMeld" \
-  "Host=db.internal;Database=sancmeld;Username=app;Password=..." \
-  --project src/SancMeld.Server
-
-# docker / production
-export ConnectionStrings__SancMeld="Host=db.example.com;Database=sancmeld;Username=app;Password=..."
+dotnet user-secrets set "ConnectionStrings:SancMeld" "Host=…" --project src/SancMeld.Server
+export ConnectionStrings__SancMeld="Host=db.example.com;Database=sancmeld;Username=app;Password=…"
+# or a git-ignored src/SancMeld.Server/appsettings.Development.json
 ```
-
-Or drop a git-ignored `src/SancMeld.Server/appsettings.Development.json` next to the
-committed one, holding nothing but the `ConnectionStrings` section.
 
 Port 55432 rather than 5432 is deliberate: anyone already running PostgreSQL locally would
 otherwise have their own server answer on `localhost:5432` and see an authentication
@@ -259,27 +230,12 @@ failure that looks like a SancMeld bug.
 | `SancMeld:Ingest:SnapshotStoragePath` | `./.snapshots` | Raw downloads, git-ignored |
 | `SancMeld:Matching:SimilarityThreshold` | `0.35` | Lower = wider net = higher recall |
 | `SancMeld:Matching:ScoreWeakAliases` | `false` | Generic aliases corroborate, they do not raise hits |
-| `SancMeld:Auth:GoogleClientId` | *empty* | Empty = no sign-in, `/auth` and `/admins` unmapped. Public value, not a secret |
+| `SancMeld:Auth:GoogleClientId` | *empty* | Empty = no sign-in. A public value, not a secret |
+| `SancMeld:Jobs:Enabled` | `true` | Off means no Hangfire and no `/jobs` |
+| `SancMeld:Database:AutoMigrate` | `false` | Migrate on start; for single-container deployments |
 
-Sanctions sources are configured in the `sanctions_source` table, not in `appsettings.json`,
-so imports and snapshots can reference them by key.
-
-> **Never edit `appsettings.json` to hold a real credential.** A local container's
-> throwaway password is one thing; a production password reaching a tracked file is in the
-> history for good. The predecessor of this project shipped exactly that. `.gitignore` is set
-> up to stop it recurring — use one of the three overrides above.
-
----
-
-## Requirements
-
-- **PostgreSQL 16+** with `pg_trgm`, `unaccent`, `fuzzystrmatch`, `pgcrypto`, `btree_gin`
-- **.NET 10 SDK**
-
-PostgreSQL is not interchangeable here. Sanctions matching is character-level, not
-word-level: 19 % of genuinely similar name pairs in the EU list share no exact token,
-so a tokenised full-text index structurally cannot find them. Measured on real data,
-`pg_trgm` reaches 100 % recall@10 where MariaDB `FULLTEXT` reaches 84.5 %.
+Sanctions sources live in the `sanctions_source` table, not in configuration, so imports
+and snapshots can reference them by key.
 
 ---
 
@@ -293,34 +249,17 @@ DiscoverEndpoint → Download → ValidateTransport → StoreSnapshot
 Endpoint discovery is a separate step from download because government attachment URLs
 change: Poland ships a GUID attachment, Czechia a dated PDF filename.
 
-Matching runs in layers, cheapest and most certain first:
-
-1. **Deterministic** — passport, national ID, IMO, LEI, and publisher-declared
-   cross-references (`REFERENCE_UE`, `REFERENCE_ONU`)
-2. **Candidate generation** — `pg_trgm`, deliberately wide, tuned for recall
-3. **Hard filters** — subject-type mismatch, surname-only match
-4. **Scoring and ranking** — rules today
-5. **Analyst adjudication** — captured as training data
-
----
-
-## Project layout
-
 ```
 src/
   SancMeld.Core/            domain, data access, matching, ingest pipeline
-    Abstractions/           ISanctionsConnector, ITenantResolver, IScoringStrategy
-    Domain/                 entities and enums
     Data/                   DbContext and EF Core migrations — the schema of record
     Ingest/                 pipeline phases and safety guards
     Matching/               normalisation, string metrics, scoring
+    Access/                 the admin allow list
   SancMeld.Connectors.*/    one project per source
   SancMeld.Api/             endpoints as a LIBRARY: AddSancMeld() / MapSancMeld()
-  SancMeld.Server/          thin host, single-tenant, no auth
-
-tests/
-  SancMeld.Core.Tests/      unit tests
-ml/prototype/               matching experiments, not part of the build
+  SancMeld.Server/          thin host
+tests/                      unit tests, plus integration tests against a real PostgreSQL
 fixtures/                   real downloaded samples, for parser regression tests
 ```
 
@@ -334,20 +273,18 @@ reuse the core without forking it.
 This repository is the complete, usable core under Apache-2.0: all connectors, the schema,
 the matching engine and the screening API.
 
-A separate closed-source edition adds hosting concerns — Google/OIDC authentication,
-multi-tenancy, billing, quotas and models trained on aggregated adjudications. It consumes
-this repository as versioned NuGet packages and never patches it. If it ever needs to,
-that means the core is missing an extension point, and the extension point belongs here.
+A separate closed-source edition adds hosting concerns — multi-tenancy, billing, quotas and
+models trained on aggregated adjudications. It consumes this repository as versioned NuGet
+packages and never patches it. If it ever needs to, that means the core is missing an
+extension point, and the extension point belongs here.
 
 ---
 
 ## Contributing
 
-New connectors are the most valuable contribution — especially national lists we have not
-covered. See [CONTRIBUTING.md](CONTRIBUTING.md).
-
-Contributions are accepted under the [DCO](https://developercertificate.org/): sign your
-commits with `git commit -s`.
+New connectors are the most valuable contribution, especially national lists not yet
+covered. See [CONTRIBUTING.md](CONTRIBUTING.md). Contributions are accepted under the
+[DCO](https://developercertificate.org/): sign your commits with `git commit -s`.
 
 ---
 
