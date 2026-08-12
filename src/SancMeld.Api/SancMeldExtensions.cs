@@ -117,16 +117,22 @@ public static class SancMeldExtensions
         endpoints.MapGet("/health", () => Results.Ok(new { status = "ok" }))
                  .WithName("Health");
 
+        // Whether a sign-in exists at all decides two things: whether the endpoints that
+        // write require one, and whether the endpoints that manage access are mapped.
+        //
+        // Without it nothing changes from the unauthenticated default the open-source
+        // edition documents. Mapping /auth and /admins anyway would produce endpoints that
+        // fail on every call — requiring authorisation against a scheme nobody registered
+        // is a 500, not a 401 — and a host with no allow list has nothing to manage, which
+        // is what 404 says.
+        var signInConfigured = endpoints.ServiceProvider.GetService<SancMeldAuthMarker>() is not null;
+
         endpoints.MapDesignations();
-        endpoints.MapScreening();
-        endpoints.MapAdjudications();
+        endpoints.MapScreening(signInConfigured);
+        endpoints.MapAdjudications(signInConfigured);
         endpoints.MapTrainingData();
 
-        // Only when a host has configured a sign-in. Mapping /auth and /admins without one
-        // would produce endpoints that fail on every call, because requiring authorisation
-        // against a scheme nobody registered is a 500, not a 401. A host with no sign-in
-        // has no allow list to manage, and 404 says exactly that.
-        if (endpoints.ServiceProvider.GetService<SancMeldAuthMarker>() is not null)
+        if (signInConfigured)
         {
             endpoints.MapSancMeldAuth();
             endpoints.MapAdmins();

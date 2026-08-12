@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -83,18 +84,19 @@ internal static class SancMeldEndpoints
         return endpoints;
     }
 
-    public static IEndpointRouteBuilder MapScreening(this IEndpointRouteBuilder endpoints)
+    public static IEndpointRouteBuilder MapScreening(this IEndpointRouteBuilder endpoints, bool requireSignIn)
     {
         endpoints.MapPost("/check", async Task<Results<Ok<CheckResult>, BadRequest<string>>> (
-            ComplianceCheckService check, CheckQuery query, CancellationToken ct) =>
+            ComplianceCheckService check, CheckQuery query, ClaimsPrincipal user, CancellationToken ct) =>
         {
             if (query is null || string.IsNullOrWhiteSpace(query.Name))
             {
                 return TypedResults.BadRequest("Supply at least a name.");
             }
 
-            return TypedResults.Ok(await check.CheckAsync(query, ct));
+            return TypedResults.Ok(await check.CheckAsync(WithCaller(query, user), ct));
         })
+        .RequireWrite(requireSignIn)
         .WithTags("Screening")
         .WithName("Check")
         .WithSummary("Screen a name and get an answer a compliance officer can act on.")
@@ -109,7 +111,7 @@ internal static class SancMeldEndpoints
             "Subjects appearing on several lists are gathered into one entry, and a listing " +
             "the name search could not reach is pulled in when a cross-reference points at it.");
 
-        endpoints.MapScreeningDiagnostics();
+        endpoints.MapScreeningDiagnostics(requireSignIn);
 
         return endpoints;
     }
@@ -123,7 +125,7 @@ internal static class SancMeldEndpoints
     /// a model nobody can audit. It is an offline job producing a versioned artefact,
     /// which arrives here as a new row in match_algorithm.
     /// </summary>
-    public static IEndpointRouteBuilder MapAdjudications(this IEndpointRouteBuilder endpoints)
+    public static IEndpointRouteBuilder MapAdjudications(this IEndpointRouteBuilder endpoints, bool requireSignIn)
     {
         var group = endpoints.MapGroup("/adjudications").WithTags("Adjudications");
 
@@ -136,27 +138,33 @@ internal static class SancMeldEndpoints
             "the part a supervisor asks about and the part a model learns from.");
 
         group.MapPost("/", async Task<Results<Ok<AdjudicationResult>, BadRequest<string>>> (
-            AdjudicationService adjudications, AdjudicationRequest request, CancellationToken ct) =>
+            AdjudicationService adjudications, AdjudicationRequest request, ClaimsPrincipal user, CancellationToken ct) =>
         {
             if (request is null || request.Decisions.Count == 0)
             {
                 return TypedResults.BadRequest("Supply at least one decision.");
             }
 
-            if (string.IsNullOrWhiteSpace(request.DecidedBy))
+            // The token wins over the body. Who decided is the one field of an audit trail
+            // that must not be assertable by whoever is writing to it — otherwise a signed-in
+            // analyst can file a decision under a colleague's name.
+            var decidedBy = SancMeldClaims.EmailOf(user) ?? request.DecidedBy;
+
+            if (string.IsNullOrWhiteSpace(decidedBy))
             {
                 return TypedResults.BadRequest("Supply who decided. An unattributed decision is not an audit trail.");
             }
 
             try
             {
-                return TypedResults.Ok(await adjudications.RecordAsync(request, ct));
+                return TypedResults.Ok(await adjudications.RecordAsync(request with { DecidedBy = decidedBy }, ct));
             }
             catch (InvalidOperationException ex)
             {
                 return TypedResults.BadRequest(ex.Message);
             }
         })
+        .RequireWrite(requireSignIn)
         .WithName("RecordAdjudication")
         .WithSummary("Record what the analyst decided about a check.")
         .WithDescription(
@@ -195,21 +203,22 @@ internal static class SancMeldEndpoints
     /// The raw form: scores, feature vectors, and every candidate considered. Kept for the
     /// audit trail and for whoever is tuning the matcher — not for the person signing off.
     /// </summary>
-    private static IEndpointRouteBuilder MapScreeningDiagnostics(this IEndpointRouteBuilder endpoints)
+    private static IEndpointRouteBuilder MapScreeningDiagnostics(this IEndpointRouteBuilder endpoints, bool requireSignIn)
     {
         endpoints.MapPost("/screen", async Task<Results<Ok<ScreeningResult>, BadRequest<string>>> (
-            ScreeningService screening, ScreeningQuery query, CancellationToken ct) =>
+            ScreeningService screening, ScreeningQuery query, ClaimsPrincipal user, CancellationToken ct) =>
         {
             if (query is null || string.IsNullOrWhiteSpace(query.Name))
             {
                 return TypedResults.BadRequest("Supply at least a name.");
             }
 
-            return TypedResults.Ok(await screening.ScreenAsync(query, ct));
+            return TypedResults.Ok(await screening.ScreenAsync(WithCaller(query, user), ct));
         })
+        .RequireWrite(requireSignIn)
         .WithTags("Screening")
         .WithName("Screen")
-        .WithSummary("Screen a name, with whatever else is known about the subject.")
+        .WithSummary("Screen a name, with whatever else is known about the subject. Writes.")
         .WithDescription(
             "Supplying a birth year, country or identifier sharpens the result but is never " +
             "required. Each qualifier is answered separately as agrees, contradicts, unknown " +
@@ -220,4 +229,30 @@ internal static class SancMeldEndpoints
 
         return endpoints;
     }
+
+    /// <summary>
+    /// Behind the sign-in where there is one, open where there is not.
+    ///
+    /// The endpoints that write are the ones worth protecting: reading the aggregate takes
+    /// nothing from anybody, while every screening and every adjudication leaves rows in
+    /// this database attributed to someone. A host with no sign-in configured keeps the
+    /// unauthenticated behaviour the open-source edition documents — requiring a policy
+    /// against a scheme nobody registered would fail every call with a 500.
+    /// </summary>
+    private static RouteHandlerBuilder RequireWrite(this RouteHandlerBuilder builder, bool requireSignIn) =>
+        requireSignIn ? builder.RequireAuthorization(SancMeldPolicies.Write) : builder;
+
+    /// <summary>
+    /// Stamps the caller from the token, overriding whatever the body claimed.
+    ///
+    /// requestedBy stays in the request model because an unauthenticated host has no other
+    /// way to say who asked — but where a token exists it is the better answer, and a
+    /// self-declared identity next to a proven one is just a way to file work under
+    /// somebody else's name.
+    /// </summary>
+    private static CheckQuery WithCaller(CheckQuery query, ClaimsPrincipal user) =>
+        SancMeldClaims.EmailOf(user) is { Length: > 0 } email ? query with { RequestedBy = email } : query;
+
+    private static ScreeningQuery WithCaller(ScreeningQuery query, ClaimsPrincipal user) =>
+        SancMeldClaims.EmailOf(user) is { Length: > 0 } email ? query with { RequestedBy = email } : query;
 }

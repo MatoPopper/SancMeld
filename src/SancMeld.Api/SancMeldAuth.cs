@@ -47,11 +47,29 @@ public sealed class SancMeldAuthOptions
     public bool IsEnabled => !string.IsNullOrWhiteSpace(GoogleClientId);
 }
 
-/// <summary>Authorisation policies this library defines.</summary>
+/// <summary>
+/// Authorisation policies this library defines.
+///
+/// Two names, one allow list behind both today. They are separate because the questions
+/// are separate — recording a screening decision is what an analyst does all day, handing
+/// out access is not — and because the day a role column arrives, only one of them
+/// changes. Collapsing them into a single "admin" would mean the first analyst added to
+/// the instance can also revoke everybody else.
+/// </summary>
 public static class SancMeldPolicies
 {
     /// <summary>The caller is signed in AND present on the allow list in the admin table.</summary>
     public const string Admin = "SancMeld.Admin";
+
+    /// <summary>
+    /// May write: screen a name, record an adjudication. Same allow list as
+    /// <see cref="Admin"/> for now.
+    ///
+    /// Reads are deliberately not covered. The aggregate is a published sanctions list;
+    /// what this protects is the rows a caller can create in this database and the
+    /// decisions attributed to them.
+    /// </summary>
+    public const string Write = "SancMeld.Write";
 }
 
 /// <summary>
@@ -91,11 +109,19 @@ public static class SancMeldAuthExtensions
         services.AddScoped<IAuthorizationHandler, AdminRequirementHandler>();
 
         services.AddAuthorization(options =>
+        {
             options.AddPolicy(SancMeldPolicies.Admin, policy =>
             {
                 policy.RequireAuthenticatedUser();
-                policy.AddRequirements(new AdminRequirement());
-            }));
+                policy.AddRequirements(new AllowListedRequirement());
+            });
+
+            options.AddPolicy(SancMeldPolicies.Write, policy =>
+            {
+                policy.RequireAuthenticatedUser();
+                policy.AddRequirements(new AllowListedRequirement());
+            });
+        });
 
         services.AddSingleton<SancMeldAuthMarker>();
         return services;
@@ -208,8 +234,8 @@ public static class SancMeldClaims
         user?.FindFirstValue(Name);
 }
 
-/// <summary>Being on the allow list.</summary>
-internal sealed class AdminRequirement : IAuthorizationRequirement;
+/// <summary>Being on the allow list. Shared by both policies.</summary>
+internal sealed class AllowListedRequirement : IAuthorizationRequirement;
 
 /// <summary>
 /// Resolves the requirement against the admin table on every request.
@@ -220,11 +246,11 @@ internal sealed class AdminRequirement : IAuthorizationRequirement;
 /// </summary>
 internal sealed class AdminRequirementHandler(
     AdminDirectory admins,
-    ILogger<AdminRequirementHandler> logger) : AuthorizationHandler<AdminRequirement>
+    ILogger<AdminRequirementHandler> logger) : AuthorizationHandler<AllowListedRequirement>
 {
     protected override async Task HandleRequirementAsync(
         AuthorizationHandlerContext context,
-        AdminRequirement requirement)
+        AllowListedRequirement requirement)
     {
         ArgumentNullException.ThrowIfNull(context);
 

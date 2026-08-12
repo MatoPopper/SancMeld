@@ -104,8 +104,12 @@ edition; see [Open core](#open-core) below.
 | `GET /designations` | every current listing, cursor-paged |
 | `GET /designations/{id}` | one listing in full |
 | `GET /designations/search?q=` | trigram search over every recorded spelling |
-| `POST /screen` | a name plus whatever else is known, scored and recorded |
+| `POST /screen` | a name plus whatever else is known, scored and recorded — **writes** |
+| `POST /check` · `POST /adjudications` | the same evidence as a decision, and what the analyst concluded — **writes** |
 | `GET /auth/me` · `GET /admins` · … | who may administer this instance — only when a sign-in is configured |
+
+Where a sign-in is configured, the endpoints marked **writes** require one and the reads do
+not. See [Signing in](#signing-in).
 
 The first three are reads. `POST /screen` also writes: the query, every candidate it
 considered and the evidence behind each score are stored, because a compliance decision
@@ -162,9 +166,17 @@ about, and the job itself is one call into `SanctionsImportService` — the same
 Off by default: with no client id configured the host is entirely unauthenticated, which is
 what the open-source edition is for, and `/auth` and `/admins` are not mapped at all.
 
-Turning it on guards one thing — the endpoints that hand out access. Reading the aggregate
-stays open, because it is a published sanctions list and a login in front of it would
-protect nothing that is not already on the publishers' own websites.
+Turning it on guards **the endpoints that write** — `POST /check`, `POST /screen`,
+`POST /adjudications` — and the endpoints that hand out access. Reading the aggregate stays
+open, because it is a published sanctions list and a login in front of it would protect
+nothing that is not already on the publishers' own websites. What a login does protect is
+this database: every screening and every adjudication leaves rows in it, attributed to
+somebody.
+
+Attribution comes from the token, not from the request body. `requestedBy` and `decidedBy`
+still exist for an unauthenticated host, which has no other way to say who asked — but
+where a token is present it wins, because a self-declared identity beside a proven one is
+just a way to file work under a colleague's name.
 
 ```bash
 # 1. an OAuth client id from Google Cloud Console (Web application)
