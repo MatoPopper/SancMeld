@@ -230,9 +230,30 @@ public class EuFsfXmlParserTests : IAsyncLifetime
     [Theory]
     [InlineData("AB-123 456", "AB123456")]
     [InlineData("ab123456", "AB123456")]
-    [InlineData("IMO 9876543", "IMO9876543")]
     [InlineData("---", "")]
     public void IdentifierNormalisationIsCaseAndPunctuationBlind(string input, string expected)
+        => Assert.Equal(expected, EuFsfXmlParser.NormalizeIdentifier(input));
+
+    /// <summary>
+    /// A word in front of the number is a description of it, and it goes.
+    ///
+    /// This case used to expect "IMO 9876543" to keep its IMO, on the reasoning that a
+    /// three-letter prefix might be part of the number. The list does not work that way:
+    /// every IMO number the EU publishes is stored bare, and all ten values that do carry
+    /// a three-letter prefix are prose — BPA, SSN, TIN, DSO, and the CAR of "CAR
+    /// diplomatic passport no.". Keeping the prefix is what stopped an officer typing
+    /// D00000898 from matching the UN record that spells it out.
+    ///
+    /// Dropping it is safe here because both sides of every comparison call the same
+    /// method, so the stored form and the typed form move together. Checked against the
+    /// live lists: none of the ten shortened values collides with an unrelated subject —
+    /// each matches its own listing, or that listing's counterpart on the other list.
+    /// </summary>
+    [Theory]
+    [InlineData("IMO 9876543", "9876543")]
+    [InlineData("HRB 81573", "81573")]
+    [InlineData("Ration Card no. 0094195", "0094195")]
+    public void IdentifierNormalisationDropsWordsThatDescribeTheNumber(string input, string expected)
         => Assert.Equal(expected, EuFsfXmlParser.NormalizeIdentifier(input));
 
     [Fact]
