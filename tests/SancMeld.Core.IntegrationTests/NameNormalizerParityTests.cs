@@ -100,12 +100,12 @@ public sealed class NameNormalizerParityTests(DatabaseFixture fixture)
     ///
     /// One class of codepoint is excluded, and it cannot be otherwise: '[:alnum:]' is
     /// answered by the database server's C library rather than by Unicode, and no managed
-    /// code can reproduce it. It is not even stable across deployments -- the development
-    /// container is postgres:17-alpine on musl and production is postgres:16 on Debian
-    /// glibc, and the two disagree about 203 codepoints (recently assigned letters,
-    /// medieval combining marks, circled letters, vulgar fractions). So the test asserts
-    /// the stronger thing that is actually true: wherever the two disagree about what a
-    /// letter is, no listing uses that character.
+    /// code can reproduce it. It is not even the same from one server to the next -- a
+    /// musl-based PostgreSQL image and a glibc-based one disagree about 203 codepoints
+    /// (recently assigned letters, medieval combining marks, circled letters, vulgar
+    /// fractions), so two deployments of this schema can normalise one name two ways. The
+    /// test therefore asserts the stronger thing that is actually true: wherever the two
+    /// disagree about what a letter is, no listing uses that character.
     /// </summary>
     [Fact]
     public async Task EveryCodepointNormalisesTheSameWay()
