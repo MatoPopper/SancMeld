@@ -18,6 +18,14 @@ public sealed record ParsedDesignation
     public required string SourceRecordKey { get; init; }
     public short FingerprintVersion { get; init; } = 1;
 
+    /// <summary>
+    /// The reference the publisher prints for citation, where that differs from
+    /// <see cref="ExternalId"/> — the EU's euReferenceNumber ("EU.5878.67"). Other lists
+    /// cite this, not the internal id: without it France's 2 051 declared links to EU
+    /// designations resolve to nothing.
+    /// </summary>
+    public string? PublisherReference { get; init; }
+
     public required SubjectType SubjectType { get; init; }
     public DesignationStatus Status { get; init; } = DesignationStatus.Active;
 

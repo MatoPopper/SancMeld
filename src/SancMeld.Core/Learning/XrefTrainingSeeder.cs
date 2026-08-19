@@ -215,9 +215,14 @@ public sealed class XrefTrainingSeeder(
     /// separately, which is the identifier everyone else cites.
     /// </summary>
     private async Task<IReadOnlyList<ResolvedLink>> ResolvedLinksAsync(CancellationToken ct) =>
+        // Either key, because publishers do not agree on which one to cite. The EU points
+        // at the UN by DATAID-side reference number, which is the UN's external id; France
+        // points at the EU by euReferenceNumber, which is not the EU's external id but its
+        // publisher reference. Matching only the first silently drops 2 051 declared links.
         await (from xref in db.CrossReferences
                join from_ in db.Designations on xref.DesignationId equals from_.Id
-               join to in db.Designations on xref.TargetExternalId equals to.ExternalId
+               from to in db.Designations.Where(d =>
+                   d.ExternalId == xref.TargetExternalId || d.PublisherReference == xref.TargetExternalId)
                join target in db.Sources on to.SourceId equals target.Id
                where from_.ValidTo == null
                      && to.ValidTo == null

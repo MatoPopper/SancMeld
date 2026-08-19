@@ -27,6 +27,7 @@ internal static class DesignationMapper
             Id = Guid.CreateVersion7(),
             SourceId = sourceId,
             ExternalId = parsed.ExternalId,
+            PublisherReference = parsed.PublisherReference,
             SourceRecordKey = parsed.SourceRecordKey,
             FingerprintVersion = parsed.FingerprintVersion,
             SubjectType = parsed.SubjectType,

@@ -1,0 +1,806 @@
+{
+ "Publications": {
+  "DatePublication": "2026-08-19T12:24:27.0208742+02:00",
+  "PublicationDetail": [
+   {
+    "IdRegistre": 6699,
+    "Nature": "Personne physique",
+    "Nom": "LAPIN",
+    "RegistreDetail": [
+     {
+      "TypeChamp": "PRENOM",
+      "Valeur": [
+       {
+        "Prenom": "Aleksandr Pavlovich "
+       }
+      ]
+     },
+     {
+      "TypeChamp": "ALIAS",
+      "Valeur": [
+       {
+        "Alias": "Александр Павлович ЛАПИН",
+        "Commentaire": ""
+       }
+      ]
+     },
+     {
+      "TypeChamp": "SEXE",
+      "Valeur": [
+       {
+        "Sexe": "Masculin"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "DATE_DE_NAISSANCE",
+      "Valeur": [
+       {
+        "Jour": "01",
+        "Mois": "01",
+        "Annee": "1964",
+        "Commentaire": ""
+       }
+      ]
+     },
+     {
+      "TypeChamp": "LIEU_DE_NAISSANCE",
+      "Valeur": [
+       {
+        "Lieu": "Kazan, ex-URSS",
+        "Pays": "RUSSIE"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "NATIONALITE",
+      "Valeur": [
+       {
+        "Pays": "RUSSIE",
+        "Commentaire": ""
+       }
+      ]
+     },
+     {
+      "TypeChamp": "TITRE",
+      "Valeur": [
+       {
+        "Titre": "Ancien chef d'état-major des forces terrestres russes"
+       },
+       {
+        "Titre": "Chef du district militaire de Leningrad"
+       },
+       {
+        "Titre": "Colonel général"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "AUTRE_IDENTITE",
+      "Valeur": [
+       {
+        "NumeroCarte": "344407793386",
+        "Commentaire": "Numéro d'identification fiscale"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "PASSEPORT",
+      "Valeur": [
+       {
+        "NumeroPasseport": " série 1808 n° 233282",
+        "Commentaire": "ou carte d'identité"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "MOTIFS",
+      "Valeur": [
+       {
+        "Motifs": "Le colonel général Aleksandr Lapin est l’ancien chef d’état-major des forces terrestres russes. À ce titre, il était le commandant en chef des troupes russes au sol et il a participé directement à la guerre d’agression menée par la Russie contre l’Ukraine. Il était auparavant le commandant du district militaire central de la Fédération de Russie, notamment pendant la guerre menée par la Russie contre l’Ukraine. À ce titre, il a commandé l’offensive russe de 2022 contre Tchernihiv et Soumy. En mai 2024, le colonel général Aleksandr Lapin a été nommé chef du district militaire de Leningrad. En assumant cette fonction et en agissant en cette qualité, le colonel général Aleksandr Lapin est responsable de soutenir et de mettre en œuvre des actions et des politiques qui compromettent et menacent l’intégrité territoriale, la souveraineté et l’indépendance de l’Ukraine."
+       }
+      ]
+     },
+     {
+      "TypeChamp": "FONDEMENT_JURIDIQUE",
+      "Valeur": [
+       {
+        "FondementJuridique": 3598,
+        "FondementJuridiqueLabel": "(UE) 2023/1216 du 23/06/2023 (UE Ukraine intégrité territoriale - R (UE) 269/2014)"
+       },
+       {
+        "FondementJuridique": 3799,
+        "FondementJuridiqueLabel": "(UE) 2024/2455 du 12/09/2024 (UE Ukraine intégrité territoriale - R (UE) 269/2014)"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "REFERENCE_UE",
+      "Valeur": [
+       {
+        "ReferenceUe": "EU.10283.92"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "IdRegistre": 1006,
+    "Nature": "Personne physique",
+    "Nom": "MAALIM AYMAN",
+    "RegistreDetail": [
+     {
+      "TypeChamp": "ALIAS",
+      "Valeur": [
+       {
+        "Alias": "Ma'alim Ayman",
+        "Commentaire": ""
+       },
+       {
+        "Alias": "Mo'alim Ayman",
+        "Commentaire": ""
+       },
+       {
+        "Alias": "Nuh Ibrahim Abdi",
+        "Commentaire": ""
+       },
+       {
+        "Alias": "Ayman Kabo",
+        "Commentaire": ""
+       },
+       {
+        "Alias": "Abdiaziz Dubow Ali",
+        "Commentaire": ""
+       }
+      ]
+     },
+     {
+      "TypeChamp": "DATE_DE_NAISSANCE",
+      "Valeur": [
+       {
+        "Jour": "",
+        "Mois": "",
+        "Annee": "1973",
+        "Commentaire": ""
+       },
+       {
+        "Jour": "",
+        "Mois": "",
+        "Annee": "1983",
+        "Commentaire": ""
+       }
+      ]
+     },
+     {
+      "TypeChamp": "LIEU_DE_NAISSANCE",
+      "Valeur": [
+       {
+        "Lieu": "",
+        "Pays": "KENYA"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "TITRE",
+      "Valeur": [
+       {
+        "Titre": "Fondateur et chef de Jeïch Aïman, faction d'Al-Shabaab menant des attaques et des opérations au Kenya et en Somalie"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "ADRESSE_PP",
+      "Valeur": [
+       {
+        "Adresse": "Frontière entre le Kenya et la Somalie",
+        "Pays": "SOMALIE"
+       },
+       {
+        "Adresse": "Badamadow, région du Bas-Djouba",
+        "Pays": "SOMALIE"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "MOTIFS",
+      "Valeur": [
+       {
+        "Motifs": "Inscrit en application de l'alinéa a) du paragraphe 8 de la résolution 1844 (2008) pour s'être livré à des actes qui menacent la paix, la sécurité ou la stabilité de la Somalie, notamment des actes qui mettent en péril l'Accord de Djibouti du 18 août 2008 ou le processus politique, pour avoir apporté son appui à leur exécution, ou pour avoir menacé par la force les Institutions fédérales de transition ou l'AMISOM. Ayman a participé aux préparatifs de l'attaque perpétrée le 5 janvier 2020 contre le camp Simba dans le comté de Lamu (Kenya)."
+       }
+      ]
+     },
+     {
+      "TypeChamp": "FONDEMENT_JURIDIQUE",
+      "Valeur": [
+       {
+        "FondementJuridique": 978,
+        "FondementJuridiqueLabel": "décision du comité des sanctions des Nations unies du 26/02/2021 (ONU Somalie - RCSNU 751 (1992) et R (UE) 356/2010)"
+       },
+       {
+        "FondementJuridique": 1043,
+        "FondementJuridiqueLabel": "(UE) 2021/559 du 06/04/2021 (ONU Somalie - RCSNU 751 (1992) et R (UE) 356/2010)"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "REFERENCE_UE",
+      "Valeur": [
+       {
+        "ReferenceUe": "EU.6192.33"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "REFERENCE_ONU",
+      "Valeur": [
+       {
+        "ReferenceOnu": "SOi.019"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "IdRegistre": 2763,
+    "Nature": "Personne physique",
+    "Nom": "ABDUL BARI AKHUND",
+    "RegistreDetail": [
+     {
+      "TypeChamp": "ALIAS",
+      "Valeur": [
+       {
+        "Alias": "Haji Mullah Sahib",
+        "Commentaire": ""
+       },
+       {
+        "Alias": "Zakir",
+        "Commentaire": "alias faible"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "DATE_DE_NAISSANCE",
+      "Valeur": [
+       {
+        "Jour": "",
+        "Mois": "",
+        "Annee": "1953",
+        "Commentaire": "vers"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "LIEU_DE_NAISSANCE",
+      "Valeur": [
+       {
+        "Lieu": "District de Baghran, province de Helmand",
+        "Pays": "AFGHANISTAN"
+       },
+       {
+        "Lieu": "District de Now Zad, province de Helmand",
+        "Pays": "AFGHANISTAN"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "NATIONALITE",
+      "Valeur": [
+       {
+        "Pays": "AFGHANISTAN",
+        "Commentaire": ""
+       }
+      ]
+     },
+     {
+      "TypeChamp": "TITRE",
+      "Valeur": [
+       {
+        "Titre": "Maulavi "
+       },
+       {
+        "Titre": "Mollah"
+       },
+       {
+        "Titre": "Gouverneur de la province de Helmand sous le régime des Taliban"
+       },
+       {
+        "Titre": "Membre du Conseil suprême des Taliban depuis 2009 "
+       }
+      ]
+     },
+     {
+      "TypeChamp": "MOTIFS",
+      "Valeur": [
+       {
+        "Motifs": "Se trouverait dans la région frontalière entre l'Afghanistan et le Pakistan - il appartient à la tribu Alokozai - est membre de la direction des Taliban dans la province de Helmand, Afghanistan."
+       }
+      ]
+     },
+     {
+      "TypeChamp": "FONDEMENT_JURIDIQUE",
+      "Valeur": [
+       {
+        "FondementJuridique": 753,
+        "FondementJuridiqueLabel": "décision du comité des sanctions des Nations unies du 23/02/2001 (ONU Afghanistan/Taliban - Résolution 1988 (2011) du CSNU et R (UE) 753/2011)"
+       },
+       {
+        "FondementJuridique": 458,
+        "FondementJuridiqueLabel": "(UE) 753/2011 du 01/08/2011 (ONU Afghanistan/Taliban - Résolution 1988 (2011) du CSNU et R (UE) 753/2011)"
+       },
+       {
+        "FondementJuridique": 459,
+        "FondementJuridiqueLabel": "(UE) 968/2011 du 29/09/2011 (ONU Afghanistan/Taliban - Résolution 1988 (2011) du CSNU et R (UE) 753/2011)"
+       },
+       {
+        "FondementJuridique": 591,
+        "FondementJuridiqueLabel": "(UE) 263/2012 du 23/03/2012 (ONU Afghanistan/Taliban - Résolution 1988 (2011) du CSNU et R (UE) 753/2011)"
+       },
+       {
+        "FondementJuridique": 595,
+        "FondementJuridiqueLabel": "(UE) 1139/2012 du 03/12/2012 (ONU Afghanistan/Taliban - Résolution 1988 (2011) du CSNU et R (UE) 753/2011)"
+       },
+       {
+        "FondementJuridique": 610,
+        "FondementJuridiqueLabel": "(UE) 2017/404 du 07/03/2017 (ONU Afghanistan/Taliban - Résolution 1988 (2011) du CSNU et R (UE) 753/2011)"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "REFERENCE_ONU",
+      "Valeur": [
+       {
+        "ReferenceOnu": "TAi.094"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "IdRegistre": 2218,
+    "Nature": "Navire",
+    "Nom": "Ocean Maritime Management Company, Limited - navire HUI CHON",
+    "RegistreDetail": [
+     {
+      "TypeChamp": "ALIAS",
+      "Valeur": [
+       {
+        "Alias": "HWANG GUM SAN 2",
+        "Commentaire": ""
+       }
+      ]
+     },
+     {
+      "TypeChamp": "NUMERO_OMI",
+      "Valeur": [
+       {
+        "NumeroOMI": "8405270"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "MOTIFS",
+      "Valeur": [
+       {
+        "Motifs": "Navire appartenant à Ocean Maritime Management Company (OMM)"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "FONDEMENT_JURIDIQUE",
+      "Valeur": [
+       {
+        "FondementJuridique": 364,
+        "FondementJuridiqueLabel": "Décision du comité de sanction des Nations unies du 02/03/2016 (ONU Corée du Nord - RCSNU 1718 (2006) et R (UE) 2017/1509)"
+       },
+       {
+        "FondementJuridique": 421,
+        "FondementJuridiqueLabel": "(UE) 2017/1509 du 30/08/2017 (ONU Corée du Nord - RCSNU 1718 (2006) et R (UE) 2017/1509)"
+       },
+       {
+        "FondementJuridique": 2433,
+        "FondementJuridiqueLabel": "(UE) 2022/1503 du 09/09/2022 (ONU Corée du Nord - RCSNU 1718 (2006) et R (UE) 2017/1509)"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "IdRegistre": 7805,
+    "Nature": "Personne morale",
+    "Nom": "JSC Gruppa Kremniy El",
+    "RegistreDetail": [
+     {
+      "TypeChamp": "ALIAS",
+      "Valeur": [
+       {
+        "Alias": "АО Группа Кремний Эл",
+        "Commentaire": "En russe"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "IDENTIFICATION",
+      "Valeur": [
+       {
+        "Identification": "/",
+        "Commentaire": "Type d’entité: société par actions  - Principal établissement: Fédération de Russie"
+       },
+       {
+        "Identification": "1023202741781",
+        "Commentaire": "Numéro d’enregistrement"
+       },
+       {
+        "Identification": "3234043140",
+        "Commentaire": "Numéro d’identification fiscale"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "ADRESSE_PM",
+      "Valeur": [
+       {
+        "Adresse": "Krasnoarmeyskaya Str. 103, 241050 Bryansk, Bryanskaya Oblast, Fédération de Russie",
+        "Pays": "RUSSIE"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "TELEPHONE",
+      "Valeur": [
+       {
+        "Telephone": "+ 7 (4832) 41-43-11"
+       },
+       {
+        "Telephone": "+ 7 (4832)  41-42-34"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "SITE_INTERNET",
+      "Valeur": [
+       {
+        "SiteInternet": "https://group-kremny.ru/"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "COURRIEL",
+      "Valeur": [
+       {
+        "Courriel": "group@kremny.032.ru"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "MOTIFS",
+      "Valeur": [
+       {
+        "Motifs": "JSC Gruppa Kremniy El est le deuxième plus grand fabricant de microélectronique en Russie et, en particulier, un fabricant de micropuces. Les micropuces produites par JSC Gruppa Kremniy El dans son usine sont utilisées par l'armée russe à plusieurs fins, y compris dans les missiles balistiques Iskander. La société fait également partie du programme fédéral russe “Alternative”, qui vise à développer de nouveaux radars basés sur des réseaux actifs en phase, destinés à la défense aérienne et à être installés sur des aéronefs et des navires. Par conséquent, JSC Gruppa Kremniy El est responsable d'apporter un soutien, matériel ou financier, à des actions qui compromettent ou menacent l'intégrité territoriale, la souveraineté et l'indépendance de l'Ukraine."
+       }
+      ]
+     },
+     {
+      "TypeChamp": "FONDEMENT_JURIDIQUE",
+      "Valeur": [
+       {
+        "FondementJuridique": 3855,
+        "FondementJuridiqueLabel": "(UE) 2024/3183 du 16/12/2024 (UE Ukraine intégrité territoriale - R (UE) 269/2014)"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "REFERENCE_UE",
+      "Valeur": [
+       {
+        "ReferenceUe": "EU.12598.59"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "IdRegistre": 2764,
+    "Nature": "Personne physique",
+    "Nom": "ABDUL GHAFAR QURISHI ABDUL GHANI",
+    "RegistreDetail": [
+     {
+      "TypeChamp": "ALIAS",
+      "Valeur": [
+       {
+        "Alias": "Abdul Ghaffar Qureshi",
+        "Commentaire": ""
+       }
+      ]
+     },
+     {
+      "TypeChamp": "DATE_DE_NAISSANCE",
+      "Valeur": [
+       {
+        "Jour": "",
+        "Mois": "",
+        "Annee": "1970",
+        "Commentaire": ""
+       },
+       {
+        "Jour": "",
+        "Mois": "",
+        "Annee": "1967",
+        "Commentaire": ""
+       }
+      ]
+     },
+     {
+      "TypeChamp": "LIEU_DE_NAISSANCE",
+      "Valeur": [
+       {
+        "Lieu": "Village de Turshut, district de Wursaj, province de Takhar",
+        "Pays": "AFGHANISTAN"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "NATIONALITE",
+      "Valeur": [
+       {
+        "Pays": "AFGHANISTAN",
+        "Commentaire": ""
+       }
+      ]
+     },
+     {
+      "TypeChamp": "TITRE",
+      "Valeur": [
+       {
+        "Titre": "Maulavi"
+       },
+       {
+        "Titre": "Attaché chargé du rapatriement, «ambassade» des talibans, Islamabad, Pakistan "
+       }
+      ]
+     },
+     {
+      "TypeChamp": "ADRESSE_PP",
+      "Valeur": [
+       {
+        "Adresse": "Khairkhana Section Number 3, Kabul",
+        "Pays": "AFGHANISTAN"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "AUTRE_IDENTITE",
+      "Valeur": [
+       {
+        "NumeroCarte": "55130",
+        "Commentaire": "n° d'identification national - carte d'identité nationale afghane, tazkira"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "PASSEPORT",
+      "Valeur": [
+       {
+        "NumeroPasseport": "D 000933",
+        "Commentaire": "Passeport afghan délivré à Kaboul le 13/09/1998"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "MOTIFS",
+      "Valeur": [
+       {
+        "Motifs": "Impliqué dans un trafic de stupéfiants  - membre du groupe ethnique Tadjik"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "FONDEMENT_JURIDIQUE",
+      "Valeur": [
+       {
+        "FondementJuridique": 754,
+        "FondementJuridiqueLabel": "décision du comité des sanctions des Nations unies du 25/01/2001 (ONU Afghanistan/Taliban - Résolution 1988 (2011) du CSNU et R (UE) 753/2011)"
+       },
+       {
+        "FondementJuridique": 458,
+        "FondementJuridiqueLabel": "(UE) 753/2011 du 01/08/2011 (ONU Afghanistan/Taliban - Résolution 1988 (2011) du CSNU et R (UE) 753/2011)"
+       },
+       {
+        "FondementJuridique": 459,
+        "FondementJuridiqueLabel": "(UE) 968/2011 du 29/09/2011 (ONU Afghanistan/Taliban - Résolution 1988 (2011) du CSNU et R (UE) 753/2011)"
+       },
+       {
+        "FondementJuridique": 591,
+        "FondementJuridiqueLabel": "(UE) 263/2012 du 23/03/2012 (ONU Afghanistan/Taliban - Résolution 1988 (2011) du CSNU et R (UE) 753/2011)"
+       },
+       {
+        "FondementJuridique": 593,
+        "FondementJuridiqueLabel": "(UE) 543/2012 du 25/06/2012 (ONU Afghanistan/Taliban - Résolution 1988 (2011) du CSNU et R (UE) 753/2011)"
+       },
+       {
+        "FondementJuridique": 603,
+        "FondementJuridiqueLabel": "(UE) 263/2014 du 14/03/2014 (ONU Afghanistan/Taliban - Résolution 1988 (2011) du CSNU et R (UE) 753/2011)"
+       },
+       {
+        "FondementJuridique": 610,
+        "FondementJuridiqueLabel": "(UE) 2017/404 du 07/03/2017 (ONU Afghanistan/Taliban - Résolution 1988 (2011) du CSNU et R (UE) 753/2011)"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "IdRegistre": 2457,
+    "Nature": "Personne physique",
+    "Nom": "CHU HYO'K",
+    "RegistreDetail": [
+     {
+      "TypeChamp": "ALIAS",
+      "Valeur": [
+       {
+        "Alias": "Ju Hyok",
+        "Commentaire": ""
+       }
+      ]
+     },
+     {
+      "TypeChamp": "SEXE",
+      "Valeur": [
+       {
+        "Sexe": "Masculin"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "DATE_DE_NAISSANCE",
+      "Valeur": [
+       {
+        "Jour": "23",
+        "Mois": "11",
+        "Annee": "1986",
+        "Commentaire": ""
+       }
+      ]
+     },
+     {
+      "TypeChamp": "NATIONALITE",
+      "Valeur": [
+       {
+        "Pays": "CORÉE DU NORD",
+        "Commentaire": ""
+       }
+      ]
+     },
+     {
+      "TypeChamp": "TITRE",
+      "Valeur": [
+       {
+        "Titre": "Ancien représentant adjoint de la Foreign Trade Bank à l'étranger"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "PASSEPORT",
+      "Valeur": [
+       {
+        "NumeroPasseport": "836420186",
+        "Commentaire": " délivré le 28.10.2016 (date d'expiration: 28.10.2021)"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "MOTIFS",
+      "Valeur": [
+       {
+        "Motifs": "Ancien représentant adjoint de la Foreign Trade Bank à l'étranger."
+       }
+      ]
+     },
+     {
+      "TypeChamp": "FONDEMENT_JURIDIQUE",
+      "Valeur": [
+       {
+        "FondementJuridique": 417,
+        "FondementJuridiqueLabel": "décision du comité des sanctions des Nations unies du 22/12/2017 (ONU Corée du Nord - RCSNU 1718 (2006) et R (UE) 2017/1509)"
+       },
+       {
+        "FondementJuridique": 424,
+        "FondementJuridiqueLabel": "(UE) 2018/12 du 08/01/2018 (ONU Corée du Nord - RCSNU 1718 (2006) et R (UE) 2017/1509)"
+       },
+       {
+        "FondementJuridique": 3600,
+        "FondementJuridiqueLabel": "décision du comité des sanctions des Nations unies du 29/06/2023 (ONU Corée du Nord - RCSNU 1718 (2006) et R (UE) 2017/1509)"
+       },
+       {
+        "FondementJuridique": 3660,
+        "FondementJuridiqueLabel": "(UE) 2023/2576 du 13/11/2023 (ONU Corée du Nord - RCSNU 1718 (2006) et R (UE) 2017/1509)"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "REFERENCE_UE",
+      "Valeur": [
+       {
+        "ReferenceUe": " EU.4262.62"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "IdRegistre": 8114,
+    "Nature": "Personne morale",
+    "Nom": "Limited Liability Company “Moscow Arms Company”",
+    "RegistreDetail": [
+     {
+      "TypeChamp": "ALIAS",
+      "Valeur": [
+       {
+        "Alias": "Общество с Ограниченной Ответственностью “Московская Оружейная Компания”",
+        "Commentaire": "En russe"
+       },
+       {
+        "Alias": "LLC “Moscow Arms Company”",
+        "Commentaire": ""
+       },
+       {
+        "Alias": "“Московская Оружейная Компания”",
+        "Commentaire": ""
+       },
+       {
+        "Alias": "BespokeGun",
+        "Commentaire": ""
+       }
+      ]
+     },
+     {
+      "TypeChamp": "IDENTIFICATION",
+      "Valeur": [
+       {
+        "Identification": "/",
+        "Commentaire": "Date d'enregistrement: 22.10.2014 - Principal établissement: Fédération de Russie"
+       },
+       {
+        "Identification": "1145012005335",
+        "Commentaire": "Numéro d'enregistrement"
+       },
+       {
+        "Identification": "5012086643",
+        "Commentaire": "Numéro d'identification fiscale"
+       },
+       {
+        "Identification": "34893133",
+        "Commentaire": "OKPO"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "ADRESSE_PM",
+      "Valeur": [
+       {
+        "Adresse": "141009, région de Moscou, district urbain de Mytishchi, Mytishchi city, Novoslobodskaya street, building 1, Fédération de Russie",
+        "Pays": ""
+       }
+      ]
+     },
+     {
+      "TypeChamp": "MOTIFS",
+      "Valeur": [
+       {
+        "Motifs": "LLC “Moscow Arms Company” (marque BespokeGun) conçoit et fabrique des armes, notamment des fusils de haute précision des séries Raptor Tactical et Specter pour les forces armées de la Fédération de Russie. Depuis 2022, les fusils de haute précision de la série Raptor sont utilisés par les tireurs d'élite des forces armées russes dans le cadre de la guerre d'agression menée par la Russie contre l'Ukraine. LLC “Moscow Arms Company” améliore la conception de ses fusils manufacturés en coordination avec les forces armées russes et l'université russe des forces spéciales (Gudermes). Les fusils de haute précision produits par LLC “Moscow Arms Company” sont activement utilisés par les tireurs d'élite russes en première ligne. Au moins 350 complexes de fusils de haute précision fabriqués par LLC “Moscow Arms Company” ont été fournis aux forces armées russes. Par conséquent, LLC “Moscow Arms Company” soutient matériellement des actions qui compromettent et menacent l'intégrité territoriale, la souveraineté et l'indépendance de l'Ukraine."
+       }
+      ]
+     },
+     {
+      "TypeChamp": "FONDEMENT_JURIDIQUE",
+      "Valeur": [
+       {
+        "FondementJuridique": 3919,
+        "FondementJuridiqueLabel": "(UE) 2025/933 du 20/05/2025 (UE Ukraine intégrité territoriale - R (UE) 269/2014)"
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

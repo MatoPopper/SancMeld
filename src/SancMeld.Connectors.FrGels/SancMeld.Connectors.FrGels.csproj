@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>SancMeld.Connectors.FrGels</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="SancMeld.Connectors.FrGels.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.4" />
+    <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="10.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../SancMeld.Core/SancMeld.Core.csproj" />
+  </ItemGroup>
+
+</Project>

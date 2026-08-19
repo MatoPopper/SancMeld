@@ -195,6 +195,11 @@ public class SancMeldDbContext(DbContextOptions<SancMeldDbContext> options) : Db
 
             e.HasIndex(x => new { x.SourceId, x.SourceRecordKey });
             e.HasIndex(x => new { x.ValidFrom, x.ValidTo });
+
+            // Cross-list links are looked up by whichever reference the citing publisher
+            // used, so both sides of that choice have to be indexed.
+            e.HasIndex(x => x.ExternalId).HasFilter("external_id IS NOT NULL");
+            e.HasIndex(x => x.PublisherReference).HasFilter("publisher_reference IS NOT NULL");
             e.HasIndex(x => x.RawRecord).HasMethod("gin");
         });
 

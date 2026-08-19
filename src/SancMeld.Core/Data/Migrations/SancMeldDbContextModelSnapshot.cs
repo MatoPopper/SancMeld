@@ -306,6 +306,10 @@ namespace SancMeld.Core.Data.Migrations
                         .HasColumnType("date")
                         .HasColumnName("listed_at");
 
+                    b.Property<string>("PublisherReference")
+                        .HasColumnType("text")
+                        .HasColumnName("publisher_reference");
+
                     b.Property<string>("RawRecord")
                         .IsRequired()
                         .HasColumnType("jsonb")
@@ -362,6 +366,14 @@ namespace SancMeld.Core.Data.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_designation");
+
+                    b.HasIndex("ExternalId")
+                        .HasDatabaseName("ix_designation_external_id")
+                        .HasFilter("external_id IS NOT NULL");
+
+                    b.HasIndex("PublisherReference")
+                        .HasDatabaseName("ix_designation_publisher_reference")
+                        .HasFilter("publisher_reference IS NOT NULL");
 
                     b.HasIndex("RawRecord")
                         .HasDatabaseName("ix_designation_raw_record");

@@ -156,6 +156,16 @@ public class Designation
     /// <summary>Publisher's own id where one exists: EU Entity_LogicalId, UN DATAID, FR IdRegistre.</summary>
     public string? ExternalId { get; set; }
 
+    /// <summary>
+    /// The reference this publisher prints for the record, when it is not the id above.
+    ///
+    /// Publishers cite each other by these, not by internal ids: France's REFERENCE_UE
+    /// says "EU.5878.67", which is the EU's euReferenceNumber and not its logicalId, so a
+    /// declared link between two lists can only be resolved through this column. The UN
+    /// needs none — its reference number IS its external id ("IRi.024").
+    /// </summary>
+    public string? PublisherReference { get; set; }
+
     /// <summary>Never null. Where the publisher has no id, a deterministic fingerprint.</summary>
     public required string SourceRecordKey { get; set; }
     public short FingerprintVersion { get; set; } = 1;

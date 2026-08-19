@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using SancMeld.Connectors.EuFsf;
+using SancMeld.Connectors.FrGels;
 using SancMeld.Connectors.UnSc;
 using SancMeld.Core.Abstractions;
 using SancMeld.Core.Configuration;
@@ -104,6 +105,7 @@ public static class SancMeldExtensions
 
         services.AddEuFsfConnector(configuration);
         services.AddUnScConnector(configuration);
+        services.AddFrGelsConnector(configuration);
 
         // TODO: adjudication capture, and scheduled runs of the import.
         // Defaults are single-tenant and unauthenticated by design; the hosted

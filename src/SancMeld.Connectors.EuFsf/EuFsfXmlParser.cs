@@ -82,6 +82,11 @@ internal static partial class EuFsfXmlParser
             // The publisher's own primary key, stable across releases, so no fingerprint
             // has to be invented here.
             ExternalId = logicalId,
+
+            // Not the same thing as the id above, and the difference matters: France
+            // declares its links to EU designations as "EU.5878.67", which is this
+            // attribute and nothing else. Without it those 2 051 links point at nothing.
+            PublisherReference = Value(e.Attribute("euReferenceNumber")),
             SourceRecordKey = logicalId,
 
             SubjectType = MapSubjectType(e.Element(Ns + "subjectType")),
