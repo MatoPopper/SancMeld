@@ -10,7 +10,7 @@ Built for the EU: EU and UN designations are treated as legally binding, third-c
 lists such as OFAC are surfaced as red flags only.
 
 ```
-Status: early development. Two connectors, working endpoints, no production sign-off.
+Status: early development. Three connectors, working endpoints, no production sign-off.
 ```
 
 Three properties drive the design:
@@ -33,12 +33,18 @@ in the connector that implements each one.
 |---|---|---|---:|---|
 | **EU** Consolidated Financial Sanctions (FSF) | binding | XML | 6 234 subjects | **implemented** |
 | **UN** Security Council Consolidated List | binding | XML | 736 persons + 275 entities | **implemented** |
-| **FR** Registre national des gels (DG Trésor) | binding | **JSON API** | 6 574 records | planned |
-| **PL** Lista osób i podmiotów (MSWiA) | binding | XLSX | ~738 rows | planned |
-| **NL** Nationale terrorismelijst | binding | ODS | small | planned |
-| **CZ** Vnitrostátní sankční seznam (MZV) | binding | PDF | small | research |
+| **FR** Registre national des gels (DG Trésor) | advisory¹ | **JSON API** | 6 578 records | **implemented** |
+| **PL** Lista osób i podmiotów (MSWiA) | advisory¹ | XLSX | ~738 rows | planned |
+| **NL** Nationale terrorismelijst | advisory¹ | ODS | small | planned |
+| **CZ** Vnitrostátní sankční seznam (MZV) | advisory¹ | PDF | small | research |
 | **OFAC** SDN + Consolidated | **advisory only** | CSV | 19 178 + 481 | planned |
 | **UK** OFSI Consolidated List | **advisory only** | CSV / XML | — | candidate |
+
+¹ A national list binds in the member state that publishes it, not on a reader elsewhere in
+the EU — so it is shown as something to look at, not something that obliges. "Binding in one
+member state" is a distinction the model does not have yet. France is imported for the
+qualifiers it records twice: 2 051 of its records name the EU designation they correspond
+to and 337 the UN one.
 
 Most EU member states publish no separate national list and rely on EU/UN designations.
 That is recorded explicitly per jurisdiction rather than left as an unexplained gap.
