@@ -455,3 +455,7 @@ ml/**/artifacts/
 # This is a guard: if a docs/ folder ever reappears here it is a mistake,
 # not something to publish. Remove this line when public docs are written.
 /docs/
+
+# Where deploy.sh ships to. Not a secret, but an SSH user beside a host name is half a
+# login, and this repository is public.
+deploy.env

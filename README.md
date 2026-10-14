@@ -286,6 +286,27 @@ reuse the core without forking it.
 
 ---
 
+## Deploying
+
+One host, which builds the image itself:
+
+```bash
+./deploy.sh             # ships HEAD — not the working tree — builds on the host, starts, checks /health
+./deploy.sh rollback    # the previous image back, one command
+```
+
+`git archive HEAD` goes over SSH to `~/sancmeld/app`, the multi-stage Dockerfile builds
+there, `docker compose up -d` restarts the container, and the script refuses to call it
+done until `/health` answers through the host's port and then through the public URL. The
+image that was running is kept as `:previous`; the new one carries the commit as an OCI
+label, so `docker image inspect` says what is deployed.
+
+The script names no host. Copy `deploy.env.example` to `deploy.env` (git-ignored) with
+your SSH target and public URL — an SSH user beside a host name is half a login, and this
+repository is public. No secrets pass through either: the connection string and the Google
+client id live in `docker-compose.yml` on the host, where migrations are applied on start
+(`SancMeld:Database:AutoMigrate=true`).
+
 ## Open core
 
 This repository is the complete, usable core under Apache-2.0: all connectors, the schema,
