@@ -156,6 +156,17 @@ how much a matching birth year, country or document should move a score. That ar
 second `IScoringStrategy` and a second row in `match_algorithm`, never as an edit to the one
 past decisions point at, because a stored decision must keep meaning what it meant.
 
+**One thing a model does reach that the trigram cannot: another script.** A multilingual
+embedding model (`bge-m3`) was measured as a *second* candidate generator beside the
+trigram, never instead of it — `tools/SancMeld.Experiments.NameEmbeddings` has the method
+and the numbers. On 7 981 listings whose non-Latin spelling was hidden from the index and
+used as the query, the trigram reaches 0 % by construction and the embedding 96.3 %
+recall@25 (Cyrillic 98.9 %, Arabic 88.6 %, Korean 61.7 %). On the 2 411 pairs publishers
+declare between their lists, fusing the two adds 0.6 points and loses nothing the trigram
+had. The cost is one more vector per recorded name: 8 ms a query by brute force, and 45–76
+ms to embed the query on a 2012 Xeon with no GPU. Not built yet; when it is, it arrives as
+vectors in the existing database and the model's name and hash as a row in `match_algorithm`.
+
 The labels cannot come from string similarity: 56.3 % of genuinely positive pairs are not
 string-related at all — different script (`Michail GRIB` ↔ `Міхаіл ГРЫБ`), translation
 (`JSC FINAM Investment Bank` ↔ `АО Банк ФИНАМ`), or an unrelated alias. They come from
@@ -266,6 +277,7 @@ src/
   SancMeld.Api/             endpoints as a LIBRARY: AddSancMeld() / MapSancMeld()
   SancMeld.Server/          thin host
 tests/                      unit tests, plus integration tests against a real PostgreSQL
+tools/                      measurements that decide what gets built — not shipped
 fixtures/                   real downloaded samples, for parser regression tests
 ```
 

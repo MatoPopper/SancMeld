@@ -1,0 +1,6 @@
+# Embeddings of every recorded name, per model. Rebuilt from the database and the model;
+# 80 MB of floats has no business in git.
+cache/
+
+# One JSON per run, with a row per link. The numbers worth keeping go into README.md.
+results/

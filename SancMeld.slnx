@@ -7,6 +7,9 @@
     <Project Path="src/SancMeld.Core/SancMeld.Core.csproj" />
     <Project Path="src/SancMeld.Server/SancMeld.Server.csproj" />
   </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/SancMeld.Experiments.NameEmbeddings/SancMeld.Experiments.NameEmbeddings.csproj" />
+  </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/SancMeld.Connectors.EuFsf.Tests/SancMeld.Connectors.EuFsf.Tests.csproj" />
     <Project Path="tests/SancMeld.Connectors.FrGels.Tests/SancMeld.Connectors.FrGels.Tests.csproj" />

@@ -214,7 +214,7 @@ public sealed class XrefTrainingSeeder(
     /// keys its records by a numeric DATAID and publishes the QDi./KPi. reference
     /// separately, which is the identifier everyone else cites.
     /// </summary>
-    private async Task<IReadOnlyList<ResolvedLink>> ResolvedLinksAsync(CancellationToken ct) =>
+    public async Task<IReadOnlyList<ResolvedLink>> ResolvedLinksAsync(CancellationToken ct = default) =>
         // Either key, because publishers do not agree on which one to cite. The EU points
         // at the UN by DATAID-side reference number, which is the UN's external id; France
         // points at the EU by euReferenceNumber, which is not the EU's external id but its
@@ -268,7 +268,13 @@ public sealed class XrefTrainingSeeder(
         };
     }
 
-    private sealed record ResolvedLink(Guid FromDesignationId, Guid ToDesignationId, string TargetSourceCode);
+    /// <summary>
+    /// One declared link whose both ends exist. Public because it is the ground truth any
+    /// retrieval experiment has to be measured on — the pairs two publishers agree are the
+    /// same subject — and an experiment that built its own list would be measuring a
+    /// different thing from what the corpus was seeded from.
+    /// </summary>
+    public sealed record ResolvedLink(Guid FromDesignationId, Guid ToDesignationId, string TargetSourceCode);
 }
 
 public sealed class XrefSeedResult

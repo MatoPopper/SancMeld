@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>SancMeld.Experiments.NameEmbeddings</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.4" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.4" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.4" />
+    <!-- SIMD dot products. 2 400 queries against 20 000 vectors of 1 024 floats is 50 G
+         multiplications, which a scalar loop turns into a coffee break. -->
+    <PackageReference Include="System.Numerics.Tensors" Version="10.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Core only. SancMeld.Api would pull in ASP.NET for a tool that serves nothing. -->
+    <ProjectReference Include="../../src/SancMeld.Core/SancMeld.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>
