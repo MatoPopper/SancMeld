@@ -18,6 +18,9 @@ public static class WellKnownIds
     /// <summary>The rules-based matcher. A trained model becomes a second row, not an edit.</summary>
     public static readonly Guid RulesAlgorithm = new("0195a1f0-0000-7000-8000-000000000201");
 
+    /// <summary>bge-m3 through Ollama, the model the retrieval measurement was made with.</summary>
+    public static readonly Guid BgeM3Model = new("0195a1f0-0000-7000-8000-000000000301");
+
     /// <summary>
     /// Seeded rows need a fixed timestamp. Anything derived from the clock would make
     /// every migration regeneration produce a diff, and EF compares seed data by value.

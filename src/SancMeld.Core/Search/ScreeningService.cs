@@ -7,6 +7,7 @@ using SancMeld.Core.Abstractions;
 using SancMeld.Core.Configuration;
 using SancMeld.Core.Data;
 using SancMeld.Core.Domain;
+using SancMeld.Core.Embeddings;
 using SancMeld.Core.Matching;
 
 namespace SancMeld.Core.Search;
@@ -33,6 +34,7 @@ public sealed class ScreeningService(
     SancMeldDbContext db,
     DesignationQueryService queries,
     IScoringStrategy scoring,
+    SemanticCandidateSource semantic,
     IOptions<SancMeldOptions> options,
     TimeProvider clock)
 {
@@ -90,12 +92,21 @@ public sealed class ScreeningService(
             candidates = [.. candidates, .. extra.Select(d => new SearchHit(d, d.Names.FirstOrDefault()?.Value ?? string.Empty, 0))];
         }
 
+        // The second candidate generator. Null whenever it has nothing to say — off, not
+        // running, no vectors yet — and the screening is then exactly what it was before
+        // one existed. In shadow mode its findings are recorded and not shown.
+        var semanticRanking = await semantic.RankAsync(query.Name, ct).ConfigureAwait(false);
+        var semanticTop = semanticRanking is null
+            ? new HashSet<Guid>()
+            : semanticRanking.Ranked.Take(options.Value.Embeddings.Candidates).Select(h => h.DesignationId).ToHashSet();
+
         var identifierHits = byIdentifier.ToHashSet();
         var hits = new List<ScreeningHit>(candidates.Count);
 
         foreach (var candidate in candidates)
         {
-            var explanation = Explain(query, candidate, identifierHits.Contains(candidate.Designation.Id));
+            var id = candidate.Designation.Id;
+            var explanation = Explain(query, candidate, identifierHits.Contains(id));
             var score = scoring.Score(explanation);
 
             hits.Add(new ScreeningHit
@@ -105,12 +116,21 @@ public sealed class ScreeningService(
                 Score = score,
                 AboveThreshold = score >= matching.MatchThreshold,
                 Explanation = explanation,
+                RetrievedBy = missing.Contains(id) ? CandidateOrigin.Identifier
+                    : semanticTop.Contains(id) ? CandidateOrigin.Both
+                    : CandidateOrigin.Trigram,
+                SemanticScore = semanticRanking?.Of(id)?.Score,
             });
         }
 
         hits = [.. hits.OrderByDescending(h => h.Score).ThenBy(h => h.Designation.Id)];
 
-        var requestId = await RecordAsync(query, normalized, hits, algorithmId, matching, started, ct)
+        var shadow = semanticRanking is null
+            ? []
+            : await ShadowHitsAsync(query, semanticRanking, semanticTop.Except(hits.Select(h => h.Designation.Id)), ct)
+                .ConfigureAwait(false);
+
+        var requestId = await RecordAsync(query, normalized, hits, shadow, algorithmId, matching, started, ct)
             .ConfigureAwait(false);
 
         return new ScreeningResult
@@ -121,6 +141,57 @@ public sealed class ScreeningService(
             CandidatesConsidered = hits.Count,
             Hits = hits,
         };
+    }
+
+    /// <summary>
+    /// The listings only the embedding reached, scored as the rules would score them.
+    ///
+    /// Their name score is the trigram's own answer below its threshold, from
+    /// <see cref="DesignationQueryService.BestNameMatchAsync"/>, so the feature vector
+    /// stored for them is the one a live screening would have produced had the trigram
+    /// returned them — comparable row for row with everything else in the table. The
+    /// rules will put nearly all of them under the threshold, which is the point: the
+    /// shadow period asks how often that is wrong.
+    /// </summary>
+    private async Task<List<ScreeningHit>> ShadowHitsAsync(
+        ScreeningQuery query,
+        SemanticRanking ranking,
+        IEnumerable<Guid> designationIds,
+        CancellationToken ct)
+    {
+        var ids = designationIds.ToList();
+        if (ids.Count == 0)
+        {
+            return [];
+        }
+
+        var designations = await DesignationQueryService
+            .Hydrate(queries.CurrentRevisions().Where(d => ids.Contains(d.Id)))
+            .ToListAsync(ct)
+            .ConfigureAwait(false);
+
+        var shadow = new List<ScreeningHit>(designations.Count);
+
+        foreach (var designation in designations)
+        {
+            var semanticHit = ranking.Of(designation.Id)!;
+            var best = await queries.BestNameMatchAsync(designation.Id, query.Name, ct).ConfigureAwait(false);
+            var candidate = new SearchHit(designation, semanticHit.Name, best?.Score ?? 0);
+            var explanation = Explain(query, candidate, identifierMatch: false);
+
+            shadow.Add(new ScreeningHit
+            {
+                Designation = designation,
+                MatchedName = semanticHit.Name,
+                Score = scoring.Score(explanation),
+                AboveThreshold = false,
+                Explanation = explanation,
+                RetrievedBy = CandidateOrigin.Semantic,
+                SemanticScore = semanticHit.Score,
+            });
+        }
+
+        return [.. shadow.OrderByDescending(h => h.SemanticScore).ThenBy(h => h.Designation.Id)];
     }
 
     /// <summary>
@@ -262,6 +333,7 @@ public sealed class ScreeningService(
         ScreeningQuery query,
         string normalized,
         List<ScreeningHit> hits,
+        List<ScreeningHit> shadow,
         Guid algorithmId,
         MatchingOptions matching,
         Stopwatch started,
@@ -284,14 +356,18 @@ public sealed class ScreeningService(
             CandidateCount = hits.Count,
         };
 
+        var recorded = hits.Concat(shadow).ToList();
+
         var snapshotIds = await db.Designations
-            .Where(d => hits.Select(h => h.Designation.Id).Contains(d.Id))
+            .Where(d => recorded.Select(h => h.Designation.Id).Contains(d.Id))
             .Select(d => new { d.Id, d.SnapshotId })
             .ToDictionaryAsync(x => x.Id, x => x.SnapshotId, ct)
             .ConfigureAwait(false);
 
+        // Shown candidates first, in their order; then the shadow ones, which were never
+        // shown and rank after everything that was. retrieved_by tells them apart.
         var rank = 0;
-        foreach (var hit in hits)
+        foreach (var hit in recorded)
         {
             rank++;
 
@@ -310,6 +386,8 @@ public sealed class ScreeningService(
                 Features = JsonSerializer.Serialize(hit.Explanation, FeatureFormat),
                 AlgorithmId = algorithmId,
                 CreatedAt = clock.GetUtcNow(),
+                RetrievedBy = hit.RetrievedBy,
+                SemanticScore = hit.SemanticScore is { } s ? (decimal)s : null,
             });
         }
 

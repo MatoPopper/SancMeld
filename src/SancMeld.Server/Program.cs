@@ -5,7 +5,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi;
 using SancMeld.Api;
 using SancMeld.Core.Access;
+using SancMeld.Core.Configuration;
 using SancMeld.Core.Data;
+using SancMeld.Core.Embeddings;
 using SancMeld.Core.Ingest;
 using SancMeld.Core.Learning;
 
@@ -239,6 +241,58 @@ if (args is ["training", "seed-xref", ..])
     return 0;
 }
 
+// Vectors for every recorded name, for the embedding beside the trigram:
+//
+//   dotnet run --project src/SancMeld.Server -- embeddings backfill [--source EU_FSF]
+//   dotnet run --project src/SancMeld.Server -- embeddings status
+//
+// The import does this for its own delta; the backfill is for a fresh deployment, a model
+// that was down when an import ran, or a new model row. Idempotent — it embeds what has
+// no vector and nothing else — so running it twice costs one query.
+if (args is ["embeddings", var action, ..])
+{
+    using var scope = app.Services.CreateScope();
+    var store = scope.ServiceProvider.GetRequiredService<NameEmbeddingStore>();
+
+    switch (action)
+    {
+        case "backfill":
+            {
+                var mode = app.Configuration.GetValue("SancMeld:Embeddings:Mode", EmbeddingsMode.Off);
+                if (mode == EmbeddingsMode.Off)
+                {
+                    Console.Error.WriteLine("SancMeld:Embeddings:Mode is Off, so nothing would be embedded. Set it to Shadow first.");
+                    return 1;
+                }
+
+                var progress = new Progress<(int Done, int Total)>(p => Console.Error.Write($"\r  {p.Done:N0} / {p.Total:N0}"));
+                var written = await store.EmbedMissingAsync(Flag(args, "--source"), progress, CancellationToken.None);
+                Console.Error.WriteLine();
+                Console.WriteLine($"{written:N0} names embedded.");
+                return 0;
+            }
+
+        case "status":
+            {
+                var coverage = await store.CoverageAsync(CancellationToken.None);
+                var model = await store.ActiveModelAsync(CancellationToken.None);
+                Console.WriteLine($"{model.Code} {model.Version} ({model.Provider} {model.ModelName}, {model.Dimensions} dims)");
+
+                foreach (var c in coverage)
+                {
+                    var state = c.Embedded == c.Names ? "complete" : $"{c.Names - c.Embedded:N0} missing";
+                    Console.WriteLine($"  {c.SourceCode,-10} {c.Embedded,8:N0} / {c.Names,-8:N0} {state}");
+                }
+
+                return 0;
+            }
+
+        default:
+            Console.Error.WriteLine("Usage: embeddings backfill [--source CODE] | embeddings status");
+            return 1;
+    }
+}
+
 // Opt-in, and off by default: a process that rewrites the schema it happens to find is
 // the wrong default for anyone running more than one instance. For a single-container
 // deployment it is the difference between one command and shipping the .NET SDK to the
@@ -347,71 +401,71 @@ static async Task<int> RunAdminCommandAsync(WebApplication app, string[] args)
     switch (args)
     {
         case ["admin", "list", ..]:
-        {
-            var includeRevoked = args.Contains("--all");
-            var entries = await admins.ListAsync(includeRevoked, CancellationToken.None);
-
-            if (entries.Count == 0)
             {
-                Console.WriteLine(includeRevoked
-                    ? "No entries."
-                    : "No active entries. Add one with 'admin add <email>', or pass --all to include revoked ones.");
+                var includeRevoked = args.Contains("--all");
+                var entries = await admins.ListAsync(includeRevoked, CancellationToken.None);
+
+                if (entries.Count == 0)
+                {
+                    Console.WriteLine(includeRevoked
+                        ? "No entries."
+                        : "No active entries. Add one with 'admin add <email>', or pass --all to include revoked ones.");
+                    return 0;
+                }
+
+                foreach (var entry in entries)
+                {
+                    var state = entry.IsActive ? "active " : "revoked";
+                    var seen = entry.LastSeenAt is { } at ? $"last seen {at:yyyy-MM-dd}" : "never signed in";
+                    Console.WriteLine($"{state}  {entry.Email,-40}  granted by {entry.CreatedBy}, {seen}");
+                }
+
                 return 0;
             }
-
-            foreach (var entry in entries)
-            {
-                var state = entry.IsActive ? "active " : "revoked";
-                var seen = entry.LastSeenAt is { } at ? $"last seen {at:yyyy-MM-dd}" : "never signed in";
-                Console.WriteLine($"{state}  {entry.Email,-40}  granted by {entry.CreatedBy}, {seen}");
-            }
-
-            return 0;
-        }
 
         case ["admin", "add", var email, ..]:
-        {
-            try
             {
-                var granted = await admins.GrantAsync(
-                    email, Flag(args, "--name"), Flag(args, "--note"), by, CancellationToken.None);
+                try
+                {
+                    var granted = await admins.GrantAsync(
+                        email, Flag(args, "--name"), Flag(args, "--note"), by, CancellationToken.None);
 
-                Console.WriteLine($"{granted.Email} may now administer this instance.");
-                return 0;
+                    Console.WriteLine($"{granted.Email} may now administer this instance.");
+                    return 0;
+                }
+                catch (ArgumentException ex)
+                {
+                    Console.Error.WriteLine(ex.Message);
+                    return 1;
+                }
             }
-            catch (ArgumentException ex)
-            {
-                Console.Error.WriteLine(ex.Message);
-                return 1;
-            }
-        }
 
         case ["admin", "revoke", var email, ..]:
-        {
-            var target = await admins.FindActiveAsync(email, CancellationToken.None);
-
-            if (target is null)
             {
-                Console.Error.WriteLine($"No active entry for {email}.");
-                return 1;
+                var target = await admins.FindActiveAsync(email, CancellationToken.None);
+
+                if (target is null)
+                {
+                    Console.Error.WriteLine($"No active entry for {email}.");
+                    return 1;
+                }
+
+                var outcome = await admins.RevokeAsync(target.Id, by, CancellationToken.None);
+
+                if (outcome is RevokeOutcome.LastActiveAdmin)
+                {
+                    // Not a lockout worth risking by default. Turning the sign-in off entirely
+                    // (clear SancMeld:Auth:GoogleClientId) is the way to close the admin API,
+                    // and it does not leave a database nobody can administer.
+                    Console.Error.WriteLine(
+                        $"{email} is the last active administrator. Grant somebody else first, or turn the "
+                        + "sign-in off with an empty SancMeld:Auth:GoogleClientId.");
+                    return 1;
+                }
+
+                Console.WriteLine($"{email} can no longer administer this instance.");
+                return 0;
             }
-
-            var outcome = await admins.RevokeAsync(target.Id, by, CancellationToken.None);
-
-            if (outcome is RevokeOutcome.LastActiveAdmin)
-            {
-                // Not a lockout worth risking by default. Turning the sign-in off entirely
-                // (clear SancMeld:Auth:GoogleClientId) is the way to close the admin API,
-                // and it does not leave a database nobody can administer.
-                Console.Error.WriteLine(
-                    $"{email} is the last active administrator. Grant somebody else first, or turn the "
-                    + "sign-in off with an empty SancMeld:Auth:GoogleClientId.");
-                return 1;
-            }
-
-            Console.WriteLine($"{email} can no longer administer this instance.");
-            return 0;
-        }
 
         default:
             Console.Error.WriteLine(

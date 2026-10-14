@@ -257,6 +257,7 @@ public sealed class ImportPipelineTests(DatabaseFixture fixture) : IAsyncLifetim
             db,
             [connector],
             new FileSystemSnapshotStore(options),
+            TestServices.EmbeddingStore(fixture, db, options),
             TimeProvider.System,
             NullLogger<SanctionsImportService>.Instance);
 

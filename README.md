@@ -164,8 +164,15 @@ used as the query, the trigram reaches 0 % by construction and the embedding 96.
 recall@25 (Cyrillic 98.9 %, Arabic 88.6 %, Korean 61.7 %). On the 2 411 pairs publishers
 declare between their lists, fusing the two adds 0.6 points and loses nothing the trigram
 had. The cost is one more vector per recorded name: 8 ms a query by brute force, and 45–76
-ms to embed the query on a 2012 Xeon with no GPU. Not built yet; when it is, it arrives as
-vectors in the existing database and the model's name and hash as a row in `match_algorithm`.
+ms to embed the query on a 2012 Xeon with no GPU.
+
+It is built as far as a **shadow**: with `SancMeld:Embeddings:Mode=Shadow` the import
+embeds every recorded name (`designation_name_embedding`, the model as a row in
+`embedding_model`), each screening retrieves through the model as well, and what only the
+model reached is recorded in `screening_candidate` with `retrieved_by = semantic` — below
+everything shown, never surfaced, scores untouched. The shadow period answers, on real
+queries rather than publishers' spellings, what the embedding would have added; the
+scorer learns to read `semantic_score` only after it has.
 
 The labels cannot come from string similarity: 56.3 % of genuinely positive pairs are not
 string-related at all — different script (`Michail GRIB` ↔ `Міхаіл ГРЫБ`), translation
@@ -248,6 +255,9 @@ failure that looks like a SancMeld bug.
 | `SancMeld:Matching:SimilarityThreshold` | `0.35` | Lower = wider net = higher recall |
 | `SancMeld:Matching:ScoreWeakAliases` | `false` | Generic aliases corroborate, they do not raise hits |
 | `SancMeld:Auth:GoogleClientId` | *empty* | Empty = no sign-in. A public value, not a secret |
+| `SancMeld:Embeddings:Mode` | `Off` | `Shadow` retrieves through the embedding model and records, never shows |
+| `SancMeld:Embeddings:Endpoint` | `http://localhost:11434` | An Ollama-compatible `/api/embed` |
+| `SancMeld:Embeddings:ModelCode` | `BGE_M3` | A row in `embedding_model`; the row says which model file and how many dimensions |
 | `SancMeld:Jobs:Enabled` | `true` | Off means no Hangfire and no `/jobs` |
 | `SancMeld:Database:AutoMigrate` | `false` | Migrate on start; for single-container deployments |
 

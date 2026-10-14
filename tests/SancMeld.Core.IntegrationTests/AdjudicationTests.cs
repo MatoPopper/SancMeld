@@ -250,7 +250,7 @@ public sealed class AdjudicationTests(DatabaseFixture fixture) : IAsyncLifetime
         await using var db = fixture.CreateContext();
         var options = Options.Create(new SancMeldOptions());
         var queries = new DesignationQueryService(db, options);
-        var screening = new ScreeningService(db, queries, new RulesScoringStrategy(), options, TimeProvider.System);
+        var screening = new ScreeningService(db, queries, new RulesScoringStrategy(), TestServices.Semantic(fixture, options), options, TimeProvider.System);
 
         return await new ComplianceCheckService(screening, queries, TimeProvider.System)
             .CheckAsync(new CheckQuery { Name = query }, CancellationToken.None);
@@ -269,6 +269,7 @@ public sealed class AdjudicationTests(DatabaseFixture fixture) : IAsyncLifetime
                 db,
                 [new FakeConnector(_sourceCode) { Records = [.. records] }],
                 new FileSystemSnapshotStore(options),
+                TestServices.EmbeddingStore(fixture, db, options),
                 TimeProvider.System,
                 NullLogger<SanctionsImportService>.Instance)
             .RunAsync(_sourceCode, force: true, CancellationToken.None);

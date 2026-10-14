@@ -761,6 +761,36 @@ namespace SancMeld.Core.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("SancMeld.Core.Data.DesignationNameEmbedding", b =>
+                {
+                    b.Property<long>("NameId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("name_id");
+
+                    b.Property<Guid>("ModelId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("model_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<byte[]>("Vector")
+                        .IsRequired()
+                        .HasColumnType("bytea")
+                        .HasColumnName("vector");
+
+                    b.HasKey("NameId", "ModelId")
+                        .HasName("pk_designation_name_embedding");
+
+                    b.HasIndex("ModelId")
+                        .HasDatabaseName("ix_designation_name_embedding_model_id");
+
+                    b.ToTable("designation_name_embedding", (string)null);
+                });
+
             modelBuilder.Entity("SancMeld.Core.Data.DesignationNationality", b =>
                 {
                     b.Property<long>("Id")
@@ -853,6 +883,82 @@ namespace SancMeld.Core.Data.Migrations
                         .HasDatabaseName("ix_designation_xref_designation_id_kind_target_external_id");
 
                     b.ToTable("designation_xref", (string)null);
+                });
+
+            modelBuilder.Entity("SancMeld.Core.Data.EmbeddingModel", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("code");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<int>("Dimensions")
+                        .HasColumnType("integer")
+                        .HasColumnName("dimensions");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("ModelName")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("model_name");
+
+                    b.Property<string>("ModelSha256")
+                        .HasMaxLength(64)
+                        .HasColumnType("character(64)")
+                        .HasColumnName("model_sha256")
+                        .IsFixedLength();
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("text")
+                        .HasColumnName("notes");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("provider");
+
+                    b.Property<string>("Version")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("version");
+
+                    b.HasKey("Id")
+                        .HasName("pk_embedding_model");
+
+                    b.HasIndex("Code", "Version")
+                        .IsUnique()
+                        .HasDatabaseName("ix_embedding_model_code_version");
+
+                    b.ToTable("embedding_model", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("0195a1f0-0000-7000-8000-000000000301"),
+                            Code = "BGE_M3",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Dimensions = 1024,
+                            IsActive = true,
+                            ModelName = "bge-m3",
+                            ModelSha256 = "7907646426070047a77226ac3e684fbbe8410524f7b4a74d02837e43f2146bab",
+                            Notes = "Measured 2026-10-14: 96.3 % recall@25 on hidden non-Latin spellings, 0 lost against the trigram. tools/SancMeld.Experiments.NameEmbeddings.",
+                            Provider = "OLLAMA",
+                            Version = "1.0.0"
+                        });
                 });
 
             modelBuilder.Entity("SancMeld.Core.Data.ImportRun", b =>
@@ -1387,10 +1493,19 @@ namespace SancMeld.Core.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("request_id");
 
+                    b.Property<string>("RetrievedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("retrieved_by");
+
                     b.Property<decimal>("Score")
                         .HasPrecision(6, 5)
                         .HasColumnType("numeric(6,5)")
                         .HasColumnName("score");
+
+                    b.Property<decimal?>("SemanticScore")
+                        .HasPrecision(6, 5)
+                        .HasColumnType("numeric(6,5)")
+                        .HasColumnName("semantic_score");
 
                     b.Property<Guid>("SnapshotId")
                         .HasColumnType("uuid")
@@ -1408,6 +1523,9 @@ namespace SancMeld.Core.Data.Migrations
 
                     b.HasIndex("RequestId")
                         .HasDatabaseName("ix_screening_candidate_request_id");
+
+                    b.HasIndex("RetrievedBy", "CreatedAt")
+                        .HasDatabaseName("ix_screening_candidate_retrieved_by_created_at");
 
                     b.ToTable("screening_candidate", (string)null);
                 });
@@ -1802,6 +1920,27 @@ namespace SancMeld.Core.Data.Migrations
                         .HasConstraintName("fk_designation_name_designation_designation_id");
 
                     b.Navigation("Designation");
+                });
+
+            modelBuilder.Entity("SancMeld.Core.Data.DesignationNameEmbedding", b =>
+                {
+                    b.HasOne("SancMeld.Core.Data.EmbeddingModel", "Model")
+                        .WithMany()
+                        .HasForeignKey("ModelId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_designation_name_embedding_embedding_model_model_id");
+
+                    b.HasOne("SancMeld.Core.Data.DesignationName", "Name")
+                        .WithMany()
+                        .HasForeignKey("NameId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_designation_name_embedding_designation_name_name_id");
+
+                    b.Navigation("Model");
+
+                    b.Navigation("Name");
                 });
 
             modelBuilder.Entity("SancMeld.Core.Data.DesignationNationality", b =>

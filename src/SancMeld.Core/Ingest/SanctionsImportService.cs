@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using SancMeld.Core.Abstractions;
 using SancMeld.Core.Data;
 using SancMeld.Core.Domain;
+using SancMeld.Core.Embeddings;
 
 namespace SancMeld.Core.Ingest;
 
@@ -19,6 +20,7 @@ public sealed class SanctionsImportService(
     SancMeldDbContext db,
     IEnumerable<ISanctionsConnector> connectors,
     ISnapshotStore snapshots,
+    NameEmbeddingStore embeddings,
     TimeProvider clock,
     ILogger<SanctionsImportService> logger)
 {
@@ -227,6 +229,21 @@ public sealed class SanctionsImportService(
                 "{SourceCode}: {Seen} records — {Inserted} new, {Updated} changed, {Unchanged} unchanged, {Missing} now possibly missing.",
                 source.Code, staged.Accepted, committed.Inserted, committed.Updated,
                 committed.Unchanged, committed.MarkedPossiblyMissing);
+
+            // After the import is final, and outside it: the list is the thing this run
+            // exists to deliver, and a vector is derived from it. A model that is down must
+            // not undo a successful import — the names wait, and 'embeddings backfill'
+            // picks them up.
+            try
+            {
+                await embeddings.EmbedMissingAsync(source.Code, ct: ct).ConfigureAwait(false);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                logger.LogWarning(ex,
+                    "{SourceCode}: imported, but its new names have no embedding yet. Run 'embeddings backfill' once the model is reachable.",
+                    source.Code);
+            }
 
             return committed with
             {

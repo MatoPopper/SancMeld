@@ -214,7 +214,7 @@ public sealed class ComplianceCheckTests(DatabaseFixture fixture) : IAsyncLifeti
         var options = Options.Create(new SancMeldOptions());
 
         var queries = new DesignationQueryService(db, options);
-        var screening = new ScreeningService(db, queries, new RulesScoringStrategy(), options, TimeProvider.System);
+        var screening = new ScreeningService(db, queries, new RulesScoringStrategy(), TestServices.Semantic(fixture, options), options, TimeProvider.System);
 
         return await new ComplianceCheckService(screening, queries, TimeProvider.System)
             .CheckAsync(query, CancellationToken.None);
@@ -233,6 +233,7 @@ public sealed class ComplianceCheckTests(DatabaseFixture fixture) : IAsyncLifeti
             db,
             [new FakeConnector(sourceCode) { Records = [.. records] }],
             new FileSystemSnapshotStore(options),
+            TestServices.EmbeddingStore(fixture, db, options),
             TimeProvider.System,
             NullLogger<SanctionsImportService>.Instance);
 

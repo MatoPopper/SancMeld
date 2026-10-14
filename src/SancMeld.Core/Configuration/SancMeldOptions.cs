@@ -15,6 +15,74 @@ public sealed class SancMeldOptions
 
     public IngestOptions Ingest { get; set; } = new();
     public MatchingOptions Matching { get; set; } = new();
+    public EmbeddingsOptions Embeddings { get; set; } = new();
+}
+
+/// <summary>
+/// How far the embedding model is allowed into screening.
+///
+/// <see cref="Shadow"/> exists because a second candidate generator can only be judged on
+/// real queries, and the measurement that justified it (tools/SancMeld.Experiments.
+/// NameEmbeddings) was made on publishers' spellings, not on what callers type. In shadow
+/// the embedding's candidates are retrieved and recorded with every screening, and change
+/// nothing anyone sees — what they would have added is then a query over
+/// screening_candidate rather than an argument.
+/// </summary>
+public enum EmbeddingsMode
+{
+    /// <summary>No model is called, nothing is embedded at import, nothing is recorded.</summary>
+    Off,
+
+    /// <summary>
+    /// Candidates the embedding reaches are recorded as retrieved_by = semantic, below
+    /// everything shown, and never surface. Scores are unaffected.
+    /// </summary>
+    Shadow,
+}
+
+/// <summary>
+/// The embedding model beside the trigram: a second way to reach a listing, for the names
+/// a character-level index cannot — another script, a translation.
+///
+/// Measured before it was built: on 7 981 listings whose non-Latin spelling was hidden and
+/// used as the query, the trigram reaches 0 % and bge-m3 96.3 % at k = 25, and fusing the
+/// two lost nothing the trigram had. See tools/SancMeld.Experiments.NameEmbeddings.
+/// </summary>
+public sealed class EmbeddingsOptions
+{
+    public EmbeddingsMode Mode { get; set; } = EmbeddingsMode.Off;
+
+    /// <summary>An Ollama-compatible /api/embed endpoint. In-process ONNX is the planned successor behind the same interface.</summary>
+    [Required]
+    public string Endpoint { get; set; } = "http://localhost:11434";
+
+    /// <summary>
+    /// Matches embedding_model.code. The row, not this setting, says which model file and
+    /// how many dimensions — a vector is only comparable to vectors from the same model,
+    /// and the table is what ties each stored vector to the one that produced it.
+    /// </summary>
+    [Required]
+    public string ModelCode { get; set; } = "BGE_M3";
+
+    /// <summary>
+    /// How many listings the embedding contributes. 25 is where the measurement was made;
+    /// recall@25 was 96.3 % and recall@10 94.7 %, so the last fifteen buy little and cost
+    /// fifteen rows per screening.
+    /// </summary>
+    [Range(1, 200)]
+    public int Candidates { get; set; } = 25;
+
+    /// <summary>Some models are trained with a role prefix (e5: "query: " / "passage: "). bge-m3 wants none.</summary>
+    public string QueryPrefix { get; set; } = "";
+
+    public string NamePrefix { get; set; } = "";
+
+    /// <summary>Names per request when embedding at import. Small, because a CPU host serves other things too.</summary>
+    [Range(1, 256)]
+    public int BatchSize { get; set; } = 32;
+
+    [Range(1, 3600)]
+    public int TimeoutSeconds { get; set; } = 120;
 }
 
 public sealed class IngestOptions

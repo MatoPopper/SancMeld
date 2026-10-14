@@ -61,6 +61,16 @@ public sealed record ScreeningHit
     public required double Score { get; init; }
     public required bool AboveThreshold { get; init; }
     public required MatchExplanation Explanation { get; init; }
+
+    /// <summary>Which retrieval found this listing. See <see cref="CandidateOrigin"/>.</summary>
+    public CandidateOrigin RetrievedBy { get; init; } = CandidateOrigin.Trigram;
+
+    /// <summary>
+    /// Cosine similarity under the embedding model, when one is running. Beside the score,
+    /// not inside it: the rules do not read it yet, and a reader comparing the two columns
+    /// is exactly what the shadow period is for.
+    /// </summary>
+    public double? SemanticScore { get; init; }
 }
 
 public sealed record ScreeningResult

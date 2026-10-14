@@ -38,3 +38,12 @@ public enum IdentifierType
 
 /// <summary>Uncertainty must stay representable; collapsing it into "no" destroys the signal.</summary>
 public enum AdjudicationDecision { Match, NoMatch, Undecided, NeedsMoreData }
+
+/// <summary>
+/// Which retrieval put a candidate in front of the scorer. Recorded with every candidate
+/// because the two generators have different blind spots — the trigram cannot cross a
+/// script, the embedding is weaker on Korean — and a decision has to say which one it
+/// rested on. <see cref="Identifier"/> is the deterministic layer: a document matched
+/// and the name search never saw the subject at all.
+/// </summary>
+public enum CandidateOrigin { Trigram, Semantic, Both, Identifier }

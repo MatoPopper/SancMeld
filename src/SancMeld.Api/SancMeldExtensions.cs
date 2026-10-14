@@ -12,6 +12,7 @@ using SancMeld.Connectors.UnSc;
 using SancMeld.Core.Abstractions;
 using SancMeld.Core.Configuration;
 using SancMeld.Core.Data;
+using SancMeld.Core.Embeddings;
 using SancMeld.Core.Ingest;
 using SancMeld.Core.Learning;
 using SancMeld.Core.Search;
@@ -92,6 +93,7 @@ public static class SancMeldExtensions
 
         services.AddScoped<DesignationQueryService>();
         services.AddScoped<IScoringStrategy, RulesScoringStrategy>();
+        services.AddSancMeldEmbeddings();
         services.AddScoped<ScreeningService>();
         services.AddScoped<ComplianceCheckService>();
         services.AddScoped<AdjudicationService>();

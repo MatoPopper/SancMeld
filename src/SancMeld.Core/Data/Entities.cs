@@ -519,6 +519,76 @@ public class ScreeningCandidate
     public required string Features { get; set; }
     public Guid AlgorithmId { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
+
+    /// <summary>
+    /// Null on rows written before retrieval was recorded; those came from the trigram or
+    /// the identifier layer and nothing can say which after the fact.
+    /// </summary>
+    public CandidateOrigin? RetrievedBy { get; set; }
+
+    /// <summary>
+    /// Cosine similarity between the query and the listing's best spelling under the active
+    /// embedding model. Null when no model was running. Outside the feature vector on
+    /// purpose: the scorer does not read it yet, and a feature the scorer ignores would
+    /// still change feature_set_version for every stored decision.
+    /// </summary>
+    public decimal? SemanticScore { get; set; }
+}
+
+// ---------------------------------------------------------------------
+// Embeddings
+//
+// A vector per recorded spelling, so a listing can be reached by a name in a script the
+// trigram index has no characters in common with. Its own table rather than a column on
+// designation_name: a vector is comparable only to vectors from the same model, two models
+// can coexist while one replaces the other, and the value is derived — recomputable from
+// the name and the model — so it is not part of a revision.
+// ---------------------------------------------------------------------
+
+/// <summary>
+/// One embedding model, as a thing a stored vector can point at.
+///
+/// Not a match_algorithm row: that table says how a score was produced, and a screening
+/// names exactly one of them. A model is an input to retrieval; the algorithm's parameters
+/// name the model it ran beside, so the chain from decision to model still holds.
+/// </summary>
+public class EmbeddingModel
+{
+    public Guid Id { get; set; }
+
+    /// <summary>Matches SancMeld:Embeddings:ModelCode, e.g. 'BGE_M3'.</summary>
+    public required string Code { get; set; }
+
+    public required string Version { get; set; }
+
+    /// <summary>'OLLAMA' today; 'ONNX' when the model runs in-process.</summary>
+    public required string Provider { get; set; }
+
+    /// <summary>The name the provider knows the model by — what 'ollama pull' took.</summary>
+    public required string ModelName { get; set; }
+
+    public int Dimensions { get; set; }
+
+    /// <summary>The provider's digest of the model file. A vector from a different file is a different vector.</summary>
+    public string? ModelSha256 { get; set; }
+
+    public bool IsActive { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+    public string? Notes { get; set; }
+}
+
+public class DesignationNameEmbedding
+{
+    public long NameId { get; set; }
+    public DesignationName? Name { get; set; }
+
+    public Guid ModelId { get; set; }
+    public EmbeddingModel? Model { get; set; }
+
+    /// <summary>Unit-length float32, little-endian, Dimensions × 4 bytes. See EmbeddingVector.</summary>
+    public required byte[] Vector { get; set; }
+
+    public DateTimeOffset CreatedAt { get; set; }
 }
 
 /// <summary>Coded rejection reasons. Free text cannot be learned from.</summary>

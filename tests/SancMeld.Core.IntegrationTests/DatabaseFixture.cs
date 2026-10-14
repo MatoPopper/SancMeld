@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using SancMeld.Core.Data;
 using Xunit;
@@ -24,6 +25,7 @@ public sealed class DatabaseFixture : IAsyncLifetime
     public async Task InitializeAsync()
     {
         await EnsureDatabaseExistsAsync();
+        BuildScopeFactory();
 
         await using var db = CreateContext();
 
@@ -53,6 +55,19 @@ public sealed class DatabaseFixture : IAsyncLifetime
             .UseSancMeld(ConnectionString)
             .Options as DbContextOptions<SancMeldDbContext>
             ?? throw new InvalidOperationException("Failed to build the context options."));
+
+    /// <summary>
+    /// For the one singleton in the core that opens its own contexts — the in-memory
+    /// semantic index — which takes a scope factory because that is what a host has.
+    /// </summary>
+    public IServiceScopeFactory ScopeFactory { get; private set; } = null!;
+
+    private void BuildScopeFactory()
+    {
+        var services = new ServiceCollection();
+        services.AddDbContext<SancMeldDbContext>(o => o.UseSancMeld(ConnectionString));
+        ScopeFactory = services.BuildServiceProvider().GetRequiredService<IServiceScopeFactory>();
+    }
 
     /// <summary>
     /// A database of its own, so a test run can never touch the development data sitting

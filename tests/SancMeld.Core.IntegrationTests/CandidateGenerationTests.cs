@@ -158,6 +158,7 @@ public sealed class CandidateGenerationTests(DatabaseFixture fixture) : IAsyncLi
                 db,
                 [new FakeConnector(_sourceCode) { Records = [.. records] }],
                 new FileSystemSnapshotStore(options),
+                TestServices.EmbeddingStore(fixture, db, options),
                 TimeProvider.System,
                 NullLogger<SanctionsImportService>.Instance)
             .RunAsync(_sourceCode, force: true, CancellationToken.None);

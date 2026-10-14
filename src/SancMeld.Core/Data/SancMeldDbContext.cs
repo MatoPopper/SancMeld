@@ -49,6 +49,9 @@ public class SancMeldDbContext(DbContextOptions<SancMeldDbContext> options) : Db
     public DbSet<Adjudication> Adjudications => Set<Adjudication>();
     public DbSet<TrainingSample> TrainingSamples => Set<TrainingSample>();
 
+    public DbSet<EmbeddingModel> EmbeddingModels => Set<EmbeddingModel>();
+    public DbSet<DesignationNameEmbedding> NameEmbeddings => Set<DesignationNameEmbedding>();
+
     public DbSet<Admin> Admins => Set<Admin>();
 
     protected override void OnModelCreating(ModelBuilder b)
@@ -361,9 +364,53 @@ public class SancMeldDbContext(DbContextOptions<SancMeldDbContext> options) : Db
             e.Property(x => x.Features).HasColumnType("jsonb");
             e.Property(x => x.Score).HasPrecision(6, 5);
             e.Property(x => x.NameScore).HasPrecision(6, 5);
+            e.Property(x => x.SemanticScore).HasPrecision(6, 5);
             e.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
             e.HasIndex(x => x.DesignationId);
             e.HasIndex(x => x.CreatedAt).IsDescending();
+
+            // What the shadow period is read through: every candidate only the embedding
+            // reached, by date.
+            e.HasIndex(x => new { x.RetrievedBy, x.CreatedAt });
+        });
+
+        b.Entity<EmbeddingModel>(e =>
+        {
+            e.ToTable("embedding_model");
+            e.HasIndex(x => new { x.Code, x.Version }).IsUnique();
+            e.Property(x => x.ModelSha256).HasMaxLength(64).IsFixedLength();
+            e.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
+
+            // The model the measurement was made with, so a deployment that turns
+            // embeddings on starts from the one row whose numbers are in the README.
+            // The digest is Ollama's for bge-m3:latest as pulled on 2026-10-14.
+            e.HasData(new EmbeddingModel
+            {
+                Id = WellKnownIds.BgeM3Model,
+                Code = "BGE_M3",
+                Version = "1.0.0",
+                Provider = "OLLAMA",
+                ModelName = "bge-m3",
+                Dimensions = 1024,
+                ModelSha256 = "7907646426070047a77226ac3e684fbbe8410524f7b4a74d02837e43f2146bab",
+                IsActive = true,
+                CreatedAt = WellKnownIds.SeededAt,
+                Notes = "Measured 2026-10-14: 96.3 % recall@25 on hidden non-Latin spellings, 0 lost against the trigram. tools/SancMeld.Experiments.NameEmbeddings.",
+            });
+        });
+
+        b.Entity<DesignationNameEmbedding>(e =>
+        {
+            e.ToTable("designation_name_embedding");
+            e.HasKey(x => new { x.NameId, x.ModelId });
+            e.HasOne(x => x.Name).WithMany()
+             .HasForeignKey(x => x.NameId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Model).WithMany()
+             .HasForeignKey(x => x.ModelId).OnDelete(DeleteBehavior.Restrict);
+            e.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
+
+            // The in-memory index loads one model's vectors at a time.
+            e.HasIndex(x => x.ModelId);
         });
 
         b.Entity<AdjudicationReason>(e =>
@@ -441,6 +488,7 @@ public class SancMeldDbContext(DbContextOptions<SancMeldDbContext> options) : Db
         c.Properties<NameType>().HaveConversion<EnumAsSnakeCaseText<NameType>>();
         c.Properties<IdentifierType>().HaveConversion<EnumAsSnakeCaseText<IdentifierType>>();
         c.Properties<AdjudicationDecision>().HaveConversion<EnumAsSnakeCaseText<AdjudicationDecision>>();
+        c.Properties<CandidateOrigin>().HaveConversion<EnumAsSnakeCaseText<CandidateOrigin>>();
     }
 
     /// <summary>Shared configuration for the one-to-many detail tables hanging off a designation.</summary>

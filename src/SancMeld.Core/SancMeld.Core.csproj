@@ -15,6 +15,12 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+    <!-- The embedding endpoint is HTTP. -->
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.4" />
+    <!-- SIMD dot products: one query against every stored vector, by brute force, in
+         single-digit milliseconds. An approximate index would put its own misses into a
+         recall number this product is judged on. -->
+    <PackageReference Include="System.Numerics.Tensors" Version="10.0.4" />
   </ItemGroup>
 
 </Project>
