@@ -1,0 +1,1141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Designations xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <DateGenerated>15/10/2026</DateGenerated>
+  <Designation>
+    <LastUpdated>04/08/2026</LastUpdated>
+    <DateDesignated>29/06/2012</DateDesignated>
+    <UniqueID>AFG0001</UniqueID>
+    <OFSIGroupID>12703</OFSIGroupID>
+    <UNReferenceNumber>TAe.010</UNReferenceNumber>
+    <Names>
+      <Name>
+        <Name6>HAJI KHAIRULLAH HAJI SATTAR MONEY EXCHANGE</Name6>
+        <NameType>Primary Name</NameType>
+      </Name>
+      <Name>
+        <Name6>Haji Alim Hawala</Name6>
+        <NameType>Alias</NameType>
+      </Name>
+      <Name>
+        <Name6>Haji Hakim Hawala</Name6>
+        <NameType>Alias</NameType>
+      </Name>
+      <Name>
+        <Name6>Haji Khair Ullah Money Service</Name6>
+        <NameType>Alias</NameType>
+      </Name>
+      <Name>
+        <Name6>Haji Khairullah and Abdul Sattar and Company</Name6>
+        <NameType>Alias</NameType>
+      </Name>
+      <Name>
+        <Name6>Haji Khairullah Money Exchange</Name6>
+        <NameType>Alias</NameType>
+      </Name>
+      <Name>
+        <Name6>Haji Khairullah-Haji Sattar Sarafi</Name6>
+        <NameType>Alias</NameType>
+      </Name>
+      <Name>
+        <Name6>Haji Salam Hawala</Name6>
+        <NameType>Alias</NameType>
+      </Name>
+      <Name>
+        <Name6>Sarafi-yi Haji Khairullah Haji Satar Haji Esmatullah</Name6>
+        <NameType>Alias</NameType>
+      </Name>
+    </Names>
+    <NonLatinNames>
+      <NonLatinName>
+        <NameNonLatinScript>حاجی خيرالله و حاجی ستار صرافی</NameNonLatinScript>
+      </NonLatinName>
+    </NonLatinNames>
+    <RegimeName>The Afghanistan (Sanctions) (EU Exit) Regulations 2020</RegimeName>
+    <IndividualEntityShip>Entity</IndividualEntityShip>
+    <DesignationSource>UN</DesignationSource>
+    <SanctionsImposed>Asset freeze</SanctionsImposed>
+    <SanctionsImposedIndicators>
+      <AssetFreeze>true</AssetFreeze>
+      <ArmsEmbargo>false</ArmsEmbargo>
+      <TargetedArmsEmbargo>false</TargetedArmsEmbargo>
+      <CharteringOfShips>false</CharteringOfShips>
+      <ClosureOfRepresentativeOffices>false</ClosureOfRepresentativeOffices>
+      <CrewServicingOfShipsAndAircraft>false</CrewServicingOfShipsAndAircraft>
+      <Deflag>false</Deflag>
+      <PreventionOfBusinessArrangements>false</PreventionOfBusinessArrangements>
+      <ProhibitionOfPortEntry>false</ProhibitionOfPortEntry>
+      <TravelBan>false</TravelBan>
+      <PreventionOfCharteringOfShips>false</PreventionOfCharteringOfShips>
+      <PreventionOfCharteringOfShipsAndAircraft>false</PreventionOfCharteringOfShipsAndAircraft>
+      <TechnicalAssistanceRelatedToAircraft>false</TechnicalAssistanceRelatedToAircraft>
+      <TrustServicesSanctions>false</TrustServicesSanctions>
+      <DirectorDisqualificationSanction>false</DirectorDisqualificationSanction>
+    </SanctionsImposedIndicators>
+    <OtherInformation>Afghan Money Service Provider License Number: 044. Haji Khairullah Haji Sattar Money Exchange was used by Taliban leadership to transfer money to Taliban commanders to fund fighters and operations in Afghanistan as of 2011. Active in Kunar Province. Associated with Abdul Sattar Abdul Manan (TAi.162) and Khairullah Barakzai Khudai Nazar (TAi.163). INTERPOL-UN Security Council Special Notice web link:  https://www.interpol.int/en/How-we-work/Notices/View-UN-Notices-Individuals.</OtherInformation>
+    <UKStatementofReasons>
+</UKStatementofReasons>
+    <Addresses>
+      <Address>
+        <AddressLine1>Ansari Market, 2nd Floor</AddressLine1>
+        <AddressLine6>Nimroz Province</AddressLine6>
+        <AddressCountry>Afghanistan</AddressCountry>
+      </Address>
+      <Address>
+        <AddressLine1>Branch Office 10</AddressLine1>
+        <AddressLine2>Suite numbers 196-197, 3rd Floor</AddressLine2>
+        <AddressLine3>Khorasan Market</AddressLine3>
+        <AddressLine5>Herat City</AddressLine5>
+        <AddressLine6>Herat Province</AddressLine6>
+        <AddressCountry>Afghanistan</AddressCountry>
+      </Address>
+      <Address>
+        <AddressLine1>Branch Office 11</AddressLine1>
+        <AddressLine2>Sarafi Market</AddressLine2>
+        <AddressLine5>Zaranj District</AddressLine5>
+        <AddressLine6>Nimroz Province</AddressLine6>
+        <AddressCountry>Afghanistan</AddressCountry>
+      </Address>
+      <Address>
+        <AddressLine1>Branch Office 12</AddressLine1>
+        <AddressLine2>Sarafi Market</AddressLine2>
+        <AddressLine3>Wesh</AddressLine3>
+        <AddressLine5>Spin Boldak District</AddressLine5>
+        <AddressCountry>Afghanistan</AddressCountry>
+      </Address>
+      <Address>
+        <AddressLine1>Branch Office 13</AddressLine1>
+        <AddressLine2>Sarafi Market</AddressLine2>
+        <AddressLine6>Farah</AddressLine6>
+        <AddressCountry>Afghanistan</AddressCountry>
+      </Address>
+      <Address>
+        <AddressLine1>Branch Office 14</AddressLine1>
+        <AddressLine6>Dubai</AddressLine6>
+        <AddressCountry>United Arab Emirates</AddressCountry>
+      </Address>
+      <Address>
+        <AddressLine1>Branch Office 15</AddressLine1>
+        <AddressLine6>Zahedan</AddressLine6>
+        <AddressCountry>Iran</AddressCountry>
+      </Address>
+      <Address>
+        <AddressLine1>Branch Office 16</AddressLine1>
+        <AddressLine6>Zabul</AddressLine6>
+        <AddressCountry>Iran</AddressCountry>
+      </Address>
+      <Address>
+        <AddressLine1>Branch Office 6</AddressLine1>
+        <AddressLine2>Shop number 237</AddressLine2>
+        <AddressLine3>Shah Zada Market (also known as Sarai Shahzada)</AddressLine3>
+        <AddressLine4>Puli Khishti area</AddressLine4>
+        <AddressLine5>Police District 1</AddressLine5>
+        <AddressLine6>Kabul</AddressLine6>
+        <AddressCountry>Afghanistan</AddressCountry>
+      </Address>
+      <Address>
+        <AddressLine1>Branch Office 7</AddressLine1>
+        <AddressLine2>Shop numbers 21 and 22, 2nd Floor</AddressLine2>
+        <AddressLine3>Kandahar City Sarafi Market</AddressLine3>
+        <AddressLine5>Kandahar City</AddressLine5>
+        <AddressLine6>Kandahar Province</AddressLine6>
+        <AddressCountry>Afghanistan</AddressCountry>
+      </Address>
+      <Address>
+        <AddressLine1>Branch Office 8</AddressLine1>
+        <AddressLine2>Gereshk City</AddressLine2>
+        <AddressLine3>Nahr-e Saraj District</AddressLine3>
+        <AddressLine6>Helmand Province</AddressLine6>
+        <AddressCountry>Afghanistan</AddressCountry>
+      </Address>
+      <Address>
+        <AddressLine1>Branch Office 9</AddressLine1>
+        <AddressLine2>Lashkar Gah Bazaar</AddressLine2>
+        <AddressLine3>Lashkar Gah</AddressLine3>
+        <AddressLine4>Lashkar Gah District</AddressLine4>
+        <AddressLine6>Helmand Province</AddressLine6>
+        <AddressCountry>Afghanistan</AddressCountry>
+      </Address>
+      <Address>
+        <AddressLine1>Haji Ghulam Nabi Market, 2nd Floor</AddressLine1>
+        <AddressLine2>Lashkar Gah District</AddressLine2>
+        <AddressLine6>Helmand Province</AddressLine6>
+        <AddressCountry>Afghanistan</AddressCountry>
+      </Address>
+      <Address>
+        <AddressLine1>Khorasan Market</AddressLine1>
+        <AddressLine2>Shahre Naw</AddressLine2>
+        <AddressLine3>District 5</AddressLine3>
+        <AddressLine5>Herat City</AddressLine5>
+        <AddressLine6>Herat Province</AddressLine6>
+        <AddressCountry>Afghanistan</AddressCountry>
+      </Address>
+      <Address>
+        <AddressLine1>New Sarafi Market, 2nd Floor</AddressLine1>
+        <AddressLine5>Kandahar City</AddressLine5>
+        <AddressLine6>Kandahar Province</AddressLine6>
+        <AddressCountry>Afghanistan</AddressCountry>
+      </Address>
+      <Address>
+        <AddressLine1>Safi Market</AddressLine1>
+        <AddressLine5>Kandahar City</AddressLine5>
+        <AddressLine6>Kandahar Province</AddressLine6>
+        <AddressCountry>Afghanistan</AddressCountry>
+      </Address>
+    </Addresses>
+    <PhoneNumbers>
+      <PhoneNumber>-103495</PhoneNumber>
+      <PhoneNumber>-101823</PhoneNumber>
+      <PhoneNumber>-222831</PhoneNumber>
+      <PhoneNumber>0202-104748</PhoneNumber>
+      <PhoneNumber>-59763</PhoneNumber>
+    </PhoneNumbers>
+    <EmailAddresses>
+      <EmailAddress>helmand_exchange_msp@yahoo.com</EmailAddress>
+    </EmailAddresses>
+  </Designation>
+  <Designation>
+    <LastUpdated>29/04/2026</LastUpdated>
+    <DateDesignated>25/01/2001</DateDesignated>
+    <UniqueID>AFG0007</UniqueID>
+    <OFSIGroupID>6909</OFSIGroupID>
+    <UNReferenceNumber>TAi.003</UNReferenceNumber>
+    <Names>
+      <Name>
+        <Name1>Abdul Kabir</Name1>
+        <Name6>MOHAMMAD JAN</Name6>
+        <NameType>Primary Name</NameType>
+      </Name>
+      <Name>
+        <Name1>KABIR</Name1>
+        <Name2>MUHAMMAD JAN</Name2>
+        <Name6>ABDUL</Name6>
+        <NameType>Primary Name Variation</NameType>
+      </Name>
+      <Name>
+        <Name1> ABDUL</Name1>
+        <Name2>KABIR</Name2>
+        <Name3> MUHAMMAD</Name3>
+        <Name6>JAN</Name6>
+        <NameType>Primary Name Variation</NameType>
+      </Name>
+      <Name>
+        <Name6>A Kabir</Name6>
+        <NameType>Alias</NameType>
+        <AliasStrength>Good quality a.k.a</AliasStrength>
+      </Name>
+    </Names>
+    <NonLatinNames>
+      <NonLatinName>
+        <NameNonLatinScript>عبد الکبیر محمد جان</NameNonLatinScript>
+      </NonLatinName>
+    </NonLatinNames>
+    <Titles>
+      <Title>Maulavi</Title>
+    </Titles>
+    <RegimeName>The Afghanistan (Sanctions) (EU Exit) Regulations 2020</RegimeName>
+    <IndividualEntityShip>Individual</IndividualEntityShip>
+    <DesignationSource>UN</DesignationSource>
+    <SanctionsImposed>Asset freeze|Travel Ban</SanctionsImposed>
+    <SanctionsImposedIndicators>
+      <AssetFreeze>true</AssetFreeze>
+      <ArmsEmbargo>false</ArmsEmbargo>
+      <TargetedArmsEmbargo>false</TargetedArmsEmbargo>
+      <CharteringOfShips>false</CharteringOfShips>
+      <ClosureOfRepresentativeOffices>false</ClosureOfRepresentativeOffices>
+      <CrewServicingOfShipsAndAircraft>false</CrewServicingOfShipsAndAircraft>
+      <Deflag>false</Deflag>
+      <PreventionOfBusinessArrangements>false</PreventionOfBusinessArrangements>
+      <ProhibitionOfPortEntry>false</ProhibitionOfPortEntry>
+      <TravelBan>true</TravelBan>
+      <PreventionOfCharteringOfShips>false</PreventionOfCharteringOfShips>
+      <PreventionOfCharteringOfShipsAndAircraft>false</PreventionOfCharteringOfShipsAndAircraft>
+      <TechnicalAssistanceRelatedToAircraft>false</TechnicalAssistanceRelatedToAircraft>
+      <TrustServicesSanctions>false</TrustServicesSanctions>
+      <DirectorDisqualificationSanction>false</DirectorDisqualificationSanction>
+    </SanctionsImposedIndicators>
+    <OtherInformation>Active in terrorist operations in Eastern Afghanistan. Collects money from drug traffickers. Member of the Taliban Supreme Council as at 2009. Family is originally from Neka District, Paktia Province, Afghanistan. Responsible for attack on Afghan parliamentarians in November 2007 in Baghlan; owns land in central Baghlan Province. Belongs to Zadran tribe. Height 185cm. Review pursuant to Security Council resolution 1822 (2008) was concluded on 23 Jul. 2010. Photo available for inclusion in the INTERPOL-UN Security Council Special Notice. INTERPOL-UN Security Council Special Notice web link:https://www.interpol.int/en/How-we-work/Notices/View-UN-Notices-Individuals#2007-47114 </OtherInformation>
+    <UKStatementofReasons>
+</UKStatementofReasons>
+    <Addresses>
+      <Address>
+        <AddressCountry>Afghanistan</AddressCountry>
+      </Address>
+    </Addresses>
+    <IndividualDetails>
+      <Individual>
+        <DOBs>
+          <DOB>dd/mm/1963</DOB>
+          <DOB>30/01/1972</DOB>
+          <DOB>30/01/1972</DOB>
+        </DOBs>
+        <PassportDetails>
+          <Passport>
+            <PassportNumber>D0009925</PassportNumber>
+            <PassportAdditionalInformation>Afghanistan diplomatic passport number D0009925, issued on 22 May 2022, issued in Kabul, Afghanistan, expires 22 May 2027 (Name in Latin script: ABDUL KABIR MUHAMMAD JAN)</PassportAdditionalInformation>
+          </Passport>
+        </PassportDetails>
+        <Nationalities>
+          <Nationality>Afghanistan</Nationality>
+        </Nationalities>
+        <Positions>
+          <Position>Governor of Nangarhar Province under the previous Taliban regime (1996-2001)</Position>
+          <Position>Head of Eastern Zone under the Taliban regime (1996-2001)</Position>
+          <Position>Second Deputy, Economic Affairs, Council of Ministers under the previous Taliban regime (1996-2001)</Position>
+        </Positions>
+        <BirthDetails>
+          <Location>
+            <TownOfBirth>Nahrin District, Baghlan Province</TownOfBirth>
+            <CountryOfBirth>Afghanistan</CountryOfBirth>
+          </Location>
+        </BirthDetails>
+      </Individual>
+    </IndividualDetails>
+  </Designation>
+  <Designation>
+    <LastUpdated>18/12/2021</LastUpdated>
+    <DateDesignated>23/02/2001</DateDesignated>
+    <UniqueID>AFG0009</UniqueID>
+    <OFSIGroupID>7022</OFSIGroupID>
+    <UNReferenceNumber>TAi.005</UNReferenceNumber>
+    <Names>
+      <Name>
+        <Name1>Muhammad</Name1>
+        <Name2>Taher</Name2>
+        <Name6>Anwari</Name6>
+        <NameType>Primary Name</NameType>
+      </Name>
+      <Name>
+        <Name1>Mohammad</Name1>
+        <Name2>Taher</Name2>
+        <Name6>Anwari</Name6>
+        <NameType>Alias</NameType>
+        <AliasStrength>Good quality a.k.a</AliasStrength>
+      </Name>
+      <Name>
+        <Name1>Mohammad</Name1>
+        <Name2>Tahre</Name2>
+        <Name6>Anwari</Name6>
+        <NameType>Alias</NameType>
+        <AliasStrength>Good quality a.k.a</AliasStrength>
+      </Name>
+      <Name>
+        <Name1>Muhammad</Name1>
+        <Name2>Tahir</Name2>
+        <Name6>Anwari</Name6>
+        <NameType>Alias</NameType>
+        <AliasStrength>Good quality a.k.a</AliasStrength>
+      </Name>
+      <Name>
+        <Name6>Mudir</Name6>
+        <NameType>Alias</NameType>
+        <AliasStrength>Low quality a.k.a</AliasStrength>
+      </Name>
+    </Names>
+    <NonLatinNames>
+      <NonLatinName>
+        <NameNonLatinScript>محمد طاهر أنوري</NameNonLatinScript>
+      </NonLatinName>
+    </NonLatinNames>
+    <Titles>
+      <Title>Mullah</Title>
+      <Title>Haji</Title>
+    </Titles>
+    <RegimeName>The Afghanistan (Sanctions) (EU Exit) Regulations 2020</RegimeName>
+    <IndividualEntityShip>Individual</IndividualEntityShip>
+    <DesignationSource>UN</DesignationSource>
+    <SanctionsImposed>Asset freeze|Travel Ban</SanctionsImposed>
+    <SanctionsImposedIndicators>
+      <AssetFreeze>true</AssetFreeze>
+      <ArmsEmbargo>false</ArmsEmbargo>
+      <TargetedArmsEmbargo>false</TargetedArmsEmbargo>
+      <CharteringOfShips>false</CharteringOfShips>
+      <ClosureOfRepresentativeOffices>false</ClosureOfRepresentativeOffices>
+      <CrewServicingOfShipsAndAircraft>false</CrewServicingOfShipsAndAircraft>
+      <Deflag>false</Deflag>
+      <PreventionOfBusinessArrangements>false</PreventionOfBusinessArrangements>
+      <ProhibitionOfPortEntry>false</ProhibitionOfPortEntry>
+      <TravelBan>true</TravelBan>
+      <PreventionOfCharteringOfShips>false</PreventionOfCharteringOfShips>
+      <PreventionOfCharteringOfShipsAndAircraft>false</PreventionOfCharteringOfShipsAndAircraft>
+      <TechnicalAssistanceRelatedToAircraft>false</TechnicalAssistanceRelatedToAircraft>
+      <TrustServicesSanctions>false</TrustServicesSanctions>
+      <DirectorDisqualificationSanction>false</DirectorDisqualificationSanction>
+    </SanctionsImposedIndicators>
+    <OtherInformation>Belongs to Andar tribe. Review pursuant to Security Council resolution 1822 (2008) was concluded on 23 Jul. 2010. INTERPOL-UN Security Council Special Notice web link: https://www.interpol.int/en/How-we-work/Notices/View-UNNotices-Individuals click here</OtherInformation>
+    <UKStatementofReasons>
+</UKStatementofReasons>
+    <IndividualDetails>
+      <Individual>
+        <DOBs>
+          <DOB>dd/mm/1961</DOB>
+        </DOBs>
+        <Nationalities>
+          <Nationality>Afghanistan</Nationality>
+        </Nationalities>
+        <Positions>
+          <Position>Director of Administrative Affairs under the Taliban regime</Position>
+          <Position>Minister of Finance under the Taliban regime</Position>
+        </Positions>
+        <BirthDetails>
+          <Location>
+            <TownOfBirth>Zurmat District, Paktia Province</TownOfBirth>
+            <CountryOfBirth>Afghanistan</CountryOfBirth>
+          </Location>
+        </BirthDetails>
+      </Individual>
+    </IndividualDetails>
+  </Designation>
+  <Designation>
+    <LastUpdated>14/04/2026</LastUpdated>
+    <DateDesignated>25/01/2001</DateDesignated>
+    <UniqueID>AFG0026</UniqueID>
+    <OFSIGroupID>7307</OFSIGroupID>
+    <UNReferenceNumber>TAi.026</UNReferenceNumber>
+    <Names>
+      <Name>
+        <Name1>AMIR</Name1>
+        <Name2>KHAN</Name2>
+        <Name6>MOTAQI</Name6>
+        <NameType>Primary Name</NameType>
+      </Name>
+      <Name>
+        <Name1>AMIR </Name1>
+        <Name2>KHAN</Name2>
+        <Name6>MUTAQI</Name6>
+        <NameType>Alias</NameType>
+        <AliasStrength>Good quality a.k.a</AliasStrength>
+      </Name>
+      <Name>
+        <Name1>Amir</Name1>
+        <Name2>Khan</Name2>
+        <Name6>MUTTAQI</Name6>
+        <NameType>Alias</NameType>
+        <AliasStrength>Good quality a.k.a</AliasStrength>
+      </Name>
+    </Names>
+    <NonLatinNames>
+      <NonLatinName>
+        <NameNonLatinScript>امیر خان متقی</NameNonLatinScript>
+        <NonLatinScriptType>Arabic</NonLatinScriptType>
+      </NonLatinName>
+      <NonLatinName>
+        <NameNonLatinScript>اميرخان متقي</NameNonLatinScript>
+        <NonLatinScriptType>Arabic</NonLatinScriptType>
+      </NonLatinName>
+    </NonLatinNames>
+    <Titles>
+      <Title>Mullah</Title>
+    </Titles>
+    <RegimeName>The Afghanistan (Sanctions) (EU Exit) Regulations 2020</RegimeName>
+    <IndividualEntityShip>Individual</IndividualEntityShip>
+    <DesignationSource>UN</DesignationSource>
+    <SanctionsImposed>Asset freeze|Travel Ban</SanctionsImposed>
+    <SanctionsImposedIndicators>
+      <AssetFreeze>true</AssetFreeze>
+      <ArmsEmbargo>false</ArmsEmbargo>
+      <TargetedArmsEmbargo>false</TargetedArmsEmbargo>
+      <CharteringOfShips>false</CharteringOfShips>
+      <ClosureOfRepresentativeOffices>false</ClosureOfRepresentativeOffices>
+      <CrewServicingOfShipsAndAircraft>false</CrewServicingOfShipsAndAircraft>
+      <Deflag>false</Deflag>
+      <PreventionOfBusinessArrangements>false</PreventionOfBusinessArrangements>
+      <ProhibitionOfPortEntry>false</ProhibitionOfPortEntry>
+      <TravelBan>true</TravelBan>
+      <PreventionOfCharteringOfShips>false</PreventionOfCharteringOfShips>
+      <PreventionOfCharteringOfShipsAndAircraft>false</PreventionOfCharteringOfShipsAndAircraft>
+      <TechnicalAssistanceRelatedToAircraft>false</TechnicalAssistanceRelatedToAircraft>
+      <TrustServicesSanctions>false</TrustServicesSanctions>
+      <DirectorDisqualificationSanction>false</DirectorDisqualificationSanction>
+    </SanctionsImposedIndicators>
+    <OtherInformation>Member of the Taliban Supreme Council as of June 2007.  Belongs to Sulaimankhel tribe. Height 170 cm. Review pursuant to Security Council resolution 1822 (2008) was concluded on 21 Jul. 2010. Photo available for inclusion in the INTERPOL-UN Security Council Special Notice. INTERPOL-UN Security Council Special Notice web link: https://www.interpol.int/en/How-we-work/Notices/View-UNNotices-Individuals click here</OtherInformation>
+    <UKStatementofReasons>
+</UKStatementofReasons>
+    <Addresses>
+      <Address>
+        <AddressLine6>Kabul</AddressLine6>
+        <AddressCountry>Afghanistan</AddressCountry>
+      </Address>
+      <Address>
+        <AddressLine1>Kabul</AddressLine1>
+        <AddressCountry>Afghanistan</AddressCountry>
+      </Address>
+    </Addresses>
+    <IndividualDetails>
+      <Individual>
+        <DOBs>
+          <DOB>dd/mm/1968</DOB>
+          <DOB>25/12/1970</DOB>
+          <DOB>1971</DOB>
+          <DOB>1971</DOB>
+        </DOBs>
+        <PassportDetails>
+          <Passport>
+            <PassportNumber>D0009716</PassportNumber>
+            <PassportAdditionalInformation>Afghanistan  diplomatic passport issued on 25 Sep. 2021, issued in Kabul, Afghanistan (Name in Latin  script: Amir Khan Mutaqi, name in original script: متقي امیرخان ; expires 25 Sep. 2026)</PassportAdditionalInformation>
+          </Passport>
+          <Passport>
+            <PassportNumber> D0009803</PassportNumber>
+            <PassportAdditionalInformation>Afghanistan  diplomatic passport issued on 13 Dec. 2021 (expires on 13 Dec. 2026)</PassportAdditionalInformation>
+          </Passport>
+          <Passport>
+            <PassportNumber>D0009803</PassportNumber>
+            <PassportAdditionalInformation>Afghanistan diplomatic passport number D0009803, issued on 13 Dec. 2021 (expires on 13 Dec. 2026)</PassportAdditionalInformation>
+          </Passport>
+        </PassportDetails>
+        <Nationalities>
+          <Nationality>Afghanistan</Nationality>
+        </Nationalities>
+        <Positions>
+          <Position>Minister of Education under the previous Taliban regime  (1996-2001) </Position>
+          <Position>Taliban representative in UN-led talks under the previous Taliban regime (1996-2001)</Position>
+        </Positions>
+        <BirthDetails>
+          <Location>
+            <TownOfBirth>Zurmat District, Paktia Province</TownOfBirth>
+            <CountryOfBirth>Afghanistan</CountryOfBirth>
+          </Location>
+          <Location>
+            <TownOfBirth>Shin Kalai village, Nad-e-Ali District, Helmand Province</TownOfBirth>
+            <CountryOfBirth>Afghanistan</CountryOfBirth>
+          </Location>
+        </BirthDetails>
+      </Individual>
+    </IndividualDetails>
+  </Designation>
+  <Designation>
+    <LastUpdated>23/06/2022</LastUpdated>
+    <DateDesignated>20/04/2016</DateDesignated>
+    <UniqueID>AQD0262</UniqueID>
+    <OFSIGroupID>13354</OFSIGroupID>
+    <UNReferenceNumber>QDi.395</UNReferenceNumber>
+    <Names>
+      <Name>
+        <Name1>MUHAMMAD</Name1>
+        <Name2>SHOLEH</Name2>
+        <Name6>IBRAHIM</Name6>
+        <NameType>Primary name</NameType>
+      </Name>
+      <Name>
+        <Name1>Mohammad</Name1>
+        <Name2>Sholeh</Name2>
+        <Name6>Ibrahim</Name6>
+        <NameType>Alias</NameType>
+        <AliasStrength>Good quality a.k.a</AliasStrength>
+      </Name>
+      <Name>
+        <Name1>Muh</Name1>
+        <Name2>Sholeh</Name2>
+        <Name6>Ibrahim</Name6>
+        <NameType>Alias</NameType>
+        <AliasStrength>Good quality a.k.a</AliasStrength>
+      </Name>
+      <Name>
+        <Name1>Muhammad</Name1>
+        <Name2>Soleh</Name2>
+        <Name6>Ibrahim</Name6>
+        <NameType>Alias</NameType>
+        <AliasStrength>Good quality a.k.a</AliasStrength>
+      </Name>
+      <Name>
+        <Name1>Muhammad</Name1>
+        <Name2>Sholeh</Name2>
+        <Name6>Ibrohim</Name6>
+        <NameType>Alias</NameType>
+        <AliasStrength>Good quality a.k.a</AliasStrength>
+      </Name>
+    </Names>
+    <Titles>
+      <Title>Ustad</Title>
+    </Titles>
+    <RegimeName>Isil (Da'esh) and Al-Qaeda (United Nations Sanctions) (EU Exit) Regulations 2019</RegimeName>
+    <IndividualEntityShip>Individual</IndividualEntityShip>
+    <DesignationSource>UN</DesignationSource>
+    <SanctionsImposed>Asset freeze|Arms embargo|Travel Ban</SanctionsImposed>
+    <SanctionsImposedIndicators>
+      <AssetFreeze>true</AssetFreeze>
+      <ArmsEmbargo>true</ArmsEmbargo>
+      <TargetedArmsEmbargo>false</TargetedArmsEmbargo>
+      <CharteringOfShips>false</CharteringOfShips>
+      <ClosureOfRepresentativeOffices>false</ClosureOfRepresentativeOffices>
+      <CrewServicingOfShipsAndAircraft>false</CrewServicingOfShipsAndAircraft>
+      <Deflag>false</Deflag>
+      <PreventionOfBusinessArrangements>false</PreventionOfBusinessArrangements>
+      <ProhibitionOfPortEntry>false</ProhibitionOfPortEntry>
+      <TravelBan>true</TravelBan>
+      <PreventionOfCharteringOfShips>false</PreventionOfCharteringOfShips>
+      <PreventionOfCharteringOfShipsAndAircraft>false</PreventionOfCharteringOfShipsAndAircraft>
+      <TechnicalAssistanceRelatedToAircraft>false</TechnicalAssistanceRelatedToAircraft>
+      <TrustServicesSanctions>false</TrustServicesSanctions>
+      <DirectorDisqualificationSanction>false</DirectorDisqualificationSanction>
+    </SanctionsImposedIndicators>
+    <OtherInformation>Has served as the acting emir of Jemmah Anshorut Tauhid (JAT) (QDe.133) since 2014 and has supported Islamic State in Iraq and the Levant (ISIL), listed as Al-Qaida in Iraq (QDe.115). Review pursuant to Security Council resolution 2268 (2017) was concluded on 15 November 2021. INTERPOL-UN Security Council Special Notice web link: https://www.interpol.int/en/notice/search/un/5943055</OtherInformation>
+    <UKStatementofReasons>
+</UKStatementofReasons>
+    <Addresses>
+      <Address>
+        <AddressLine1>Desa Cemani</AddressLine1>
+        <AddressLine2>Waringinrejo RT 001/021</AddressLine2>
+        <AddressLine3>Kecamatan Grogo</AddressLine3>
+        <AddressLine4>Kabupaten Sukoharjo</AddressLine4>
+        <AddressLine5>Jawa Tenagh</AddressLine5>
+        <AddressCountry>Indonesia</AddressCountry>
+      </Address>
+      <Address>
+        <AddressLine1>Masjid Baitul Amin</AddressLine1>
+        <AddressLine2>Waringinrejo RT 01 RW 02</AddressLine2>
+        <AddressLine3>Grogol</AddressLine3>
+        <AddressLine4>Cemani</AddressLine4>
+        <AddressLine5>Sukoharjo</AddressLine5>
+        <AddressLine6>Jawa Tengah</AddressLine6>
+        <AddressPostalCode>57572</AddressPostalCode>
+        <AddressCountry>Indonesia</AddressCountry>
+      </Address>
+    </Addresses>
+    <IndividualDetails>
+      <Individual>
+        <DOBs>
+          <DOB>dd/09/1958</DOB>
+        </DOBs>
+        <Nationalities>
+          <Nationality>Indonesia</Nationality>
+          <Nationality>Indonesia</Nationality>
+        </Nationalities>
+        <NationalIdentifierDetails>
+          <NationalIdentifier>
+            <NationalIdentifierNumber> 3311092409580002</NationalIdentifierNumber>
+            <NationalIdentifierAdditionalInformation>National Identity Card </NationalIdentifierAdditionalInformation>
+          </NationalIdentifier>
+          <NationalIdentifier>
+            <NationalIdentifierNumber>3311092409580003</NationalIdentifierNumber>
+            <NationalIdentifierAdditionalInformation>National Identity Card</NationalIdentifierAdditionalInformation>
+          </NationalIdentifier>
+        </NationalIdentifierDetails>
+        <BirthDetails>
+          <Location>
+            <TownOfBirth>Demak</TownOfBirth>
+            <CountryOfBirth>Indonesia</CountryOfBirth>
+          </Location>
+        </BirthDetails>
+      </Individual>
+    </IndividualDetails>
+  </Designation>
+  <Designation>
+    <LastUpdated>09/04/2025</LastUpdated>
+    <DateDesignated>31/12/2020</DateDesignated>
+    <UniqueID>BEL0065</UniqueID>
+    <OFSIGroupID>14039</OFSIGroupID>
+    <Names>
+      <Name>
+        <Name6>LLC Synesis</Name6>
+        <NameType>Primary name</NameType>
+      </Name>
+    </Names>
+    <NonLatinNames>
+      <NonLatinName>
+        <NameNonLatinScript>ООО “Синезис”</NameNonLatinScript>
+        <NonLatinScriptType>Cyrillic</NonLatinScriptType>
+        <NonLatinScriptLanguage>Russian</NonLatinScriptLanguage>
+      </NonLatinName>
+    </NonLatinNames>
+    <RegimeName>The Republic of Belarus (Sanctions) (EU Exit) Regulations 2019</RegimeName>
+    <IndividualEntityShip>Entity</IndividualEntityShip>
+    <DesignationSource>UK</DesignationSource>
+    <SanctionsImposed>Asset freeze|Director Disqualification Sanction</SanctionsImposed>
+    <SanctionsImposedIndicators>
+      <AssetFreeze>true</AssetFreeze>
+      <ArmsEmbargo>false</ArmsEmbargo>
+      <TargetedArmsEmbargo>false</TargetedArmsEmbargo>
+      <CharteringOfShips>false</CharteringOfShips>
+      <ClosureOfRepresentativeOffices>false</ClosureOfRepresentativeOffices>
+      <CrewServicingOfShipsAndAircraft>false</CrewServicingOfShipsAndAircraft>
+      <Deflag>false</Deflag>
+      <PreventionOfBusinessArrangements>false</PreventionOfBusinessArrangements>
+      <ProhibitionOfPortEntry>false</ProhibitionOfPortEntry>
+      <TravelBan>false</TravelBan>
+      <PreventionOfCharteringOfShips>false</PreventionOfCharteringOfShips>
+      <PreventionOfCharteringOfShipsAndAircraft>false</PreventionOfCharteringOfShipsAndAircraft>
+      <TechnicalAssistanceRelatedToAircraft>false</TechnicalAssistanceRelatedToAircraft>
+      <TrustServicesSanctions>false</TrustServicesSanctions>
+      <DirectorDisqualificationSanction>true</DirectorDisqualificationSanction>
+    </SanctionsImposedIndicators>
+    <OtherInformation>The Director Disqualification Sanction was imposed on 09/04/2025.</OtherInformation>
+    <UKStatementofReasons>
+LLC Synesis (“Synesis”), including through its former wholly-owned subsidiary, LLC 24x7 Panoptes (“Panoptes”), has supplied the Kipod Technology (“Kipod”) to the Republic of Belarus for use with the “Republican System for Monitoring Public Safety” (“RSMPS”), which is a video surveillance and monitoring system. The RSMPS is used by the Belarus Ministry of Internal Affairs, as the State body authorised to coordinate the use of the RSMPS, and law enforcement agencies, including by security and police units. Kipod is a key part of the RSMPS.  
+The RSMPS, relying on Kipod, has provided the Ministry of Internal Affairs and law enforcement agencies with the capability inter alia, to track down civil society and pro-democracy activists, in order to repress them. Further, that capability has been so used. For example, following the elections on 9 August 2020, Nikolay Dedok, a civil society activist who was in hiding was tracked down by the RSMPS using the Kipod system. He was subsequently detained and tortured.  
+Synesis has therefore been involved in the commission of a serious human rights violation or abuse in Belarus and/or the repression of civil society or democratic opposition in Belarus as Synesis has been responsible for and/or has provided support for, either or both such activities; and/or that Synesis has been involved in the supply to Belarus of technology which could contribute to either or both such activities. 
+</UKStatementofReasons>
+    <Addresses>
+      <Address>
+        <AddressLine1>20B Platonova street</AddressLine1>
+        <AddressLine6>Minsk</AddressLine6>
+        <AddressCountry>Belarus</AddressCountry>
+      </Address>
+      <Address>
+        <AddressLine1>Mantulinskaya 24</AddressLine1>
+        <AddressLine6>Moscow</AddressLine6>
+        <AddressPostalCode>123100</AddressPostalCode>
+        <AddressCountry>Russia</AddressCountry>
+      </Address>
+    </Addresses>
+    <PhoneNumbers>
+      <PhoneNumber>00375 1 72 40 36 50</PhoneNumber>
+    </PhoneNumbers>
+    <Websites>
+      <Website>https://synesis.partners </Website>
+    </Websites>
+    <EmailAddresses>
+      <EmailAddress>S@synesis.y</EmailAddress>
+    </EmailAddresses>
+    <EntityDetails>
+      <Entity>
+        <TypeOfEntities>
+          <TypeOfEntity>Software company</TypeOfEntity>
+        </TypeOfEntities>
+        <BusinessRegistrationNumbers>
+          <BusinessRegistrationNumber>(УНН/ИНН): 190950894 (Belarus),  
+7704734000/770301001 (Russia) </BusinessRegistrationNumber>
+        </BusinessRegistrationNumbers>
+      </Entity>
+    </EntityDetails>
+  </Designation>
+  <Designation>
+    <LastUpdated>09/04/2025</LastUpdated>
+    <DateDesignated>18/02/2021</DateDesignated>
+    <UniqueID>BEL0071</UniqueID>
+    <OFSIGroupID>14043</OFSIGroupID>
+    <Names>
+      <Name>
+        <Name1>Oleg</Name1>
+        <Name2>Georgevich</Name2>
+        <Name6>KARAZEI</Name6>
+        <NameType>Primary name</NameType>
+      </Name>
+      <Name>
+        <Name1>Aleh</Name1>
+        <Name2>Heorhievich</Name2>
+        <Name6>KARAZEI</Name6>
+        <NameType>Primary name variation</NameType>
+      </Name>
+      <Name>
+        <Name1>Aleh</Name1>
+        <Name2>Heorhievich</Name2>
+        <Name6>Karaziei</Name6>
+        <NameType>Primary Name Variation</NameType>
+      </Name>
+    </Names>
+    <NonLatinNames>
+      <NonLatinName>
+        <NameNonLatinScript>Алег Георгiевiч КАРАЗЕЙ</NameNonLatinScript>
+      </NonLatinName>
+      <NonLatinName>
+        <NameNonLatinScript>Олег Георгиевич КАРАЗЕЙ</NameNonLatinScript>
+      </NonLatinName>
+    </NonLatinNames>
+    <RegimeName>The Republic of Belarus (Sanctions) (EU Exit) Regulations 2019</RegimeName>
+    <IndividualEntityShip>Individual</IndividualEntityShip>
+    <DesignationSource>UK</DesignationSource>
+    <SanctionsImposed>Asset freeze|Travel Ban|Director Disqualification Sanction</SanctionsImposed>
+    <SanctionsImposedIndicators>
+      <AssetFreeze>true</AssetFreeze>
+      <ArmsEmbargo>false</ArmsEmbargo>
+      <TargetedArmsEmbargo>false</TargetedArmsEmbargo>
+      <CharteringOfShips>false</CharteringOfShips>
+      <ClosureOfRepresentativeOffices>false</ClosureOfRepresentativeOffices>
+      <CrewServicingOfShipsAndAircraft>false</CrewServicingOfShipsAndAircraft>
+      <Deflag>false</Deflag>
+      <PreventionOfBusinessArrangements>false</PreventionOfBusinessArrangements>
+      <ProhibitionOfPortEntry>false</ProhibitionOfPortEntry>
+      <TravelBan>true</TravelBan>
+      <PreventionOfCharteringOfShips>false</PreventionOfCharteringOfShips>
+      <PreventionOfCharteringOfShipsAndAircraft>false</PreventionOfCharteringOfShipsAndAircraft>
+      <TechnicalAssistanceRelatedToAircraft>false</TechnicalAssistanceRelatedToAircraft>
+      <TrustServicesSanctions>false</TrustServicesSanctions>
+      <DirectorDisqualificationSanction>true</DirectorDisqualificationSanction>
+    </SanctionsImposedIndicators>
+    <OtherInformation>The Director Disqualification Sanction was imposed on 09/04/2025.</OtherInformation>
+    <UKStatementofReasons>
+Oleg Karazei is Head of the Prevention Department of the Main Department of Law Enforcement and Prevention of the Public Security Police of the Ministry of Internal Affairs of the Republic of Belarus. In this role, Karazei is responsible for the repression and intimidation of peaceful protesters in the wake of the 2020 presidential election, in particular with arbitrary arrests and ill-treatment, including torture, of peaceful demonstrators as well as intimidation and violence against journalists.</UKStatementofReasons>
+    <IndividualDetails>
+      <Individual>
+        <DOBs>
+          <DOB>01/01/1979</DOB>
+        </DOBs>
+        <Positions>
+          <Position>Head of the Prevention Department of the Main Department of Law Enforcement and Prevention of the Public Security Police of the Ministry of Internal Affairs of the Republic of Belarus</Position>
+        </Positions>
+        <Genders>
+          <Gender>Male</Gender>
+        </Genders>
+        <BirthDetails>
+          <Location>
+            <TownOfBirth>Dzerzhinsky district of the Minsk region</TownOfBirth>
+            <CountryOfBirth>former USSR (now Belarus)</CountryOfBirth>
+          </Location>
+        </BirthDetails>
+      </Individual>
+    </IndividualDetails>
+  </Designation>
+  <Designation>
+    <LastUpdated>09/04/2025</LastUpdated>
+    <DateDesignated>20/07/2023</DateDesignated>
+    <UniqueID>CAF0020</UniqueID>
+    <OFSIGroupID>16033</OFSIGroupID>
+    <Names>
+      <Name>
+        <Name6>Lobaye Invest Sarlu</Name6>
+        <NameType>Primary Name</NameType>
+      </Name>
+    </Names>
+    <RegimeName>The Central African Republic (Sanctions) (EU Exit) Regulations 2020</RegimeName>
+    <IndividualEntityShip>Entity</IndividualEntityShip>
+    <DesignationSource>UK</DesignationSource>
+    <SanctionsImposed>Asset freeze|Director Disqualification Sanction</SanctionsImposed>
+    <SanctionsImposedIndicators>
+      <AssetFreeze>true</AssetFreeze>
+      <ArmsEmbargo>false</ArmsEmbargo>
+      <TargetedArmsEmbargo>false</TargetedArmsEmbargo>
+      <CharteringOfShips>false</CharteringOfShips>
+      <ClosureOfRepresentativeOffices>false</ClosureOfRepresentativeOffices>
+      <CrewServicingOfShipsAndAircraft>false</CrewServicingOfShipsAndAircraft>
+      <Deflag>false</Deflag>
+      <PreventionOfBusinessArrangements>false</PreventionOfBusinessArrangements>
+      <ProhibitionOfPortEntry>false</ProhibitionOfPortEntry>
+      <TravelBan>false</TravelBan>
+      <PreventionOfCharteringOfShips>false</PreventionOfCharteringOfShips>
+      <PreventionOfCharteringOfShipsAndAircraft>false</PreventionOfCharteringOfShipsAndAircraft>
+      <TechnicalAssistanceRelatedToAircraft>false</TechnicalAssistanceRelatedToAircraft>
+      <TrustServicesSanctions>false</TrustServicesSanctions>
+      <DirectorDisqualificationSanction>true</DirectorDisqualificationSanction>
+    </SanctionsImposedIndicators>
+    <OtherInformation>The Director Disqualification Sanction was imposed on 09/04/2025.</OtherInformation>
+    <UKStatementofReasons>
+Lobaye Invest Sarlu (LOBAYE) is an involved person under the Central African Republic (Sanctions) (EU Exit) Regulations 2020 as it is and has been involved in actions and activities which undermine or threaten the peace, stability and security of the Central African Republic, including through acts that undermine efforts to resolve armed conflicts.  It is and has been involved in such actions and activities (i) itself; (ii) through its subsidiary, Sewa Security Services (SSS) and (iii) because it is responsible for, engaging in, providing support for, and/or promoting the actions and activities of the broader Wagner Group in Central African Republic. 
+</UKStatementofReasons>
+    <Addresses>
+      <Address>
+        <AddressLine6>Bangui</AddressLine6>
+        <AddressCountry>Central African Republic</AddressCountry>
+      </Address>
+    </Addresses>
+    <EntityDetails>
+      <Entity>
+        <TypeOfEntities>
+          <TypeOfEntity>Mining and media conglomerate </TypeOfEntity>
+        </TypeOfEntities>
+        <Subsidiaries>
+          <Subsidiary>Sewa Security Services </Subsidiary>
+        </Subsidiaries>
+        <ParentCompanies>
+          <ParentCompany>M-Finans </ParentCompany>
+        </ParentCompanies>
+        <BusinessRegistrationNumbers>
+          <BusinessRegistrationNumber>M 354838 D 0001 </BusinessRegistrationNumber>
+        </BusinessRegistrationNumbers>
+      </Entity>
+    </EntityDetails>
+  </Designation>
+  <Designation>
+    <LastUpdated>18/12/2021</LastUpdated>
+    <DateDesignated>03/10/2017</DateDesignated>
+    <UniqueID>DPR0075</UniqueID>
+    <Names>
+      <Name>
+        <Name6>Petrel 8</Name6>
+        <NameType>Primary name</NameType>
+      </Name>
+      <Name>
+        <Name6>Jal Vahini</Name6>
+        <NameType>Alias</NameType>
+      </Name>
+      <Name>
+        <Name6>Jal_Vahini</Name6>
+        <NameType>Alias</NameType>
+      </Name>
+      <Name>
+        <Name6>Tian Tai 36</Name6>
+        <NameType>Alias</NameType>
+      </Name>
+    </Names>
+    <RegimeName>The Democratic People's Republic of Korea (Sanctions) (EU Exit) Regulations 2019</RegimeName>
+    <IndividualEntityShip>Ship</IndividualEntityShip>
+    <DesignationSource>UN</DesignationSource>
+    <SanctionsImposed>Prohibition of port entry</SanctionsImposed>
+    <SanctionsImposedIndicators>
+      <AssetFreeze>false</AssetFreeze>
+      <ArmsEmbargo>false</ArmsEmbargo>
+      <TargetedArmsEmbargo>false</TargetedArmsEmbargo>
+      <CharteringOfShips>false</CharteringOfShips>
+      <ClosureOfRepresentativeOffices>false</ClosureOfRepresentativeOffices>
+      <CrewServicingOfShipsAndAircraft>false</CrewServicingOfShipsAndAircraft>
+      <Deflag>false</Deflag>
+      <PreventionOfBusinessArrangements>false</PreventionOfBusinessArrangements>
+      <ProhibitionOfPortEntry>true</ProhibitionOfPortEntry>
+      <TravelBan>false</TravelBan>
+      <PreventionOfCharteringOfShips>false</PreventionOfCharteringOfShips>
+      <PreventionOfCharteringOfShipsAndAircraft>false</PreventionOfCharteringOfShipsAndAircraft>
+      <TechnicalAssistanceRelatedToAircraft>false</TechnicalAssistanceRelatedToAircraft>
+      <TrustServicesSanctions>false</TrustServicesSanctions>
+      <DirectorDisqualificationSanction>false</DirectorDisqualificationSanction>
+    </SanctionsImposedIndicators>
+    <OtherInformation>Pursuant to paragraph 6 of Security Council Resolution 2371 (2017) and paragraph 6 of Security Council Resolution 2375 (2017)</OtherInformation>
+    <UKStatementofReasons>
+</UKStatementofReasons>
+    <ShipDetails>
+      <Ship>
+        <IMONumbers>
+          <IMONumber>IMO9562233</IMONumber>
+        </IMONumbers>
+        <CurrentOwnerOperators>
+          <CurrentOwnerOperator>Global United Shipping India </CurrentOwnerOperator>
+        </CurrentOwnerOperators>
+        <CurrentBelievedFlagOfShips>
+          <CurrentBelievedFlagOfShip>Comoros</CurrentBelievedFlagOfShip>
+        </CurrentBelievedFlagOfShips>
+        <PreviousFlags>
+          <PreviousFlag>India</PreviousFlag>
+        </PreviousFlags>
+        <TypeOfShipDetails>
+          <TypeOfShip>Bulk Carrier</TypeOfShip>
+        </TypeOfShipDetails>
+        <TonnageOfShipDetails>
+          <TonnageOfShip>7078</TonnageOfShip>
+        </TonnageOfShipDetails>
+        <LengthOfShipDetails>
+          <LengthOfShip>134.5</LengthOfShip>
+        </LengthOfShipDetails>
+        <YearsBuilt>
+          <YearBuilt>2011</YearBuilt>
+        </YearsBuilt>
+      </Ship>
+    </ShipDetails>
+  </Designation>
+  <Designation>
+    <LastUpdated>09/04/2025</LastUpdated>
+    <DateDesignated>06/07/2020</DateDesignated>
+    <UniqueID>GHR0001</UniqueID>
+    <OFSIGroupID>13852</OFSIGroupID>
+    <Names>
+      <Name>
+        <Name1>Dmitry</Name1>
+        <Name2>Borisovich</Name2>
+        <Name6>KRATOV</Name6>
+        <NameType>Primary name</NameType>
+      </Name>
+      <Name>
+        <Name1>Dimitri</Name1>
+        <Name2>Borisovich</Name2>
+        <Name6>KRATOV</Name6>
+        <NameType>Primary name variation</NameType>
+      </Name>
+    </Names>
+    <RegimeName>The Global Human Rights Sanctions Regulations 2020</RegimeName>
+    <IndividualEntityShip>Individual</IndividualEntityShip>
+    <DesignationSource>UK</DesignationSource>
+    <SanctionsImposed>Asset freeze|Travel Ban|Director Disqualification Sanction</SanctionsImposed>
+    <SanctionsImposedIndicators>
+      <AssetFreeze>true</AssetFreeze>
+      <ArmsEmbargo>false</ArmsEmbargo>
+      <TargetedArmsEmbargo>false</TargetedArmsEmbargo>
+      <CharteringOfShips>false</CharteringOfShips>
+      <ClosureOfRepresentativeOffices>false</ClosureOfRepresentativeOffices>
+      <CrewServicingOfShipsAndAircraft>false</CrewServicingOfShipsAndAircraft>
+      <Deflag>false</Deflag>
+      <PreventionOfBusinessArrangements>false</PreventionOfBusinessArrangements>
+      <ProhibitionOfPortEntry>false</ProhibitionOfPortEntry>
+      <TravelBan>true</TravelBan>
+      <PreventionOfCharteringOfShips>false</PreventionOfCharteringOfShips>
+      <PreventionOfCharteringOfShipsAndAircraft>false</PreventionOfCharteringOfShipsAndAircraft>
+      <TechnicalAssistanceRelatedToAircraft>false</TechnicalAssistanceRelatedToAircraft>
+      <TrustServicesSanctions>false</TrustServicesSanctions>
+      <DirectorDisqualificationSanction>true</DirectorDisqualificationSanction>
+    </SanctionsImposedIndicators>
+    <OtherInformation>The Director Disqualification Sanction was imposed on 09/04/2025.</OtherInformation>
+    <UKStatementofReasons>
+Dmitry Borisovich Kratov, who was the chief medical officer and deputy head of Butyrka Prison where Magnitsky was detained until shortly before his death on 16 November 2009, was responsible for the mistreatment of Sergei Magnitsky, including by failing to ensure the proper administration of medical care, which contributed significantly to his death.</UKStatementofReasons>
+    <IndividualDetails>
+      <Individual>
+        <DOBs>
+          <DOB>19/07/1964</DOB>
+        </DOBs>
+        <Nationalities>
+          <Nationality>Russia</Nationality>
+        </Nationalities>
+        <Positions>
+          <Position>Chief medical officer/deputy head - Butyrka Prison</Position>
+        </Positions>
+        <Genders>
+          <Gender>Male</Gender>
+        </Genders>
+      </Individual>
+    </IndividualDetails>
+  </Designation>
+  <Designation>
+    <LastUpdated>09/04/2025</LastUpdated>
+    <DateDesignated>31/12/2020</DateDesignated>
+    <UniqueID>GUB0009</UniqueID>
+    <OFSIGroupID>12664</OFSIGroupID>
+    <UNReferenceNumber>GBi.005</UNReferenceNumber>
+    <Names>
+      <Name>
+        <Name1>Antonio</Name1>
+        <Name6>Injai</Name6>
+        <NameType>Primary name</NameType>
+      </Name>
+      <Name>
+        <Name1>Antonio</Name1>
+        <Name6>Indjai</Name6>
+        <NameType>Alias</NameType>
+        <AliasStrength>Good quality a.k.a</AliasStrength>
+      </Name>
+    </Names>
+    <NonLatinNames>
+      <NonLatinName>
+        <NameNonLatinScript>António Injai</NameNonLatinScript>
+      </NonLatinName>
+      <NonLatinName>
+        <NameNonLatinScript>António Indjai</NameNonLatinScript>
+      </NonLatinName>
+    </NonLatinNames>
+    <RegimeName>The Republic of Guinea-Bissau (Sanctions) (EU Exit) Regulations 2019</RegimeName>
+    <IndividualEntityShip>Individual</IndividualEntityShip>
+    <DesignationSource>UK|UN</DesignationSource>
+    <SanctionsImposed>Asset freeze|Travel Ban|Director Disqualification Sanction</SanctionsImposed>
+    <SanctionsImposedIndicators>
+      <AssetFreeze>true</AssetFreeze>
+      <ArmsEmbargo>false</ArmsEmbargo>
+      <TargetedArmsEmbargo>false</TargetedArmsEmbargo>
+      <CharteringOfShips>false</CharteringOfShips>
+      <ClosureOfRepresentativeOffices>false</ClosureOfRepresentativeOffices>
+      <CrewServicingOfShipsAndAircraft>false</CrewServicingOfShipsAndAircraft>
+      <Deflag>false</Deflag>
+      <PreventionOfBusinessArrangements>false</PreventionOfBusinessArrangements>
+      <ProhibitionOfPortEntry>false</ProhibitionOfPortEntry>
+      <TravelBan>true</TravelBan>
+      <PreventionOfCharteringOfShips>false</PreventionOfCharteringOfShips>
+      <PreventionOfCharteringOfShipsAndAircraft>false</PreventionOfCharteringOfShipsAndAircraft>
+      <TechnicalAssistanceRelatedToAircraft>false</TechnicalAssistanceRelatedToAircraft>
+      <TrustServicesSanctions>false</TrustServicesSanctions>
+      <DirectorDisqualificationSanction>true</DirectorDisqualificationSanction>
+    </SanctionsImposedIndicators>
+    <OtherInformation>Injai was listed on 18 May 2012 pursuant to paragraph 4 of resolution 2048 (2012) as “António Injai was personally involved in planning and leading the mutiny of 1 April 2010, culminating with the illegal apprehension of the Prime Minister, Carlo Gomes Junior, and the then Chief of Staff of the Armed Forces, José Zamora Induta; during the 2012 electoral period, in his capacity as Chief of Staff of the Armed Forces, Injai made statements threatening to overthrow the elected authorities and to put an end to the electoral process; António Injai has been involved in the operational planning of the coup d’état of 12 April 2012. In the aftermath of the coup, the first communiqué by the “Military Command” was issued by the Armed Forces General Staff, which is led by General Injai.” Father’s name is Wasna Injai; Mother’s name is Quiritche Cofte. The Director Disqualification Sanction was imposed on 09/04/2025.</OtherInformation>
+    <UKStatementofReasons>
+António Injai was personally involved in planning and leading the mutiny of 1 April 2010, culminating with the illegal apprehension of the Prime Minister, Carlo Gomes Junior, and the then Chief of Staff of the Armed Forces, José Zamora Induta; during the 2012 electoral period, in his capacity as Chief of Staff of the Armed Forces, Injai made statements threatening to overthrow the elected authorities and to put an end to the electoral process; António Injai has been involved in the operational planning of the coup d'état of 12 April 2012. In the aftermath of the coup, the first communiqué by the ‘Military Command’ was issued by the Armed Forces General Staff, which was led by General Injai.
+</UKStatementofReasons>
+    <IndividualDetails>
+      <Individual>
+        <DOBs>
+          <DOB>20/01/1955</DOB>
+        </DOBs>
+        <PassportDetails>
+          <Passport>
+            <PassportNumber>AAID00435</PassportNumber>
+            <PassportAdditionalInformation>Diplomatic Passport Issued 18 February 2010 in Guinea-Bissau. Expires 18 February 2013</PassportAdditionalInformation>
+          </Passport>
+        </PassportDetails>
+        <Nationalities>
+          <Nationality>Guinea-Bissau</Nationality>
+        </Nationalities>
+        <Positions>
+          <Position>Lieutenant General</Position>
+          <Position>Chief of Staff of the Armed Forces</Position>
+        </Positions>
+        <Genders>
+          <Gender>Male</Gender>
+        </Genders>
+        <BirthDetails>
+          <Location>
+            <TownOfBirth>Encheia, Sector de Bissorá, Região de Oio</TownOfBirth>
+            <CountryOfBirth>Guinea-Bissau</CountryOfBirth>
+          </Location>
+        </BirthDetails>
+      </Individual>
+    </IndividualDetails>
+  </Designation>
+  <Designation>
+    <LastUpdated>09/04/2025</LastUpdated>
+    <DateDesignated>15/03/2022</DateDesignated>
+    <UniqueID>RUS0777</UniqueID>
+    <OFSIGroupID>14728</OFSIGroupID>
+    <Names>
+      <Name>
+        <Name1>Galina</Name1>
+        <Name2>Evgenyevna</Name2>
+        <Name6>PUMPYANSKAYA</Name6>
+        <NameType>Primary Name</NameType>
+      </Name>
+      <Name>
+        <NameType>Primary Name Variation</NameType>
+      </Name>
+    </Names>
+    <NonLatinNames>
+      <NonLatinName>
+        <NameNonLatinScript>ПУМПЯНСКАЯ Галина Евгеньевна  </NameNonLatinScript>
+        <NonLatinScriptType>Cyrillic</NonLatinScriptType>
+        <NonLatinScriptLanguage>Russian</NonLatinScriptLanguage>
+      </NonLatinName>
+      <NonLatinName>
+        <NameNonLatinScript>Галина Евгеньевна ПУМПЯНСКАЯ</NameNonLatinScript>
+        <NonLatinScriptType>Cyrillic</NonLatinScriptType>
+        <NonLatinScriptLanguage>Russian</NonLatinScriptLanguage>
+      </NonLatinName>
+    </NonLatinNames>
+    <RegimeName>The Russia (Sanctions) (EU Exit) Regulations 2019</RegimeName>
+    <IndividualEntityShip>Individual</IndividualEntityShip>
+    <DesignationSource>UK</DesignationSource>
+    <SanctionsImposed>Asset freeze|Travel Ban|Trust Services Sanctions|Director Disqualification Sanction|Transport sanctions: see "Other information"</SanctionsImposed>
+    <SanctionsImposedIndicators>
+      <AssetFreeze>true</AssetFreeze>
+      <ArmsEmbargo>false</ArmsEmbargo>
+      <TargetedArmsEmbargo>false</TargetedArmsEmbargo>
+      <CharteringOfShips>false</CharteringOfShips>
+      <ClosureOfRepresentativeOffices>false</ClosureOfRepresentativeOffices>
+      <CrewServicingOfShipsAndAircraft>false</CrewServicingOfShipsAndAircraft>
+      <Deflag>false</Deflag>
+      <PreventionOfBusinessArrangements>false</PreventionOfBusinessArrangements>
+      <ProhibitionOfPortEntry>false</ProhibitionOfPortEntry>
+      <TravelBan>true</TravelBan>
+      <PreventionOfCharteringOfShips>false</PreventionOfCharteringOfShips>
+      <PreventionOfCharteringOfShipsAndAircraft>false</PreventionOfCharteringOfShipsAndAircraft>
+      <TechnicalAssistanceRelatedToAircraft>false</TechnicalAssistanceRelatedToAircraft>
+      <TrustServicesSanctions>true</TrustServicesSanctions>
+      <DirectorDisqualificationSanction>true</DirectorDisqualificationSanction>
+    </SanctionsImposedIndicators>
+    <OtherInformation>Transport Sanctions: where transport sanctions apply, a ship owned, controlled, chartered or operated by a designated person is prohibited from entering a port in the UK, may be given a movement or a port entry direction, can be detained, and will be refused permission to register on the UK Ship Register or have its existing registration terminated. Similarly, an aircraft owned, chartered or operated by a designated person is prohibited from overflying or landing in the UK, may be given a movement direction, can be detained or moved to a specified airport, and will be refused permission to register on the CAA Aircraft Register or have its existing registration terminated. This also includes a prohibition of technical assistance relating to aircraft and ships: a prohibition on the provision of technical assistance relating to aircraft or ships will prevent a person from directly or indirectly providing technical assistance to, or for the benefit of, the designated person, where that technical assistance relates to an aircraft or ship. The Director Disqualification Sanction was imposed on 09/04/2025.</OtherInformation>
+    <UKStatementofReasons>
+Galina Evgenyevna PUMPYANSKAYA (hereafter PUMPYANSKAYA) is an involved person under the Russia (Sanctions) (EU Exit) Regulations 2019 on the following ground: (1) PUMPYANSKAYA is associated with a Dmitry Alexandrovich PUMPYANSKY as his wife and by receiving a material benefit from PUMPYANSKY. Dmitry Alexandrovich PUMPYANSKY is an involved person as defined in the regulations. 
+The trust services sanctions were imposed on 21/03/2023.
+</UKStatementofReasons>
+    <Addresses>
+      <Address>
+        <AddressLine6>Geneva</AddressLine6>
+        <AddressCountry>Switzerland</AddressCountry>
+      </Address>
+    </Addresses>
+    <IndividualDetails>
+      <Individual>
+        <DOBs>
+          <DOB>10/02/1966</DOB>
+          <DOB>10/02/1966</DOB>
+        </DOBs>
+        <Nationalities>
+          <Nationality>Russia</Nationality>
+        </Nationalities>
+        <NationalIdentifierDetails>
+          <NationalIdentifier>
+            <NationalIdentifierNumber>665805050720</NationalIdentifierNumber>
+            <NationalIdentifierAdditionalInformation>TIN </NationalIdentifierAdditionalInformation>
+          </NationalIdentifier>
+        </NationalIdentifierDetails>
+        <Genders>
+          <Gender>Female</Gender>
+        </Genders>
+        <BirthDetails>
+          <Location>
+            <TownOfBirth>Yekaterinburg</TownOfBirth>
+            <CountryOfBirth>Russia</CountryOfBirth>
+          </Location>
+        </BirthDetails>
+      </Individual>
+    </IndividualDetails>
+  </Designation>
+</Designations>

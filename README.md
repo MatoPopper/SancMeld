@@ -10,7 +10,7 @@ Built for the EU: EU and UN designations are treated as legally binding, third-c
 lists such as OFAC are surfaced as red flags only.
 
 ```
-Status: early development. Six connectors, working endpoints, no production sign-off.
+Status: early development. Seven connectors, working endpoints, no production sign-off.
 ```
 
 Three properties drive the design:
@@ -38,7 +38,7 @@ in the connector that implements each one.
 | **NL** Nationale sanctielijst terrorisme (BZ) | advisory¹ | ODS | 117 entries | **implemented** |
 | **CZ** Vnitrostátní sankční seznam (MZV) | advisory¹ | CSV | 26 entries | **implemented** |
 | **OFAC** SDN + Consolidated | **advisory only** | CSV | 19 178 + 481 | planned |
-| **UK** UK Sanctions List (FCDO; the OFSI Consolidated List closed 2026-01-28) | **advisory only** | XML / CSV | — | candidate |
+| **UK** UK Sanctions List (FCDO; the OFSI Consolidated List closed 2026-01-28) | **advisory only** | XML | 6 408 designations | **implemented** |
 
 ¹ A national list binds in the member state that publishes it, not on a reader elsewhere in
 the EU — so it is shown as something to look at, not something that obliges. "Binding in one
@@ -54,7 +54,9 @@ subject met, so a Czech listing lands under the same programme code as its EU
 counterparts. The Netherlands freezes the assets of residents connected with terrorism
 under its own regulation implementing UN Resolution 1373 — people the EU's terrorism list
 does not carry — and publishes the list as a spreadsheet with no status column, so a
-withdrawn entry simply leaves it.
+withdrawn entry simply leaves it. The United Kingdom is the first third-country list: a UK
+designation obliges nobody in the EU and is surfaced as a red flag, imported for the 5 360
+designations that are the UK's own and for the UN references its transpositions carry.
 
 Most EU member states publish no separate national list and rely on EU/UN designations.
 That is recorded explicitly per jurisdiction rather than left as an unexplained gap.

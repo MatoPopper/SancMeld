@@ -23,6 +23,7 @@
     <ProjectReference Include="../SancMeld.Connectors.FrGels/SancMeld.Connectors.FrGels.csproj" />
     <ProjectReference Include="../SancMeld.Connectors.NlBz/SancMeld.Connectors.NlBz.csproj" />
     <ProjectReference Include="../SancMeld.Connectors.PlMswia/SancMeld.Connectors.PlMswia.csproj" />
+    <ProjectReference Include="../SancMeld.Connectors.UkFcdo/SancMeld.Connectors.UkFcdo.csproj" />
     <ProjectReference Include="../SancMeld.Connectors.UnSc/SancMeld.Connectors.UnSc.csproj" />
   </ItemGroup>
 
