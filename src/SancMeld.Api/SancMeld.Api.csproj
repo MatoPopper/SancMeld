@@ -21,6 +21,7 @@
     <ProjectReference Include="../SancMeld.Connectors.CzMzv/SancMeld.Connectors.CzMzv.csproj" />
     <ProjectReference Include="../SancMeld.Connectors.EuFsf/SancMeld.Connectors.EuFsf.csproj" />
     <ProjectReference Include="../SancMeld.Connectors.FrGels/SancMeld.Connectors.FrGels.csproj" />
+    <ProjectReference Include="../SancMeld.Connectors.NlBz/SancMeld.Connectors.NlBz.csproj" />
     <ProjectReference Include="../SancMeld.Connectors.PlMswia/SancMeld.Connectors.PlMswia.csproj" />
     <ProjectReference Include="../SancMeld.Connectors.UnSc/SancMeld.Connectors.UnSc.csproj" />
   </ItemGroup>

@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/SancMeld.Connectors.NlBz/SancMeld.Connectors.NlBz.csproj" />
+  </ItemGroup>
+
+  <!-- The spreadsheet as published on 2026-09-11, whole: 14 kB, 117 entries. Small
+       enough to keep intact, and keeping it intact is what proves the title block, the
+       merged cells and the empty 16 000-column tails are read past rather than read. -->
+  <ItemGroup>
+    <Content Include="../../fixtures/nl-bz/sample.ods"
+             Link="fixtures/nl-bz/sample.ods"
+             CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

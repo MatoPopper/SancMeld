@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using SancMeld.Connectors.CzMzv;
 using SancMeld.Connectors.EuFsf;
 using SancMeld.Connectors.FrGels;
+using SancMeld.Connectors.NlBz;
 using SancMeld.Connectors.PlMswia;
 using SancMeld.Connectors.UnSc;
 using SancMeld.Core.Abstractions;
@@ -112,6 +113,7 @@ public static class SancMeldExtensions
         services.AddFrGelsConnector(configuration);
         services.AddPlMswiaConnector(configuration);
         services.AddCzMzvConnector(configuration);
+        services.AddNlBzConnector(configuration);
 
         // TODO: adjudication capture, and scheduled runs of the import.
         // Defaults are single-tenant and unauthenticated by design; the hosted

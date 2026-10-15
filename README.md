@@ -10,7 +10,7 @@ Built for the EU: EU and UN designations are treated as legally binding, third-c
 lists such as OFAC are surfaced as red flags only.
 
 ```
-Status: early development. Five connectors, working endpoints, no production sign-off.
+Status: early development. Six connectors, working endpoints, no production sign-off.
 ```
 
 Three properties drive the design:
@@ -35,7 +35,7 @@ in the connector that implements each one.
 | **UN** Security Council Consolidated List | binding | XML | 736 persons + 275 entities | **implemented** |
 | **FR** Registre national des gels (DG Trésor) | advisory¹ | **JSON API** | 6 578 records | **implemented** |
 | **PL** Lista osób i podmiotów (MSWiA) | advisory¹ | XLSX | 445 persons + 139 entities | **implemented** |
-| **NL** Nationale terrorismelijst | advisory¹ | ODS | small | planned |
+| **NL** Nationale sanctielijst terrorisme (BZ) | advisory¹ | ODS | 117 entries | **implemented** |
 | **CZ** Vnitrostátní sankční seznam (MZV) | advisory¹ | CSV | 26 entries | **implemented** |
 | **OFAC** SDN + Consolidated | **advisory only** | CSV | 19 178 + 481 | planned |
 | **UK** UK Sanctions List (FCDO; the OFSI Consolidated List closed 2026-01-28) | **advisory only** | XML / CSV | — | candidate |
@@ -51,7 +51,10 @@ in a workbook, with the delisted rows kept and dated, and the connector reads it
 The Czech Republic lists by government resolution, mostly people the EU has not listed
 yet, and removes them once the EU does — each entry cites the EU act whose criteria the
 subject met, so a Czech listing lands under the same programme code as its EU
-counterparts.
+counterparts. The Netherlands freezes the assets of residents connected with terrorism
+under its own regulation implementing UN Resolution 1373 — people the EU's terrorism list
+does not carry — and publishes the list as a spreadsheet with no status column, so a
+withdrawn entry simply leaves it.
 
 Most EU member states publish no separate national list and rely on EU/UN designations.
 That is recorded explicitly per jurisdiction rather than left as an unexplained gap.
