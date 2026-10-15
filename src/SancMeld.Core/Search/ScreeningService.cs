@@ -69,7 +69,8 @@ public sealed class ScreeningService(
         var byIdentifier = identifiers.Count == 0
             ? []
             : await db.Identifiers
-                .Where(i => i.Designation!.ValidTo == null && identifiers.Contains(i.ValueNormalized))
+                .Where(i => i.Designation!.ValidTo == null && i.Designation.Status != DesignationStatus.Delisted)
+                .Where(i => identifiers.Contains(i.ValueNormalized))
                 .Select(i => i.DesignationId)
                 .Distinct()
                 .ToListAsync(ct)

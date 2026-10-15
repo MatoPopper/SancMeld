@@ -91,7 +91,7 @@ and we would like to keep it that way.
 
 ## Reporting a source that broke
 
-Open an issue with the source code (`EU_FSF`, `PL_NATIONAL`, …), the HTTP status or parse
+Open an issue with the source code (`EU_FSF`, `PL_MSWIA`, …), the HTTP status or parse
 error, and the date you observed it. Government endpoints change without notice; these
 reports are genuinely useful.
 

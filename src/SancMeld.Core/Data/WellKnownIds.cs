@@ -15,6 +15,12 @@ public static class WellKnownIds
     public static readonly Guid UnJurisdiction = new("0195a1f0-0000-7000-8000-000000000002");
     public static readonly Guid UnScSource = new("0195a1f0-0000-7000-8000-000000000102");
 
+    public static readonly Guid FrJurisdiction = new("0195a1f0-0000-7000-8000-000000000003");
+    public static readonly Guid FrGelsSource = new("0195a1f0-0000-7000-8000-000000000103");
+
+    public static readonly Guid PlJurisdiction = new("0195a1f0-0000-7000-8000-000000000004");
+    public static readonly Guid PlMswiaSource = new("0195a1f0-0000-7000-8000-000000000104");
+
     /// <summary>The rules-based matcher. A trained model becomes a second row, not an edit.</summary>
     public static readonly Guid RulesAlgorithm = new("0195a1f0-0000-7000-8000-000000000201");
 

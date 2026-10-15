@@ -136,6 +136,25 @@ public sealed class CandidateGenerationTests(DatabaseFixture fixture) : IAsyncLi
         Assert.True(hit.NameScore > 0.5, $"expected the word measure to carry it, got {hit.NameScore}");
     }
 
+    [Fact]
+    public async Task ADelistedSubjectIsNotACandidate()
+    {
+        // Poland publishes its delistings as dated rows and the import keeps them, so a
+        // past decision can still see what it was taken against. A search must not: the
+        // obligation ended on the date in the row.
+        var surname = Named("burzynski");
+        var delisted = Subject("a", $"pavel {surname}") with
+        {
+            Status = DesignationStatus.Delisted,
+            DelistedAt = new DateOnly(2022, 6, 10),
+        };
+
+        await ImportAsync(delisted, Subject("b", $"andrei {surname}"));
+
+        var hit = Assert.Single(await SearchAsync(surname));
+        Assert.Equal($"andrei {surname}", hit.MatchedName);
+    }
+
     private async Task<IReadOnlyList<SearchHit>> SearchAsync(string query)
     {
         await using var db = fixture.CreateContext();

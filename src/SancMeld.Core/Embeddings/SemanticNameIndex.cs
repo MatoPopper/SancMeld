@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SancMeld.Core.Configuration;
 using SancMeld.Core.Data;
+using SancMeld.Core.Domain;
 
 namespace SancMeld.Core.Embeddings;
 
@@ -82,6 +83,7 @@ public sealed class SemanticNameIndex(
             .AsNoTracking()
             .Where(e => e.ModelId == model.Id)
             .Where(e => e.Name!.Designation!.ValidTo == null)
+            .Where(e => e.Name!.Designation!.Status != DesignationStatus.Delisted)
             .Where(e => includeWeak || !e.Name!.IsWeak)
             .Select(e => new { e.NameId, e.Name!.DesignationId, e.Name.NameOriginal, e.Vector })
             .ToListAsync(ct)

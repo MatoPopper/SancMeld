@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>SancMeld.Connectors.PlMswia</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="SancMeld.Connectors.PlMswia.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The list is published as an attachment on a gov.pl page whose link changes with
+         every release, so the page itself has to be read. CONTRIBUTING rules out regexes
+         over HTML; AngleSharp is the parser the project already names for that. -->
+    <PackageReference Include="AngleSharp" Version="1.8.5" />
+
+    <!-- The attachment is an XLSX. The SDK reads a worksheet row by row through
+         OpenXmlReader and exposes the hyperlink parts, which is where each row's link to
+         the ministerial decision lives; a cell-value reader would drop the links. -->
+    <PackageReference Include="DocumentFormat.OpenXml" Version="3.5.1" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.4" />
+    <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="10.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../SancMeld.Core/SancMeld.Core.csproj" />
+  </ItemGroup>
+
+</Project>

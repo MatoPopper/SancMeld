@@ -284,6 +284,11 @@ public sealed class DesignationQueryService(SancMeldDbContext db, IOptions<SancM
     private IQueryable<DesignationName> MatchingNames(string normalizedQuery, bool includeWeak, bool byWord) =>
         db.Names
             .Where(n => n.Designation!.ValidTo == null)
+
+            // A listing the publisher has withdrawn is kept, dated, because past decisions
+            // point at it — but it is not a hit. Poland is the first source that publishes
+            // its delistings as rows; the EU and UN simply drop them.
+            .Where(n => n.Designation!.Status != DesignationStatus.Delisted)
             .Where(n => includeWeak || !n.IsWeak)
             .Where(n => EF.Functions.TrigramsAreSimilar(n.NameNormalized!, normalizedQuery)
                 || (byWord && EF.Functions.TrigramsAreWordSimilar(normalizedQuery, n.NameNormalized!)));

@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/SancMeld.Connectors.PlMswia/SancMeld.Connectors.PlMswia.csproj" />
+  </ItemGroup>
+
+  <!-- The published workbook of 2026-05-26 cut down to 13 persons and 14 entities, plus
+       both sheets' footnote rows. Rows were chosen for what breaks a prose parser: a
+       year-only birth, a numeric date, a birthplace on the next line, two nationalities,
+       Cyrillic names in brackets, a company's former and current names, a registry number
+       written in Greek letters, a link to a file on the editor's own disk, and delisted
+       rows with their dates. The cut keeps the real XML, shared strings and hyperlink
+       parts; a hand-made sheet would only prove the parser agrees with whoever made it. -->
+  <ItemGroup>
+    <Content Include="../../fixtures/pl-mswia/sample.xlsx"
+             Link="fixtures/pl-mswia/sample.xlsx"
+             CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>
