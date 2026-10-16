@@ -1,0 +1,70 @@
+{
+  "icoId": "01234567",
+  "zaznamy": [
+    {
+      "rejstrik": "OR",
+      "primarniZaznam": true,
+      "ico": [ { "datumZapisu": "2019-01-22", "hodnota": "01234567" } ],
+      "obchodniJmeno": [
+        { "datumZapisu": "2019-01-22", "datumVymazu": "2020-01-01", "hodnota": "Sample Retail s.r.o. (old)" },
+        { "datumZapisu": "2020-01-01", "hodnota": "Sample Retail CZ s.r.o." }
+      ],
+      "adresy": [
+        { "datumZapisu": "2019-01-22", "adresa": { "kodStatu": "CZ", "nazevStatu": "Česká republika", "textovaAdresa": "Ulice 1, 15500 Praha 5" } }
+      ],
+      "spolecnici": [
+        {
+          "datumZapisu": "2019-01-22",
+          "nazevOrganu": "Společníci",
+          "spolecnik": [
+            {
+              "datumZapisu": "2019-01-22",
+              "datumVymazu": "2023-10-04",
+              "podil": [ { "datumZapisu": "2019-01-22", "velikostPodilu": { "typObnos": "PROCENTA", "hodnota": "15" } } ],
+              "osoba": { "typAngazma": "SPOLECNIK_OSOBA", "fyzickaOsoba": { "jmeno": "ANDREY", "prijmeni": "SHNAYDER", "datumNarozeni": "1974-02-09" } }
+            },
+            {
+              "datumZapisu": "2026-07-29",
+              "podil": [
+                { "datumZapisu": "2026-07-29", "velikostPodilu": { "typObnos": "PROCENTA", "hodnota": "15" } }
+              ],
+              "osoba": { "typAngazma": "SPOLECNIK_OSOBA", "fyzickaOsoba": { "jmeno": "ANDREY", "prijmeni": "SHNAYDER", "datumNarozeni": "1974-02-09" } }
+            },
+            {
+              "datumZapisu": "2019-01-22",
+              "datumVymazu": "2023-01-05",
+              "podil": [
+                { "datumZapisu": "2020-08-13", "datumVymazu": "2023-01-05", "velikostPodilu": { "typObnos": "PROCENTA", "hodnota": "76" } },
+                { "datumZapisu": "2019-01-22", "datumVymazu": "2020-03-12", "velikostPodilu": { "typObnos": "PROCENTA", "hodnota": "61;5" } }
+              ],
+              "osoba": { "typAngazma": "SPOLECNIK_OSOBA", "fyzickaOsoba": { "jmeno": "SERGEY", "prijmeni": "SHNAYDER", "datumNarozeni": "1966-06-16" } }
+            },
+            {
+              "datumZapisu": "2019-01-22",
+              "podil": [ { "datumZapisu": "2019-01-22", "velikostPodilu": { "typObnos": "PROCENTA", "hodnota": "6" } } ],
+              "osoba": { "typAngazma": "SPOLECNIK_OSOBA", "fyzickaOsoba": { "jmeno": "JAN", "prijmeni": "NOVAK", "datumNarozeni": "1980-01-01" } }
+            },
+            {
+              "datumZapisu": "2021-03-01",
+              "podil": [ { "datumZapisu": "2021-03-01", "velikostPodilu": { "typObnos": "PROCENTA", "hodnota": "3" } } ],
+              "osoba": { "typAngazma": "SPOLECNIK_OSOBA", "pravnickaOsoba": { "obchodniJmeno": "Sample Holding Ltd", "adresa": { "kodStatu": "CY" } } }
+            }
+          ]
+        }
+      ],
+      "statutarniOrgany": [
+        {
+          "nazevOrganu": "Statutární orgán",
+          "clenoveOrganu": [
+            {
+              "datumZapisu": "2020-06-02",
+              "typAngazma": "STATUTARNI_ORGAN_CLEN",
+              "clenstvi": { "funkce": { "nazev": "jednatel" } },
+              "fyzickaOsoba": { "jmeno": "PETR", "prijmeni": "SVOBODA", "datumNarozeni": "1976-09-09" }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

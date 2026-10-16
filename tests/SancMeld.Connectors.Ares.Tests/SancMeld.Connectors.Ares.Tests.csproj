@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/SancMeld.Connectors.Ares/SancMeld.Connectors.Ares.csproj" />
+  </ItemGroup>
+
+  <!-- A synthetic record in the shape ARES serves (checked against the live response of
+       2026-10-16): no real person's data that is not on a sanctions list goes into a
+       public repository. -->
+  <ItemGroup>
+    <Content Include="../../fixtures/ares/vr-sample.json" Link="fixtures/ares/vr-sample.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

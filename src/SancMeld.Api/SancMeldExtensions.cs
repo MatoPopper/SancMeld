@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using SancMeld.Connectors.Ares;
 using SancMeld.Connectors.CzMzv;
 using SancMeld.Connectors.EuFsf;
 using SancMeld.Connectors.FrGels;
@@ -127,6 +128,9 @@ public static class SancMeldExtensions
         // Not a sanctions source: a register of who owns and runs what, read for the
         // listed persons the lists already hold.
         services.AddWikidataConnector(configuration);
+
+        // The Czech company register, read on request for who owns and runs a company.
+        services.AddAresConnector(configuration);
 
         // TODO: adjudication capture, and scheduled runs of the import.
         // Defaults are single-tenant and unauthenticated by design; the hosted

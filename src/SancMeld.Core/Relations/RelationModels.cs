@@ -24,6 +24,9 @@ public enum RelationKind
 
     /// <summary>Runs the stores or the business of a brand it need not own: ChainStores SK runs MERE in Slovakia.</summary>
     OperatorOf,
+
+    /// <summary>The same entity recorded in two registers: a curated party and its ARES record.</summary>
+    SameAs,
 }
 
 /// <summary>What an external register says a related party is. Decides which screening a party can answer.</summary>
@@ -46,6 +49,9 @@ public static class RelationSystems
     /// owners are listed. Every link names its source.
     /// </summary>
     public const string Curated = "CURATED";
+
+    /// <summary>The Czech register of economic subjects (ARES), public register part: shareholders and statutory bodies.</summary>
+    public const string Ares = "ARES";
 }
 
 /// <summary>One related party as a screening sees it.</summary>

@@ -180,12 +180,35 @@ internal static class SancMeldEndpoints
     /// a model nobody can audit. It is an offline job producing a versioned artefact,
     /// which arrives here as a new row in match_algorithm.
     /// </summary>
+    /// <summary>A company to look up in a national register: an identification number or a name.</summary>
+    public sealed record RegisterLookupRequest(string Query, int? Depth = null);
+
     /// <summary>
     /// An analyst's verdict on a link the graph shows: a listed subject's tie to a party,
     /// a tie between two parties, or the identity a register match rests on.
     /// </summary>
     public static IEndpointRouteBuilder MapRelationDecisions(this IEndpointRouteBuilder endpoints, bool requireSignIn)
     {
+        endpoints.MapPost("/registers/ares/lookup", async Task<Results<Ok<SancMeld.Connectors.Ares.AresLookupResult>, BadRequest<string>>> (
+            SancMeld.Connectors.Ares.AresLookupService ares, RegisterLookupRequest request, CancellationToken ct) =>
+        {
+            if (request is null || string.IsNullOrWhiteSpace(request.Query))
+            {
+                return TypedResults.BadRequest("Supply an IČO or a company name.");
+            }
+
+            return TypedResults.Ok(await ares.LookupAsync(request.Query, request.Depth, ct));
+        })
+        .RequireWrite(requireSignIn)
+        .WithTags("Designations")
+        .WithName("LookupAres")
+        .WithSummary("Read a Czech company's shareholders and statutory body from ARES and link the listed ones — writes.")
+        .WithDescription(
+            "Query is an IČO or a business name. Shareholders and members of the statutory body " +
+            "whose date of birth and name match a listed person are linked to the company as " +
+            "candidates; corporate shareholders are followed up to Depth hops. People who are not " +
+            "listed are not stored. The query is sent to ARES (Ministry of Finance of the Czech Republic).");
+
         endpoints.MapPost("/relations/decisions", async Task<Results<Ok<RelationDecisionResult>, BadRequest<string>, NotFound<string>>> (
             RelationDecisionService decisions, RelationDecisionRequest request, ClaimsPrincipal user, CancellationToken ct) =>
         {

@@ -36,3 +36,23 @@ public sealed class TrigramSimilarityTests
         Assert.Equal(separately, both.ToHashSet());
     }
 }
+
+public sealed class CyrillicTransliteratorTests
+{
+    [Theory]
+    [InlineData("Андрей ШНАЙДЕР", "andrei shnaider", "andrey shnayder")]
+    [InlineData("Сергей Иванович Шнайдер", "sergei ivanovich shnaider", "sergey ivanovich shnayder")]
+    public void BothRegisterSpellingsAreProduced(string cyrillic, string icao, string bgn)
+    {
+        var variants = SancMeld.Core.Matching.CyrillicTransliterator.Variants(cyrillic).Select(v => v.ToLowerInvariant()).ToList();
+
+        Assert.Contains(icao, variants);
+        Assert.Contains(bgn, variants);
+    }
+
+    [Fact]
+    public void LatinTextHasNoVariants()
+    {
+        Assert.Empty(SancMeld.Core.Matching.CyrillicTransliterator.Variants("Andrey SCHNEIDER"));
+    }
+}

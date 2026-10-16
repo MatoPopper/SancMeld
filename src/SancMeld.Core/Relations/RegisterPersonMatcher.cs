@@ -1,13 +1,13 @@
 using SancMeld.Core.Matching;
-using SancMeld.Core.Relations;
 
-namespace SancMeld.Connectors.Wikidata;
+namespace SancMeld.Core.Relations;
 
 /// <summary>A register record as the matcher sees it: its id and every spelling, with the English label kept apart.</summary>
 public sealed record RegisterCandidate(string ItemId, string? EnglishLabel, IReadOnlyCollection<string> Labels);
 
 /// <summary>
-/// Decides which of the humans born on a given day, if any, is the listed person.
+/// Decides which of the people born on a given day in a register, if any, is the listed
+/// person. Shared by the registers: Wikidata's humans, the shareholders ARES records.
 ///
 /// The birth date has already narrowed the field to a hundred or so; what is left is a
 /// name comparison, done with the same trigram similarity the screening runs on, over
@@ -19,7 +19,7 @@ public sealed record RegisterCandidate(string ItemId, string? EnglishLabel, IRea
 /// because two register records this close are not something a machine should choose
 /// between — the person stays unresolved, with a note saying why.
 /// </summary>
-public static class WikidataPersonMatcher
+public static class RegisterPersonMatcher
 {
     /// <summary>
     /// What a listed spelling scores against a label that contains all of its words:
@@ -36,9 +36,14 @@ public static class WikidataPersonMatcher
         double minNameScore,
         double ambiguityMargin)
     {
+        // Every listed spelling, and the Latin transliterations of the Cyrillic ones: a
+        // register writes Шнайдер as SHNAYDER or SHNAIDER, and only the listing's own
+        // Cyrillic spelling, transliterated, meets it word for word.
         var spellings = person.Names
-            .Select(n => (Original: n, Normalized: NameNormalizer.Normalize(n).Trim()))
+            .SelectMany(n => CyrillicTransliterator.Variants(n).Prepend(n).Select(v => (Original: n, Text: v)))
+            .Select(n => (n.Original, Normalized: NameNormalizer.Normalize(n.Text).Trim()))
             .Where(n => n.Normalized.Length > 0)
+            .DistinctBy(n => n.Normalized)
             .ToList();
 
         if (spellings.Count == 0 || candidates.Count == 0)
@@ -127,7 +132,7 @@ public static class WikidataPersonMatcher
     /// men. The surname is the word that carries the identity, and this is what makes
     /// it count: the word with no counterpart fails the pair, however long the rest.
     /// </summary>
-    internal static bool WordsCovered(string normalizedA, string normalizedB)
+    public static bool WordsCovered(string normalizedA, string normalizedB)
     {
         var a = normalizedA.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         var b = normalizedB.Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -139,7 +144,7 @@ public static class WikidataPersonMatcher
     }
 
     /// <summary>All words of one side occur in the other, and there are at least two of them.</summary>
-    internal static bool Contains(string normalizedA, string normalizedB)
+    public static bool Contains(string normalizedA, string normalizedB)
     {
         var a = normalizedA.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         var b = normalizedB.Split(' ', StringSplitOptions.RemoveEmptyEntries);

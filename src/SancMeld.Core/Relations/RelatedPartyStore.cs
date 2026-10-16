@@ -122,6 +122,25 @@ public sealed class RelatedPartyStore(SancMeldDbContext db, TimeProvider clock, 
     }
 
     /// <summary>
+    /// Every current, not delisted listed person born on this day, with all their
+    /// spellings: the candidates a register's person is compared with.
+    /// </summary>
+    public async Task<IReadOnlyList<PendingPerson>> ListedPersonsBornOnAsync(DateOnly date, CancellationToken ct = default)
+    {
+        var (y, m, d) = ((short)date.Year, (short)date.Month, (short)date.Day);
+
+        var rows = await db.Designations
+            .AsNoTracking()
+            .Where(x => x.ValidTo == null && x.Status != DesignationStatus.Delisted && x.SubjectType == SubjectType.Person)
+            .Where(x => x.Births.Any(b => b.Year == y && b.Month == m && b.Day == d))
+            .Select(x => new { x.Id, x.SourceId, x.SourceRecordKey, Names = x.Names.Where(n => !n.IsWeak).Select(n => n.NameOriginal).ToList() })
+            .ToListAsync(ct)
+            .ConfigureAwait(false);
+
+        return [.. rows.Select(r => new PendingPerson(r.Id, r.SourceId, r.SourceRecordKey, [date], r.Names))];
+    }
+
+    /// <summary>
     /// Records the outcome of one lookup, found or not. A miss is recorded too, so the
     /// next run does not repeat it until <see cref="PendingPersonsAsync"/> says it is time.
     /// </summary>

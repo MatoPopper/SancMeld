@@ -146,7 +146,7 @@ public sealed class WikidataSyncService(
                 }
 
                 attempted.Add(key);
-                var outcome = WikidataPersonMatcher.Match(person, candidates, settings.MinNameScore, settings.AmbiguityMargin);
+                var outcome = RegisterPersonMatcher.Match(person, candidates, settings.MinNameScore, settings.AmbiguityMargin);
                 await store.RecordIdentityAsync(person, System, outcome.Match, outcome.Note, run.Id, ct).ConfigureAwait(false);
 
                 if (outcome.Match is not null)

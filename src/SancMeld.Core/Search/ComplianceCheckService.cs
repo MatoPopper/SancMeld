@@ -186,6 +186,7 @@ public sealed class ComplianceCheckService(
             RelationKind.ParentOrganisationOf => "is the parent organisation of",
             RelationKind.SubsidiaryOf => "is a subsidiary of",
             RelationKind.OperatorOf => "operates",
+            RelationKind.SameAs => "is the same entity as",
             _ => "is related to",
         };
 
@@ -227,6 +228,7 @@ public sealed class ComplianceCheckService(
     {
         RelationSystems.Wikidata => "Wikidata",
         RelationSystems.Curated => "The internal register",
+        RelationSystems.Ares => "The Czech company register (ARES)",
         _ => system,
     };
 

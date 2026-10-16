@@ -279,7 +279,12 @@ public sealed class DesignationGraphService(
                 b.Party(to, status);
 
                 var urls = e.EvidenceUrls is null ? [] : System.Text.Json.JsonSerializer.Deserialize<List<string>>(e.EvidenceUrls) ?? [];
-                var source = e.System == RelationSystems.Curated ? "Internal register" : e.System;
+                var source = e.System switch
+                {
+                    RelationSystems.Curated => "Internal register",
+                    RelationSystems.Ares => "ARES (CZ company register)",
+                    _ => e.System,
+                };
                 b.Edge(b.PartyId(from), b.PartyId(to), e.Kind.ToString(), status,
                     $"{source}: {from.Name} {Verb(e.Kind)} {to.Name}"
                     + (e.Note is { Length: > 0 } note ? $" — {note}" : string.Empty)
@@ -313,6 +318,20 @@ public sealed class DesignationGraphService(
 
     private static string RelationEvidence(RelationKind kind, RelatedPartyView party, decimal? share, DateOnly? start, DateOnly? end, int references, LinkStatus identity)
     {
+        if (party.System == RelationSystems.Ares)
+        {
+            var matched = identity == LinkStatus.Confirmed ? "identity confirmed by an analyst" : "identity matched by name and date of birth, unconfirmed";
+            var shareText2 = share is { } sh2 ? $", {sh2 * 100:0.##} %" : string.Empty;
+            var period = (start, end) switch
+            {
+                (null, null) => string.Empty,
+                ({ } s2, null) => $" since {s2:yyyy-MM-dd}",
+                (null, { } e2) => $" until {e2:yyyy-MM-dd}",
+                ({ } s2, { } e2) => $" {s2:yyyy-MM-dd} to {e2:yyyy-MM-dd}",
+            };
+            return $"ARES (CZ company register): {Verb(kind)} {party.Name}{shareText2}{period}; {matched}.";
+        }
+
         if (party.System == RelationSystems.Curated)
         {
             var refs = references == 0 ? "no source cited" : $"{references} source{(references == 1 ? string.Empty : "s")} cited";
@@ -346,6 +365,7 @@ public sealed class DesignationGraphService(
         RelationKind.ParentOrganisationOf => "parent organisation of",
         RelationKind.SubsidiaryOf => "subsidiary of",
         RelationKind.OperatorOf => "operator of",
+        RelationKind.SameAs => "the same entity as",
         _ => "related to",
     };
 

@@ -352,6 +352,49 @@ if (args is ["related-parties", var relatedAction, ..])
     }
 }
 
+// Who owns and runs a Czech company, from ARES; listed persons among them are linked:
+//
+//   dotnet run --project src/SancMeld.Server -- ares lookup 07825781
+//   dotnet run --project src/SancMeld.Server -- ares lookup "Torgretail CZ" [--depth 2]
+//   dotnet run --project src/SancMeld.Server -- ares sync      (every Czech party already known)
+if (args is ["ares", var aresAction, ..])
+{
+    using var scope = app.Services.CreateScope();
+    var ares = scope.ServiceProvider.GetRequiredService<SancMeld.Connectors.Ares.AresLookupService>();
+    var depth = int.TryParse(Flag(args, "--depth"), out var parsedDepth) ? parsedDepth : (int?)null;
+
+    var queries = new List<string>();
+    if (aresAction == "lookup" && args.Length > 2)
+    {
+        queries.Add(args[2]);
+    }
+    else if (aresAction == "sync")
+    {
+        var db = scope.ServiceProvider.GetRequiredService<SancMeldDbContext>();
+        queries.AddRange(await db.RelatedParties
+            .Where(p => p.CountryIso2 == "CZ" && p.System != RelationSystems.Ares)
+            .Select(p => p.Label)
+            .Distinct()
+            .ToListAsync());
+    }
+    else
+    {
+        Console.Error.WriteLine("Usage: ares lookup <ičo|name> [--depth N] | ares sync");
+        return 1;
+    }
+
+    foreach (var query in queries)
+    {
+        var result = await ares.LookupAsync(query, depth, CancellationToken.None);
+        Console.WriteLine($"ARES '{query}': {result.Companies.Count} companies, {result.ListingLinks.Count} listed persons linked, {result.PartyLinks} company links.");
+        foreach (var line in result.Companies) Console.WriteLine($"  company  {line}");
+        foreach (var line in result.ListingLinks) Console.WriteLine($"  LISTED   {line}");
+        foreach (var line in result.Notes) Console.WriteLine($"  note     {line}");
+    }
+
+    return 0;
+}
+
 // Hand-entered links into the internal register, from a case file kept outside the repo:
 //
 //   dotnet run --project src/SancMeld.Server -- relations import-curated case.json
