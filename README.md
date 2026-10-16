@@ -80,12 +80,48 @@ The query service answers in two to eight seconds a date, so the first fill is a
 of hours and is run by hand (`related-parties sync`); the nightly job caps itself at
 `MaxDatesPerScheduledRun` and drains the rest.
 
+**Why it matters.** EU sanctions regulations freeze not only the funds of the persons
+they list but "all funds and economic resources belonging to, owned, held or controlled
+by" them (Regulation 269/2014, Article 2(1), and its counterparts). The Commission's
+guidance reads *owned* as more than 50 % of the proprietary rights or a majority interest,
+and *controlled* as the power to appoint management, to use the assets, or otherwise to
+decide — so a company absent from every list can still be one whose assets are frozen,
+and the obliged entity is the one who has to notice. OFAC's 50 % rule is the same idea on
+the other side of the Atlantic. The lists do not name these companies. Registers do, and
+of the open ones Wikidata is the only one that is both free of licence terms and rich in
+the one qualifier the match needs.
+
+**What it decides, and what it leaves to the analyst.** It proposes the chain — listed
+person, register item, party — with the evidence for each link. It does not settle the
+50 % question: the register records a share on few statements (`share`, where present),
+never aggregates indirect holdings, and says nothing about control. Reading the result:
+open the register record and the sources it cites, satisfy yourself that the register's
+person is the listed one (the matched spellings, the similarity and the agreeing date of
+birth are shown), then read the kind of tie, the period and the share against your own
+records. `external_identity.status` and `designation_relation.status` hold the verdict —
+`confirmed` or `rejected` — and a rejected link is never shown again and never remade; an
+endpoint for recording the verdict is the next step, and until then it is set in SQL.
+Nothing personal is kept that the match did not need: the register's names, ids and
+statements, not its biographies.
+
 What this is not: a listing. A check whose name resembles a related party gets the party
 **beside** the bands, never in them, with both ends of the chain shown — what the register
 says about the tie and why the register's person is taken to be the listed one — as a
 candidate until an analyst confirms it, and advisory whichever list the owner is on.
 Anyone can edit Wikidata; that is why the evidence travels with every link, and why a
 person without a day-precise date of birth is not looked up at all.
+
+**Running it.** `SancMeld.Server related-parties sync` looks up every pending person and
+refreshes the relations of every resolved one, committing as it goes; `--max-dates N`
+bounds a run, and `related-parties status` prints how far coverage has got. The first
+fill is one query per distinct birth date — hours, at the half-second pause the query
+service's policy asks for — so run it once by hand, detached, and let the nightly job
+(`SancMeld:Wikidata:CronExpression`, off when the scheduler is off) keep up with new
+listings and re-read relations every `RefreshRelationsAfterDays`. A person the register
+did not have is tried again after `RetryMissAfterDays`. `SancMeld:Wikidata:Enabled=false`
+stops every query and job; what was stored keeps serving. The client sends the
+`SancMeld:Ingest:UserAgent`, runs one query at a time and honours Retry-After, which is
+what the Wikidata Query Service asks of a bot.
 
 ---
 
