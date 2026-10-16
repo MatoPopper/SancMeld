@@ -548,6 +548,17 @@ public sealed class DesignationGraphService(
         _ => 0,
     };
 
+    /// <summary>
+    /// Registration for an organisation (its first address with a country), nationality
+    /// for a person, whichever the listing records first otherwise.
+    /// </summary>
+    private static string? CountryOf(DesignationView d)
+    {
+        var address = d.Addresses.Select(a => a.CountryIso2).FirstOrDefault(c => c is { Length: 2 });
+        var nationality = d.Nationalities.Select(n => n.CountryIso2).FirstOrDefault(c => c is { Length: 2 });
+        return d.SubjectType == SubjectType.Person ? nationality ?? address : address ?? nationality;
+    }
+
     /// <summary>Collects nodes and edges without duplicates; a node's status is the worst of its edges.</summary>
     private sealed class Builder(DesignationView subject)
     {
@@ -588,6 +599,7 @@ public sealed class DesignationGraphService(
                 Source = d.Source,
                 LegalEffect = d.LegalEffect,
                 SubjectType = d.SubjectType,
+                CountryIso2 = CountryOf(d),
                 Detail = string.Join(" · ", new[] { d.Function ?? d.Title, d.ListedAt is { } l ? $"listed {l:yyyy-MM-dd}" : null }.Where(s => !string.IsNullOrWhiteSpace(s))),
             };
         }
@@ -612,6 +624,7 @@ public sealed class DesignationGraphService(
                 Label = p.Name,
                 Status = status,
                 PartyKind = p.Kind,
+                CountryIso2 = p.CountryIso2,
                 Url = p.Url,
                 Detail = string.Join(" · ", new[] { p.Description, p.CountryIso2 }.Where(s => !string.IsNullOrWhiteSpace(s))),
             };
@@ -648,6 +661,7 @@ public sealed class DesignationGraphService(
                 Source = subject.Source,
                 LegalEffect = subject.LegalEffect,
                 SubjectType = subject.SubjectType,
+                CountryIso2 = CountryOf(subject),
                 Detail = subject.Function ?? subject.Title,
             };
 

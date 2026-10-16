@@ -29,6 +29,13 @@ public sealed record GraphNode
     public SubjectType? SubjectType { get; init; }
 
     public RelatedPartyKind? PartyKind { get; init; }
+
+    /// <summary>
+    /// Where the entity is registered or, for a person, their first stated nationality:
+    /// an organisation's first address country on a listing, the register's country for
+    /// a party. Drawn as a flag; null when nobody records one.
+    /// </summary>
+    public string? CountryIso2 { get; init; }
     public string? Url { get; init; }
 
     /// <summary>One line for a tooltip: the role, the description, the listing date.</summary>
