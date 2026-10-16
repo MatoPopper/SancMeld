@@ -188,6 +188,57 @@ if (args is ["admin", ..])
     return await RunAdminCommandAsync(app, args);
 }
 
+// API keys for programs — an agent, a script — that cannot sign in with Google. A key acts
+// as its owner and spends the owner's request budget; the key is printed once, here:
+//
+//   dotnet run --project src/SancMeld.Server -- apikey create you@example.com --name "my agent"
+//   dotnet run --project src/SancMeld.Server -- apikey list
+//   dotnet run --project src/SancMeld.Server -- apikey revoke smk_AbCdEf
+if (args is ["apikey", var keyAction, ..])
+{
+    using var scope = app.Services.CreateScope();
+    var keys = scope.ServiceProvider.GetRequiredService<SancMeld.Core.Access.ApiKeyDirectory>();
+
+    switch (keyAction)
+    {
+        case "create" when args.Length > 2 && Flag(args, "--name") is { Length: > 0 } keyName:
+            {
+                var users = scope.ServiceProvider.GetRequiredService<SancMeld.Core.Access.ApiUserDirectory>();
+                var limit = scope.ServiceProvider.GetRequiredService<IOptions<SancMeld.Api.SancMeldAuthOptions>>().Value.DefaultRequestLimit;
+                var owner = await users.EnsureAsync(args[2], null, null, limit, CancellationToken.None);
+                var (key, record) = await keys.CreateAsync(owner.Email, keyName, CancellationToken.None);
+
+                Console.WriteLine($"API key '{record.Name}' for {record.OwnerEmail} (budget {owner.RequestLimit - owner.RequestsUsed:N0} of {owner.RequestLimit:N0} requests left):");
+                Console.WriteLine();
+                Console.WriteLine($"  {key}");
+                Console.WriteLine();
+                Console.WriteLine("Shown once and stored only as a hash. Send it as the X-Api-Key header.");
+                return 0;
+            }
+
+        case "list":
+            foreach (var k in await keys.ListAsync(CancellationToken.None))
+            {
+                Console.WriteLine($"{k.DisplayPrefix,-12} {k.OwnerEmail,-32} {k.Name,-24} created {k.CreatedAt:yyyy-MM-dd} "
+                    + $"last used {(k.LastUsedAt is { } u ? u.ToString("yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture) : "never"),-16}"
+                    + (k.RevokedAt is { } r ? $" REVOKED {r:yyyy-MM-dd}" : string.Empty));
+            }
+
+            return 0;
+
+        case "revoke" when args.Length > 2:
+            {
+                var count = await keys.RevokeAsync(args[2], CancellationToken.None);
+                Console.WriteLine(count == 0 ? $"No live key starts with {args[2]}." : $"Revoked {count} key(s) starting with {args[2]}.");
+                return count == 0 ? 1 : 0;
+            }
+
+        default:
+            Console.Error.WriteLine("Usage: apikey create <email> --name <name> | apikey list | apikey revoke <prefix>");
+            return 1;
+    }
+}
+
 // Build training pairs from the cross-references publishers declare between their lists:
 //
 //   dotnet run --project src/SancMeld.Server -- training seed-xref [--replace] [--candidates 25]

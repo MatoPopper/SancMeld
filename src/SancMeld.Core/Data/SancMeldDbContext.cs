@@ -59,6 +59,7 @@ public class SancMeldDbContext(DbContextOptions<SancMeldDbContext> options) : Db
     public DbSet<RelationDecision> RelationDecisions => Set<RelationDecision>();
     public DbSet<ApiUser> ApiUsers => Set<ApiUser>();
     public DbSet<QuotaRequest> QuotaRequests => Set<QuotaRequest>();
+    public DbSet<ApiKey> ApiKeys => Set<ApiKey>();
 
     public DbSet<EmbeddingModel> EmbeddingModels => Set<EmbeddingModel>();
     public DbSet<DesignationNameEmbedding> NameEmbeddings => Set<DesignationNameEmbedding>();
@@ -563,6 +564,18 @@ public class SancMeldDbContext(DbContextOptions<SancMeldDbContext> options) : Db
             e.ToTable("api_user", t => t.HasCheckConstraint("api_user_budget_ck", "request_limit >= 0 AND requests_used >= 0"));
             e.HasIndex(x => x.Email).IsUnique();
             e.Property(x => x.Email).HasMaxLength(320);
+            e.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
+        });
+
+        b.Entity<ApiKey>(e =>
+        {
+            e.ToTable("api_key");
+            e.HasIndex(x => x.KeyHash).IsUnique();
+            e.HasIndex(x => x.DisplayPrefix);
+            e.Property(x => x.Name).HasMaxLength(200);
+            e.Property(x => x.OwnerEmail).HasMaxLength(320);
+            e.Property(x => x.KeyHash).HasMaxLength(64);
+            e.Property(x => x.DisplayPrefix).HasMaxLength(20);
             e.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
         });
 

@@ -669,6 +669,29 @@ public class TrainingSample
 /// can obtain a valid Google token, and none of them are administrators of this
 /// deployment until an existing one says so.
 /// </summary>
+/// <summary>
+/// An API key, as its hash: who it acts as, what it is called, when it was last used.
+/// The key itself is shown once when it is made and stored nowhere.
+/// </summary>
+public class ApiKey
+{
+    public Guid Id { get; set; }
+    public required string Name { get; set; }
+
+    /// <summary>The user the key acts as; requests spend this user's budget.</summary>
+    public required string OwnerEmail { get; set; }
+
+    /// <summary>Lowercase hex SHA-256 of the key.</summary>
+    public required string KeyHash { get; set; }
+
+    /// <summary>The first characters of the key, to tell keys apart in a listing and to revoke one.</summary>
+    public required string DisplayPrefix { get; set; }
+
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset? LastUsedAt { get; set; }
+    public DateTimeOffset? RevokedAt { get; set; }
+}
+
 public class ApiUser
 {
     public Guid Id { get; set; }

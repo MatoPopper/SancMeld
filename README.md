@@ -386,6 +386,22 @@ UPDATE api_user SET request_limit = 1000 WHERE email = 'someone@example.com';
 The migration that introduced the table gave everyone then on the allow list a budget of
 a million.
 
+**API keys, for programs.** An agent or a script cannot sign in with Google, so it sends
+`X-Api-Key` instead. A key acts as the user it was made for and spends that user's
+budget; it may screen and record decisions, never manage the allow list. Only a SHA-256
+of the key is stored, and the key is printed once:
+
+```bash
+dotnet run --project src/SancMeld.Server -- apikey create you@example.com --name "my agent"
+dotnet run --project src/SancMeld.Server -- apikey list
+dotnet run --project src/SancMeld.Server -- apikey revoke smk_AbCdEf
+```
+
+```bash
+curl -X POST https://your-host/check -H "X-Api-Key: smk_..." \
+  -H "Content-Type: application/json" -d '{"name":"Ramzan Kadyrov"}'
+```
+
 > **Google requires an `https` origin**, with `http://localhost` the single exception. A
 > deployment on plain http can accept tokens, but no browser on it can produce one.
 

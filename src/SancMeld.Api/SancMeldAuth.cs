@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -115,6 +116,7 @@ public static class SancMeldAuthExtensions
 
         services.AddScoped<AdminDirectory>();
         services.AddScoped<ApiUserDirectory>();
+        services.AddScoped<ApiKeyDirectory>();
         services.AddScoped<IAuthorizationHandler, VerifiedAddressHandler>();
 
         // Scoped, not singleton: it queries the database on every authorisation check and
@@ -172,7 +174,17 @@ public static class SancMeldAuthExtensions
 
         services.AddSancMeldAdminAccess();
 
-        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        // One default scheme that looks at the request: an X-Api-Key header is a program
+        // with a key, anything else a person with a Google ID token.
+        services.AddAuthentication(SelectorScheme)
+            .AddPolicyScheme(SelectorScheme, "Google ID token or API key", selector =>
+            {
+                selector.ForwardDefaultSelector = context =>
+                    context.Request.Headers.ContainsKey(ApiKeyAuthenticationHandler.HeaderName)
+                        ? ApiKeyAuthenticationHandler.SchemeName
+                        : JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddScheme<AuthenticationSchemeOptions, ApiKeyAuthenticationHandler>(ApiKeyAuthenticationHandler.SchemeName, null)
             .AddJwtBearer(jwt =>
             {
                 // Discovery, and with it the signing keys, comes from Google and is
@@ -210,6 +222,7 @@ public static class SancMeldAuthExtensions
     }
 
     private const string GoogleIssuer = "https://accounts.google.com";
+    private const string SelectorScheme = "SancMeld";
 }
 
 /// <summary>Claim names as Google writes them in an ID token.</summary>
@@ -219,6 +232,13 @@ public static class SancMeldClaims
     public const string EmailVerified = "email_verified";
     public const string Subject = "sub";
     public const string Name = "name";
+
+    /// <summary>How the caller signed in; "api_key" for a key, absent for a Google token.</summary>
+    public const string AuthenticationMethod = "amr";
+
+    /// <summary>Whether the caller is a program holding an API key rather than a person.</summary>
+    public static bool IsApiKey(ClaimsPrincipal? user) =>
+        user?.FindFirstValue(AuthenticationMethod) == ApiKeyAuthenticationHandler.Method;
 
     /// <summary>
     /// The caller's address, or null.
@@ -353,6 +373,13 @@ internal sealed class AdminRequirementHandler(
         if (!SancMeldClaims.EmailIsVerified(context.User))
         {
             logger.LogWarning("Rejected {Email}: the provider does not state the address is verified.", email);
+            return;
+        }
+
+        // A key acts as its owner for screening, never for handing out access.
+        if (SancMeldClaims.IsApiKey(context.User))
+        {
+            logger.LogWarning("Rejected an API key of {Email} on an admin endpoint.", email);
             return;
         }
 

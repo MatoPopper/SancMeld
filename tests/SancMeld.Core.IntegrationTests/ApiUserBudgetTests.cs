@@ -104,3 +104,36 @@ public sealed class QuotaRequestTests(DatabaseFixture fixture)
         Assert.Equal(1, await db.QuotaRequests.CountAsync(r => r.Email == email));
     }
 }
+
+[Collection(DatabaseCollection.Name)]
+public sealed class ApiKeyTests(DatabaseFixture fixture)
+{
+    [Fact]
+    public async Task AKeyIsFoundByItselfAndStoredOnlyAsAHash()
+    {
+        await using var db = fixture.CreateContext();
+        var keys = new ApiKeyDirectory(db, TimeProvider.System);
+        var owner = $"owner.{Guid.NewGuid():N}@example.org";
+
+        var (key, record) = await keys.CreateAsync(owner, "agent");
+
+        Assert.StartsWith(ApiKeyDirectory.Prefix, key, StringComparison.Ordinal);
+        Assert.DoesNotContain(key, record.KeyHash, StringComparison.Ordinal);
+        Assert.Equal(record.Id, (await keys.FindAsync(key))?.Id);
+        Assert.Null(await keys.FindAsync(key + "x"));
+        Assert.Null(await keys.FindAsync("not-a-key"));
+    }
+
+    [Fact]
+    public async Task ARevokedKeyStopsWorking()
+    {
+        await using var db = fixture.CreateContext();
+        var keys = new ApiKeyDirectory(db, TimeProvider.System);
+        var (key, record) = await keys.CreateAsync($"owner.{Guid.NewGuid():N}@example.org", "agent");
+
+        Assert.Equal(1, await keys.RevokeAsync(record.DisplayPrefix));
+
+        await using var fresh = fixture.CreateContext();
+        Assert.Null(await new ApiKeyDirectory(fresh, TimeProvider.System).FindAsync(key));
+    }
+}
