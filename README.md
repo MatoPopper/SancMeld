@@ -186,6 +186,12 @@ everything shown, never surfaced, scores untouched. The shadow period answers, o
 queries rather than publishers' spellings, what the embedding would have added; the
 scorer learns to read `semantic_score` only after it has.
 
+The vectors are searched from memory, by brute force, and the copy follows the table
+rather than the process: before each screening the API compares two timestamps (the
+newest vector, the last successful import — 0.2 ms off an index) and reloads when the
+table has moved on and been quiet for `IndexSettleSeconds`. An import run through
+`docker exec` in another container is picked up by the next screening; no restart.
+
 The labels cannot come from string similarity: 56.3 % of genuinely positive pairs are not
 string-related at all — different script (`Michail GRIB` ↔ `Міхаіл ГРЫБ`), translation
 (`JSC FINAM Investment Bank` ↔ `АО Банк ФИНАМ`), or an unrelated alias. They come from
@@ -270,6 +276,7 @@ failure that looks like a SancMeld bug.
 | `SancMeld:Embeddings:Mode` | `Off` | `Shadow` retrieves through the embedding model and records, never shows |
 | `SancMeld:Embeddings:Endpoint` | `http://localhost:11434` | An Ollama-compatible `/api/embed` |
 | `SancMeld:Embeddings:ModelCode` | `BGE_M3` | A row in `embedding_model`; the row says which model file and how many dimensions |
+| `SancMeld:Embeddings:IndexSettleSeconds` | `10` | The in-memory index reloads once the vector table has been quiet this long; a running backfill writes every second or two |
 | `SancMeld:Jobs:Enabled` | `true` | Off means no Hangfire and no `/jobs` |
 | `SancMeld:Database:AutoMigrate` | `false` | Migrate on start; for single-container deployments |
 

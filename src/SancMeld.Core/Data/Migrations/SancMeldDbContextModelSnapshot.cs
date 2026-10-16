@@ -785,8 +785,8 @@ namespace SancMeld.Core.Data.Migrations
                     b.HasKey("NameId", "ModelId")
                         .HasName("pk_designation_name_embedding");
 
-                    b.HasIndex("ModelId")
-                        .HasDatabaseName("ix_designation_name_embedding_model_id");
+                    b.HasIndex("ModelId", "CreatedAt")
+                        .HasDatabaseName("ix_designation_name_embedding_model_id_created_at");
 
                     b.ToTable("designation_name_embedding", (string)null);
                 });

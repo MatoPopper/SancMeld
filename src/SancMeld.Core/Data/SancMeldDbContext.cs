@@ -409,8 +409,10 @@ public class SancMeldDbContext(DbContextOptions<SancMeldDbContext> options) : Db
              .HasForeignKey(x => x.ModelId).OnDelete(DeleteBehavior.Restrict);
             e.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
 
-            // The in-memory index loads one model's vectors at a time.
-            e.HasIndex(x => x.ModelId);
+            // The in-memory index loads one model's vectors at a time, and before every
+            // search asks for the model's newest vector to learn whether the table moved
+            // on — MAX(created_at) off the end of this index instead of a 20 ms scan.
+            e.HasIndex(x => new { x.ModelId, x.CreatedAt });
         });
 
         b.Entity<AdjudicationReason>(e =>

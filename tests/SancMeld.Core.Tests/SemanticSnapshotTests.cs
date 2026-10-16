@@ -15,6 +15,7 @@ public sealed class SemanticSnapshotTests
         // outrank A just because A also carries a bad alias.
         var snapshot = new SemanticSnapshot(
             Guid.NewGuid(),
+            default,
             [A, A, B],
             [1, 2, 3],
             ["a poor", "a good", "b"],
@@ -31,7 +32,7 @@ public sealed class SemanticSnapshotTests
     [Fact]
     public void EveryListingIsReachableByLookup()
     {
-        var snapshot = new SemanticSnapshot(Guid.NewGuid(), [A, B], [1, 2], ["a", "b"], [[1f, 0f], [0f, 1f]]);
+        var snapshot = new SemanticSnapshot(Guid.NewGuid(), default, [A, B], [1, 2], ["a", "b"], [[1f, 0f], [0f, 1f]]);
 
         var ranking = snapshot.Rank([1f, 0f]);
 

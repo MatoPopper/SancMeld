@@ -47,15 +47,17 @@ internal static class TestServices
         await db.SaveChangesAsync();
     }
 
-    public static IOptions<SancMeldOptions> Options(string snapshotRoot, EmbeddingsMode mode = EmbeddingsMode.Off) =>
+    public static IOptions<SancMeldOptions> Options(string snapshotRoot, EmbeddingsMode mode = EmbeddingsMode.Off, int indexSettleSeconds = 0) =>
         Microsoft.Extensions.Options.Options.Create(new SancMeldOptions
         {
             Ingest = new IngestOptions { SnapshotStoragePath = snapshotRoot },
-            Embeddings = new EmbeddingsOptions { Mode = mode, ModelCode = FakeModelCode },
+            // No settling by default: a test writes and then searches at once, and the
+            // search must see the write. The tests of the settling itself set it.
+            Embeddings = new EmbeddingsOptions { Mode = mode, ModelCode = FakeModelCode, IndexSettleSeconds = indexSettleSeconds },
         });
 
-    public static SemanticNameIndex Index(DatabaseFixture fixture, IOptions<SancMeldOptions> options) =>
-        new(fixture.ScopeFactory, options, NullLogger<SemanticNameIndex>.Instance);
+    public static SemanticNameIndex Index(DatabaseFixture fixture, IOptions<SancMeldOptions> options, TimeProvider? clock = null) =>
+        new(fixture.ScopeFactory, options, clock ?? TimeProvider.System, NullLogger<SemanticNameIndex>.Instance);
 
     public static NameEmbeddingStore EmbeddingStore(
         DatabaseFixture fixture,
@@ -71,9 +73,10 @@ internal static class TestServices
         SancMeldDbContext db,
         ISanctionsConnector connector,
         IOptions<SancMeldOptions> options,
-        INameEmbedder? embedder = null) =>
+        INameEmbedder? embedder = null,
+        SemanticNameIndex? index = null) =>
         new(db, [connector], new FileSystemSnapshotStore(options),
-            EmbeddingStore(fixture, db, options, embedder), TimeProvider.System,
+            EmbeddingStore(fixture, db, options, embedder, index), TimeProvider.System,
             NullLogger<SanctionsImportService>.Instance);
 
     public static SemanticCandidateSource Semantic(

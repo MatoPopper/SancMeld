@@ -83,6 +83,16 @@ public sealed class EmbeddingsOptions
 
     [Range(1, 3600)]
     public int TimeoutSeconds { get; set; } = 120;
+
+    /// <summary>
+    /// How long the vector table must have been quiet before a search reloads the in-memory
+    /// index from it. An import or backfill — often another process — writes a batch every
+    /// second or two for minutes; reloading behind each batch would cost two seconds and
+    /// 200 MB of churn per search for the whole run. Ten seconds is five batches of silence,
+    /// which a running backfill never leaves.
+    /// </summary>
+    [Range(0, 3600)]
+    public int IndexSettleSeconds { get; set; } = 10;
 }
 
 public sealed class IngestOptions
