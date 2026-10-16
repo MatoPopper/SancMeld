@@ -133,6 +133,23 @@ candidate until an analyst confirms it, and advisory whichever list the owner is
 Anyone can edit Wikidata; that is why the evidence travels with every link, and why a
 person without a day-precise date of birth is not looked up at all.
 
+**When a listing arrives, and the picture.** The import hands the listings it just wrote
+to every register connector at once (`IRelatedPartyEnricher`), so the morning a person
+is listed, the question "what else does this touch" has its answer; a register that is
+down costs a warning, never the import. `GET /designations/{id}/graph` draws the answer:
+the other lists naming the same subject (cross-references, a publisher's own word), the
+parties a register ties them to and whoever else is tied to those parties (co-owners,
+co-founders), and the statements of reasons that mention them or that theirs names.
+Every edge carries one of four statuses and its evidence — **confirmed** (a publisher's
+or an analyst's word), **candidate** (a machine's, with the match and the source cited),
+**review** (a candidate that reaches a binding listing or a controlling share, the one a
+person looks at today), **rejected** (kept, greyed, so the reader sees it was
+considered) — and the front end colours by status, never by kind. `GET /designations/recent`
+is the same picture as a feed: the last runs that added or changed listings, each new
+subject with the counts and the first lines of what it touches, and the worst status
+among them. The graph decides nothing; it puts in one picture what four queries would
+have shown.
+
 **Running it.** `SancMeld.Server related-parties sync` looks up every pending person and
 refreshes the relations of every resolved one, committing as it goes; `--max-dates N`
 bounds a run, and `related-parties status` prints how far coverage has got. The first
@@ -186,6 +203,8 @@ obvious lines of Hangfire in `SancMeld.Server`; the job itself is the same call 
 | `GET /designations/search?q=` | trigram search over every recorded spelling |
 | `GET /designations/mentions?q=` | listings whose statement of reasons mentions the words |
 | `GET /designations/{id}/related` | what open registers say the subject owns, founded or runs |
+| `GET /designations/{id}/graph` | the listing and everything it is tied to, as nodes and edges with a status and evidence each |
+| `GET /designations/recent` | what the last import runs added, and what each new listing touches |
 | `POST /check` | a name plus whatever is known, answered as a decision — **writes** |
 | `POST /screen` | the same evidence as scores and feature vectors — **writes** |
 | `POST /adjudications` | what the analyst concluded — **writes** |

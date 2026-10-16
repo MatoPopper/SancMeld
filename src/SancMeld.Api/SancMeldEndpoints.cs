@@ -101,6 +101,31 @@ internal static class SancMeldEndpoints
             "whether the listed person owns or controls it is what the statement says and the " +
             "list does not decide.");
 
+        group.MapGet("/recent", async (DesignationGraphService graphs, int? runs, int? perRun, CancellationToken ct) =>
+            TypedResults.Ok(await graphs.RecentAsync(runs ?? 5, perRun ?? 25, ct)))
+        .WithName("GetRecentListings")
+        .WithSummary("What the last import runs added, and what each new listing touches.")
+        .WithDescription(
+            "The runs that inserted or changed listings, newest first, each with its new subjects " +
+            "and, per subject, the other lists naming them, the parties a register ties them to, " +
+            "the listings whose statements mention them and the listings their own statement names. " +
+            "Each tie carries a status: confirmed (a publisher's or an analyst's word), candidate " +
+            "(a machine's, with evidence), review (a candidate that reaches a binding listing or a " +
+            "controlling share), rejected.");
+
+        group.MapGet("/{id:guid}/graph", async Task<Results<Ok<DesignationGraph>, NotFound>> (
+            DesignationGraphService graphs, Guid id, CancellationToken ct) =>
+            await graphs.BuildAsync(id, ct) is { } graph
+                ? TypedResults.Ok(graph)
+                : TypedResults.NotFound())
+        .WithName("GetDesignationGraph")
+        .WithSummary("The listing and everything it is tied to, as nodes and edges with evidence.")
+        .WithDescription(
+            "Cross-references between lists, related parties from open registers and the listed " +
+            "subjects tied to the same parties, and mentions in statements of reasons in both " +
+            "directions. Every edge says why it is drawn and which of the four statuses it has; " +
+            "the graph decides nothing.");
+
         group.MapGet("/{id:guid}/related", async (RelatedPartyQueryService related, Guid id, CancellationToken ct) =>
             TypedResults.Ok(await related.ForDesignationAsync(id, ct)))
         .WithName("GetDesignationRelatedParties")

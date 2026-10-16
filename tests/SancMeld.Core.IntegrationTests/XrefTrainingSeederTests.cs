@@ -266,7 +266,7 @@ public sealed class XrefTrainingSeederTests(DatabaseFixture fixture) : IAsyncLif
                 db,
                 [new FakeConnector(sourceCode) { Records = [.. records] }],
                 new FileSystemSnapshotStore(options),
-                TestServices.EmbeddingStore(fixture, db, options),
+                TestServices.EmbeddingStore(fixture, db, options), [],
                 TimeProvider.System,
                 NullLogger<SanctionsImportService>.Instance)
             .RunAsync(sourceCode, force: true, CancellationToken.None);

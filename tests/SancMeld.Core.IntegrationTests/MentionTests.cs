@@ -21,8 +21,10 @@ public sealed class MentionTests(DatabaseFixture fixture) : IAsyncLifetime
     private readonly string _sourceCode = "MEN_" + Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
     private readonly string _snapshotRoot = Path.Combine(Path.GetTempPath(), "sancmeld-mentions", Guid.NewGuid().ToString("N"));
 
-    // A made-up brand, so no other test's text and no real listing can contain it.
-    private readonly string _brand = "Zvetofar" + Guid.NewGuid().ToString("N")[..6];
+    // A made-up brand with no shared word: two instances of this class share the
+    // database, and "Zvetofar1a2b" against "Zvetofar3c4d Trading" is trigram-similar
+    // enough to be a name hit, which one test here asserts there is none of.
+    private readonly string _brand = "zv" + Guid.NewGuid().ToString("N")[..10];
 
     public async Task InitializeAsync()
     {

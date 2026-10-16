@@ -233,7 +233,7 @@ public sealed class ComplianceCheckTests(DatabaseFixture fixture) : IAsyncLifeti
             db,
             [new FakeConnector(sourceCode) { Records = [.. records] }],
             new FileSystemSnapshotStore(options),
-            TestServices.EmbeddingStore(fixture, db, options),
+            TestServices.EmbeddingStore(fixture, db, options), [],
             TimeProvider.System,
             NullLogger<SanctionsImportService>.Instance);
 

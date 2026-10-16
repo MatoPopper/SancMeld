@@ -75,9 +75,12 @@ internal static class TestServices
         ISanctionsConnector connector,
         IOptions<SancMeldOptions> options,
         INameEmbedder? embedder = null,
-        SemanticNameIndex? index = null) =>
+        SemanticNameIndex? index = null,
+        IRelatedPartyEnricher? enricher = null) =>
         new(db, [connector], new FileSystemSnapshotStore(options),
-            EmbeddingStore(fixture, db, options, embedder, index), TimeProvider.System,
+            EmbeddingStore(fixture, db, options, embedder, index),
+            enricher is null ? [] : [enricher],
+            TimeProvider.System,
             NullLogger<SanctionsImportService>.Instance);
 
     public static SemanticCandidateSource Semantic(

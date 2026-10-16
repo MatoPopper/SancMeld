@@ -5,6 +5,7 @@ using SancMeld.Core.Abstractions;
 using SancMeld.Core.Data;
 using SancMeld.Core.Domain;
 using SancMeld.Core.Embeddings;
+using SancMeld.Core.Relations;
 
 namespace SancMeld.Core.Ingest;
 
@@ -21,6 +22,7 @@ public sealed class SanctionsImportService(
     IEnumerable<ISanctionsConnector> connectors,
     ISnapshotStore snapshots,
     NameEmbeddingStore embeddings,
+    IEnumerable<IRelatedPartyEnricher> enrichers,
     TimeProvider clock,
     ILogger<SanctionsImportService> logger)
 {
@@ -245,6 +247,14 @@ public sealed class SanctionsImportService(
                     source.Code);
             }
 
+            // The listings this run wrote — new subjects and changed ones — are the ones
+            // whose owners, companies and cross-mentions are worth knowing today. The
+            // registers are asked now; the nightly job would ask tomorrow.
+            if (committed.Inserted + committed.Updated > 0)
+            {
+                await EnrichAsync(source, run, ct).ConfigureAwait(false);
+            }
+
             return committed with
             {
                 ImportRunId = run.Id,
@@ -253,6 +263,40 @@ public sealed class SanctionsImportService(
                 RecordsSeen = staged.Accepted,
                 Duration = started.Elapsed,
             };
+        }
+    }
+
+    /// <summary>
+    /// Hands the revisions this run opened to every register connector. Outside the
+    /// import's transaction and outside its success: the list is delivered, and what a
+    /// register says about it is derived.
+    /// </summary>
+    private async Task EnrichAsync(SanctionsSource source, ImportRun run, CancellationToken ct)
+    {
+        var written = await db.Designations
+            .AsNoTracking()
+            .Where(d => d.SourceId == source.Id && d.ValidTo == null && d.LastSeenRunId == run.Id && d.ValidFrom >= run.StartedAt)
+            .Select(d => d.Id)
+            .ToListAsync(ct)
+            .ConfigureAwait(false);
+
+        if (written.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var enricher in enrichers)
+        {
+            try
+            {
+                await enricher.EnrichAsync(written, ct).ConfigureAwait(false);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                logger.LogWarning(ex,
+                    "{SourceCode}: imported, but {Enricher} could not read the registers for its {Count} new or changed listings; the scheduled run will.",
+                    source.Code, enricher.GetType().Name, written.Count);
+            }
         }
     }
 

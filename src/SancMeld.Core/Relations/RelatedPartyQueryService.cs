@@ -197,7 +197,7 @@ public sealed class RelatedPartyQueryService(
     }
 
     /// <summary>The current, not delisted listing behind each identity, keyed by the publisher's record.</summary>
-    private async Task<Dictionary<(Guid SourceId, string Key), DesignationView>> CurrentListingsAsync(
+    internal async Task<Dictionary<(Guid SourceId, string Key), DesignationView>> CurrentListingsAsync(
         IEnumerable<ExternalIdentity> identities,
         CancellationToken ct)
     {

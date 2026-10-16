@@ -18,21 +18,51 @@ public sealed class WikidataSyncService(
     ISparqlClient sparql,
     RelatedPartyStore store,
     IOptions<WikidataOptions> options,
-    ILogger<WikidataSyncService> logger)
+    ILogger<WikidataSyncService> logger) : IRelatedPartyEnricher
 {
     private const string System = RelationSystems.Wikidata;
+
+    /// <summary>
+    /// The import's call: the listings it just wrote, looked up now. Their relations are
+    /// read whether or not they are due, because the listing is new and so is the question.
+    /// </summary>
+    public async Task EnrichAsync(IReadOnlyCollection<Guid> designationIds, CancellationToken ct = default)
+    {
+        if (!options.Value.Enabled || designationIds.Count == 0)
+        {
+            return;
+        }
+
+        var run = await RunAsync(maxDates: 0, progress: null, ct, designationIds).ConfigureAwait(false);
+
+        if (run.Status != "SUCCESS")
+        {
+            throw new InvalidOperationException(run.ErrorSummary ?? "The Wikidata run failed.");
+        }
+    }
 
     /// <param name="maxDates">Birth dates looked up in this run; zero means every pending one.</param>
     /// <param name="progress">Lines for a terminal, when there is one.</param>
     /// <param name="ct">Cancellation token.</param>
-    public async Task<RelationRun> RunAsync(int maxDates, IProgress<string>? progress, CancellationToken ct)
+    public Task<RelationRun> RunAsync(int maxDates, IProgress<string>? progress, CancellationToken ct) =>
+        RunAsync(maxDates, progress, ct, onlyDesignations: null);
+
+    /// <param name="maxDates">Birth dates looked up in this run; zero means every pending one.</param>
+    /// <param name="progress">Lines for a terminal, when there is one.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <param name="onlyDesignations">Restricts the run to these listings; null means every pending one.</param>
+    public async Task<RelationRun> RunAsync(
+        int maxDates,
+        IProgress<string>? progress,
+        CancellationToken ct,
+        IReadOnlyCollection<Guid>? onlyDesignations)
     {
         var run = await store.StartRunAsync(System, ct).ConfigureAwait(false);
 
         try
         {
-            await ResolvePersonsAsync(run, maxDates, progress, ct).ConfigureAwait(false);
-            await FetchRelationsAsync(run, progress, ct).ConfigureAwait(false);
+            await ResolvePersonsAsync(run, maxDates, progress, ct, onlyDesignations).ConfigureAwait(false);
+            await FetchRelationsAsync(run, progress, ct, onlyDesignations).ConfigureAwait(false);
             await store.FinishRunAsync(run, "SUCCESS", null, ct).ConfigureAwait(false);
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
@@ -53,11 +83,12 @@ public sealed class WikidataSyncService(
     /// One query per distinct birth date, never per person: the date is what the index
     /// answers quickly, and the persons born on it are compared in memory.
     /// </summary>
-    private async Task ResolvePersonsAsync(RelationRun run, int maxDates, IProgress<string>? progress, CancellationToken ct)
+    private async Task ResolvePersonsAsync(
+        RelationRun run, int maxDates, IProgress<string>? progress, CancellationToken ct, IReadOnlyCollection<Guid>? onlyDesignations)
     {
         var settings = options.Value;
         var pending = await store
-            .PendingPersonsAsync(System, TimeSpan.FromDays(settings.RetryMissAfterDays), int.MaxValue, ct)
+            .PendingPersonsAsync(System, TimeSpan.FromDays(settings.RetryMissAfterDays), int.MaxValue, ct, onlyDesignations)
             .ConfigureAwait(false);
 
         var byDate = pending
@@ -167,11 +198,12 @@ public sealed class WikidataSyncService(
         return [.. labels.Select(kv => new RegisterCandidate(kv.Key, english.GetValueOrDefault(kv.Key), kv.Value))];
     }
 
-    private async Task FetchRelationsAsync(RelationRun run, IProgress<string>? progress, CancellationToken ct)
+    private async Task FetchRelationsAsync(
+        RelationRun run, IProgress<string>? progress, CancellationToken ct, IReadOnlyCollection<Guid>? onlyDesignations)
     {
         var settings = options.Value;
         var due = await store
-            .IdentitiesDueForRelationsAsync(System, TimeSpan.FromDays(settings.RefreshRelationsAfterDays), int.MaxValue, ct)
+            .IdentitiesDueForRelationsAsync(System, TimeSpan.FromDays(settings.RefreshRelationsAfterDays), int.MaxValue, ct, onlyDesignations)
             .ConfigureAwait(false);
 
         progress?.Report($"{due.Count} resolved persons due for a relations refresh.");

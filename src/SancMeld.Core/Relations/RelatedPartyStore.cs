@@ -29,7 +29,8 @@ public sealed class RelatedPartyStore(SancMeldDbContext db, TimeProvider clock, 
         string system,
         TimeSpan retryAfter,
         int limit,
-        CancellationToken ct = default)
+        CancellationToken ct = default,
+        IReadOnlyCollection<Guid>? onlyDesignations = null)
     {
         var now = clock.GetUtcNow();
         var retryBefore = now - retryAfter;
@@ -39,6 +40,7 @@ public sealed class RelatedPartyStore(SancMeldDbContext db, TimeProvider clock, 
             where d.ValidTo == null
                   && d.Status != DesignationStatus.Delisted
                   && d.SubjectType == SubjectType.Person
+                  && (onlyDesignations == null || onlyDesignations.Contains(d.Id))
                   && d.Births.Any(b => b.Precision == DatePrecision.Day && b.Year != null && b.Month != null && b.Day != null)
             let identity = db.ExternalIdentities
                 .Where(i => i.System == system && i.SourceId == d.SourceId && i.SourceRecordKey == d.SourceRecordKey)
@@ -179,13 +181,15 @@ public sealed class RelatedPartyStore(SancMeldDbContext db, TimeProvider clock, 
         string system,
         TimeSpan refreshAfter,
         int limit,
-        CancellationToken ct = default)
+        CancellationToken ct = default,
+        IReadOnlyCollection<Guid>? onlyDesignations = null)
     {
         var before = clock.GetUtcNow() - refreshAfter;
 
         return await db.ExternalIdentities
             .Where(i => i.System == system && i.ExternalId != null && i.Status != LinkStatus.Rejected)
-            .Where(i => i.RelationsFetchedAt == null || i.RelationsFetchedAt < before)
+            .Where(i => onlyDesignations == null || onlyDesignations.Contains(i.DesignationId))
+            .Where(i => onlyDesignations != null || i.RelationsFetchedAt == null || i.RelationsFetchedAt < before)
             .OrderBy(i => i.RelationsFetchedAt)
             .ThenBy(i => i.Id)
             .Take(limit)
