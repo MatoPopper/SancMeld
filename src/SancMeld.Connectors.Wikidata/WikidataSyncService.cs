@@ -120,7 +120,7 @@ public sealed class WikidataSyncService(
                 run.Queries++;
                 failures = 0;
             }
-            catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException && !ct.IsCancellationRequested)
+            catch (Exception ex) when (IsTransient(ex, ct))
             {
                 run.Queries++;
                 failures++;
@@ -164,6 +164,14 @@ public sealed class WikidataSyncService(
             }
         }
     }
+
+    /// <summary>
+    /// A query the service did not answer: an HTTP error, a timeout, or a connection the
+    /// other end closed mid-response (HttpIOException "The response ended prematurely",
+    /// seen on the first production fill) — but not our own cancellation.
+    /// </summary>
+    private static bool IsTransient(Exception ex, CancellationToken ct) =>
+        !ct.IsCancellationRequested && ex is HttpRequestException or TaskCanceledException or IOException or global::System.Text.Json.JsonException;
 
     private static List<RegisterCandidate> Candidates(IReadOnlyList<SparqlRow> rows)
     {
@@ -210,15 +218,37 @@ public sealed class WikidataSyncService(
 
         var parties = new HashSet<string>(StringComparer.Ordinal);
         var done = 0;
+        var relationFailures = 0;
 
         foreach (var batch in due.Chunk(settings.RelationBatchSize))
         {
             // One person on three lists is three identities and one item: read it once.
             var items = batch.Select(i => i.ExternalId!).Distinct(StringComparer.Ordinal).ToList();
 
-            var statements = await ReadStatementsAsync(items, run, ct).ConfigureAwait(false);
-            var targets = statements.SelectMany(kv => kv.Value).Select(s => s.Target).Distinct(StringComparer.Ordinal).ToList();
-            var records = await ReadPartiesAsync(targets, run, ct).ConfigureAwait(false);
+            Dictionary<string, List<Statement>> statements;
+            Dictionary<string, PartyRecord> records;
+
+            // A batch the service could not answer is skipped, not fatal: its persons stay
+            // due and the next run reads them. Before this, one dropped connection two
+            // hours into the first fill ended the run before any relation was read.
+            try
+            {
+                statements = await ReadStatementsAsync(items, run, ct).ConfigureAwait(false);
+                var targets = statements.SelectMany(kv => kv.Value).Select(s => s.Target).Distinct(StringComparer.Ordinal).ToList();
+                records = await ReadPartiesAsync(targets, run, ct).ConfigureAwait(false);
+                relationFailures = 0;
+            }
+            catch (Exception ex) when (IsTransient(ex, ct))
+            {
+                relationFailures++;
+                logger.LogWarning(ex, "Relations of {Count} persons could not be read ({Failures} batches in a row).", batch.Length, relationFailures);
+                if (relationFailures >= settings.MaxConsecutiveFailures)
+                {
+                    throw new InvalidOperationException($"Wikidata did not answer {relationFailures} relation batches in a row; giving up this run.", ex);
+                }
+
+                continue;
+            }
 
             foreach (var identity in batch)
             {

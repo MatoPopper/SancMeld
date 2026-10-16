@@ -287,6 +287,27 @@ public sealed class WikidataSyncTests(DatabaseFixture fixture) : IAsyncLifetime
     }
 
     [Fact]
+    public async Task ADroppedConnectionSkipsABatchInsteadOfEndingTheRun()
+    {
+        await ImportAsync(Person("a", Named("Ramzan Akhmadovitch KADYROV"), new DateOnly(1976, 10, 5)));
+
+        var sparql = new FakeSparqlClient { DropNextRelationQuery = true }
+            .BornOn(new DateOnly(1976, 10, 5), (_person, Named("Ramzan Kadyrov"), "en"))
+            .Relation(_person, "P1830", outgoing: true, target: _party)
+            .Party(_party, Named("Akhmat Fund"), null, null, organisation: true, names: [Named("Akhmat Fund")]);
+
+        var first = await SyncAsync(sparql);
+        Assert.Equal("SUCCESS", first.Status);
+        Assert.Equal(1, first.PersonsResolved);
+        Assert.Equal(0, first.RelationsSeen);
+
+        // The skipped person is still due, and the next run reads the relation.
+        var second = await SyncAsync(sparql);
+        Assert.Equal("SUCCESS", second.Status);
+        Assert.Single(Mine(await CheckAsync(Named("Akhmat Fund"))));
+    }
+
+    [Fact]
     public async Task ADetailViewListsWhatTheSubjectIsRelatedTo()
     {
         await ImportAsync(Person("a", Named("Ramzan Akhmadovitch KADYROV"), new DateOnly(1976, 10, 5)));
@@ -383,9 +404,18 @@ internal sealed class FakeSparqlClient : ISparqlClient
 
     public int Queries { get; private set; }
 
+    /// <summary>The next relation query ends as the live service once did: the connection closed mid-response.</summary>
+    public bool DropNextRelationQuery { get; set; }
+
     public Task<IReadOnlyList<SparqlRow>> QueryAsync(string sparql, CancellationToken ct = default)
     {
         Queries++;
+
+        if (DropNextRelationQuery && sparql.Contains("wdt:P1830 ?target", StringComparison.Ordinal))
+        {
+            DropNextRelationQuery = false;
+            throw new IOException("The response ended prematurely. (ResponseEnded)");
+        }
         IReadOnlyList<SparqlRow> rows;
 
         if (sparql.Contains("wdt:P569", StringComparison.Ordinal))
