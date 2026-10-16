@@ -76,7 +76,8 @@ internal static class AdminEndpoints
             }
 
             var verified = SancMeldClaims.EmailIsVerified(user);
-            var admin = verified ? await admins.FindActiveAsync(email, ct) : null;
+            // A key never administers, whoever owns it; saying otherwise would invite a 403.
+            var admin = verified && !SancMeldClaims.IsApiKey(user) ? await admins.FindActiveAsync(email, ct) : null;
 
             // The first sign-in creates the user and their budget.
             var account = verified
