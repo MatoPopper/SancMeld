@@ -52,6 +52,9 @@ public static class RelationSystems
 
     /// <summary>The Czech register of economic subjects (ARES), public register part: shareholders and statutory bodies.</summary>
     public const string Ares = "ARES";
+
+    /// <summary>The Slovak register of public sector partners (RPVS): beneficial owners, with dates of birth.</summary>
+    public const string Rpvs = "RPVS";
 }
 
 /// <summary>One related party as a screening sees it.</summary>

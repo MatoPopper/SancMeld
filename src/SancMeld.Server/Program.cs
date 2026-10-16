@@ -395,6 +395,24 @@ if (args is ["ares", var aresAction, ..])
     return 0;
 }
 
+// Beneficial owners of Slovak public sector partners, from RPVS; listed persons among them
+// are linked. The whole register is read and compared here — nothing is sent to it:
+//
+//   dotnet run --project src/SancMeld.Server -- rpvs sync [--max-pages N]
+if (args is ["rpvs", "sync", ..])
+{
+    using var scope = app.Services.CreateScope();
+    var rpvs = scope.ServiceProvider.GetRequiredService<SancMeld.Connectors.Rpvs.RpvsSyncService>();
+    var maxPages = int.TryParse(Flag(args, "--max-pages"), out var parsedPages) ? parsedPages : (int?)null;
+
+    var result = await rpvs.SyncAsync(maxPages, CancellationToken.None);
+    Console.WriteLine($"RPVS: {result.Pages:N0} pages, {result.Partners:N0} partners, {result.OwnersWithBirthDate:N0} owners with a birth date, "
+        + $"{result.ListingLinks.Count} listed owners linked{(result.Complete ? $", {result.NoLongerListed} no longer current" : " (stopped early)")}.");
+    foreach (var line in result.ListingLinks) Console.WriteLine($"  LISTED   {line}");
+    foreach (var line in result.Notes) Console.WriteLine($"  note     {line}");
+    return 0;
+}
+
 // Hand-entered links into the internal register, from a case file kept outside the repo:
 //
 //   dotnet run --project src/SancMeld.Server -- relations import-curated case.json
@@ -511,6 +529,22 @@ static async Task ScheduleImportsAsync(WebApplication app)
         else
         {
             schedule.RemoveIfExists(wikidataJob);
+        }
+
+        // RPVS is read whole, about three thousand pages; weekly is as often as it changes.
+        var rpvs = scope.ServiceProvider.GetRequiredService<IOptions<SancMeld.Connectors.Rpvs.RpvsOptions>>().Value;
+        const string rpvsJob = "related-parties:rpvs";
+
+        if (rpvs.Enabled)
+        {
+            schedule.AddOrUpdate<SancMeld.Connectors.Rpvs.RpvsSyncService>(
+                recurringJobId: rpvsJob,
+                methodCall: sync => sync.SyncAsync(null, CancellationToken.None),
+                cronExpression: rpvs.CronExpression);
+        }
+        else
+        {
+            schedule.RemoveIfExists(rpvsJob);
         }
     }
     catch (Exception ex)

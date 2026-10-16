@@ -2,6 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/SancMeld.Api/SancMeld.Api.csproj" />
     <Project Path="src/SancMeld.Connectors.Ares/SancMeld.Connectors.Ares.csproj" />
+    <Project Path="src/SancMeld.Connectors.Rpvs/SancMeld.Connectors.Rpvs.csproj" />
     <Project Path="src/SancMeld.Connectors.CzMzv/SancMeld.Connectors.CzMzv.csproj" />
     <Project Path="src/SancMeld.Connectors.EuFsf/SancMeld.Connectors.EuFsf.csproj" />
     <Project Path="src/SancMeld.Connectors.FrGels/SancMeld.Connectors.FrGels.csproj" />
@@ -18,6 +19,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/SancMeld.Connectors.Ares.Tests/SancMeld.Connectors.Ares.Tests.csproj" />
+    <Project Path="tests/SancMeld.Connectors.Rpvs.Tests/SancMeld.Connectors.Rpvs.Tests.csproj" />
     <Project Path="tests/SancMeld.Connectors.CzMzv.Tests/SancMeld.Connectors.CzMzv.Tests.csproj" />
     <Project Path="tests/SancMeld.Connectors.EuFsf.Tests/SancMeld.Connectors.EuFsf.Tests.csproj" />
     <Project Path="tests/SancMeld.Connectors.FrGels.Tests/SancMeld.Connectors.FrGels.Tests.csproj" />

@@ -14,6 +14,7 @@
     <ProjectReference Include="../../src/SancMeld.Core/SancMeld.Core.csproj" />
     <ProjectReference Include="../../src/SancMeld.Connectors.Wikidata/SancMeld.Connectors.Wikidata.csproj" />
     <ProjectReference Include="../../src/SancMeld.Connectors.Ares/SancMeld.Connectors.Ares.csproj" />
+    <ProjectReference Include="../../src/SancMeld.Connectors.Rpvs/SancMeld.Connectors.Rpvs.csproj" />
   </ItemGroup>
 
 </Project>

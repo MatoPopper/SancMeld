@@ -162,6 +162,29 @@ stops every query and job; what was stored keeps serving. The client sends the
 `SancMeld:Ingest:UserAgent`, runs one query at a time and honours Retry-After, which is
 what the Wikidata Query Service asks of a bot.
 
+### Beneficial owners, from the Slovak RPVS
+
+The register of public sector partners (RPVS, Ministry of Justice of the Slovak
+Republic) lists the beneficial owners of every company that contracts with the Slovak
+state, each a natural person with a full date of birth on the newer entries, as open
+data. `rpvs sync` reads the whole of it — about sixty thousand partners, three thousand
+OData pages, some ten minutes — and compares every owner here: an owner born on a day
+no listed person was born is passed over without a query, the rest go through the same
+birth-date-then-name match ARES and Wikidata use. Nothing a user screens is sent to
+RPVS, which is the difference from the ARES lookup, and only the owners who turn out to
+be listed are stored, as candidate `OwnerOf` links from the listed person to the
+company, with the partner's public RPVS page as the evidence.
+
+```bash
+dotnet run --project src/SancMeld.Server -- rpvs sync [--max-pages N]
+```
+
+A weekly job (`SancMeld:Rpvs:CronExpression`) keeps it current; a full pass marks the
+links it no longer saw as not current, a partial one leaves them alone. The register
+covers only partners of the public sector, so a Slovak company that never dealt with
+the state is not in it. Other Slovak registers come in only where they give a date of
+birth: a name alone is not enough to link anyone.
+
 ---
 
 ## Quick start
@@ -404,6 +427,9 @@ failure that looks like a SancMeld bug.
 | `SancMeld:Wikidata:Enabled` | `true` | Read Wikidata for what listed persons own and run; off means no query and no job, the stored links still serve |
 | `SancMeld:Wikidata:CronExpression` | `30 2 * * *` | The nightly run, capped at `MaxDatesPerScheduledRun` (300) birth dates |
 | `SancMeld:Wikidata:MinNameScore` | `0.6` | Trigram similarity a listed spelling must reach against a register label, once the birth date agrees |
+| `SancMeld:Rpvs:Enabled` | `true` | Read the Slovak RPVS for beneficial owners; off means no call and no job |
+| `SancMeld:Rpvs:CronExpression` | `30 4 * * 0` | The weekly full pass |
+| `SancMeld:Rpvs:DelayMilliseconds` | `100` | Pause between the three thousand pages |
 | `SancMeld:Jobs:Enabled` | `true` | Off means no Hangfire and no `/jobs` |
 | `SancMeld:Database:AutoMigrate` | `false` | Migrate on start; for single-container deployments |
 

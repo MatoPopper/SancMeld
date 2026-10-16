@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/SancMeld.Connectors.Rpvs/SancMeld.Connectors.Rpvs.csproj" />
+  </ItemGroup>
+
+  <!-- A synthetic page in the shape the RPVS open-data service serves (checked against the
+       live response of 2026-10-16): invented people and companies only, since nobody's
+       data that is not on a sanctions list goes into a public repository. -->
+  <ItemGroup>
+    <Content Include="../../fixtures/rpvs/partneri-sample.json" Link="fixtures/rpvs/partneri-sample.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

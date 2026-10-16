@@ -19,6 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="../SancMeld.Core/SancMeld.Core.csproj" />
     <ProjectReference Include="../SancMeld.Connectors.Ares/SancMeld.Connectors.Ares.csproj" />
+    <ProjectReference Include="../SancMeld.Connectors.Rpvs/SancMeld.Connectors.Rpvs.csproj" />
     <ProjectReference Include="../SancMeld.Connectors.CzMzv/SancMeld.Connectors.CzMzv.csproj" />
     <ProjectReference Include="../SancMeld.Connectors.EuFsf/SancMeld.Connectors.EuFsf.csproj" />
     <ProjectReference Include="../SancMeld.Connectors.FrGels/SancMeld.Connectors.FrGels.csproj" />

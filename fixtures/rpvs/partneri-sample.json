@@ -1,0 +1,27 @@
+{
+  "@odata.context": "https://rpvs.gov.sk/opendatav2/$metadata#Partneri(PartneriVerejnehoSektora(),KonecniUzivateliaVyhod(StatnaPrislusnost()))",
+  "value": [
+    {
+      "Id": 900001,
+      "CisloVlozky": 800001,
+      "PartneriVerejnehoSektora": [
+        { "Id": 1, "Meno": null, "Priezvisko": null, "DatumNarodenia": null, "TitulPred": null, "TitulZa": null, "ObchodneMeno": "Example Trade s.r.o.", "Ico": "99000001", "FormaOsoby": "PravnickaOsoba", "PlatnostOd": "2018-01-01T00:00:00+01:00", "PlatnostDo": "2021-03-31T23:59:59.9+02:00" },
+        { "Id": 2, "Meno": null, "Priezvisko": null, "DatumNarodenia": null, "TitulPred": null, "TitulZa": null, "ObchodneMeno": "Example Trade Holding s.r.o.", "Ico": "99000001", "FormaOsoby": "PravnickaOsoba", "PlatnostOd": "2021-04-01T00:00:00+02:00", "PlatnostDo": null }
+      ],
+      "KonecniUzivateliaVyhod": [
+        { "Id": 11, "Meno": "Ivan", "Priezvisko": "Testovsky", "DatumNarodenia": "1970-06-15T00:00:00+01:00", "TitulPred": null, "TitulZa": null, "JeVerejnyCinitel": false, "ObchodneMeno": null, "Ico": "", "PlatnostOd": "2018-01-01T00:00:00+01:00", "PlatnostDo": "2021-03-31T23:59:59.9+02:00", "StatnaPrislusnost": { "Id": 1, "Meno": "Ruská federácia", "StatistickyKod": "643", "PlatnostOd": null, "PlatnostDo": null } },
+        { "Id": 12, "Meno": "Ivan", "Priezvisko": "Testovsky", "DatumNarodenia": "1970-06-15T00:00:00+01:00", "TitulPred": null, "TitulZa": null, "JeVerejnyCinitel": false, "ObchodneMeno": null, "Ico": "", "PlatnostOd": "2021-04-01T00:00:00+02:00", "PlatnostDo": null, "StatnaPrislusnost": { "Id": 1, "Meno": "Ruská federácia", "StatistickyKod": "643", "PlatnostOd": null, "PlatnostDo": null } },
+        { "Id": 13, "Meno": "Jana", "Priezvisko": "Prikladova", "DatumNarodenia": null, "TitulPred": "Ing.", "TitulZa": null, "JeVerejnyCinitel": true, "ObchodneMeno": null, "Ico": "", "PlatnostOd": "2018-01-01T00:00:00+01:00", "PlatnostDo": null, "StatnaPrislusnost": null }
+      ]
+    },
+    {
+      "Id": 900002,
+      "CisloVlozky": 800002,
+      "PartneriVerejnehoSektora": [
+        { "Id": 3, "Meno": "Peter", "Priezvisko": "Vzorovy", "DatumNarodenia": null, "TitulPred": null, "TitulZa": null, "ObchodneMeno": null, "Ico": "99000002", "FormaOsoby": "FyzickaOsobaPodnikatel", "PlatnostOd": "2019-01-01T00:00:00+01:00", "PlatnostDo": null }
+      ],
+      "KonecniUzivateliaVyhod": []
+    }
+  ],
+  "@odata.nextLink": "https://rpvs.gov.sk/opendatav2/Partneri?$expand=PartneriVerejnehoSektora%2CKonecniUzivateliaVyhod($expand%3DStatnaPrislusnost)&$skiptoken=Id-900002"
+}
