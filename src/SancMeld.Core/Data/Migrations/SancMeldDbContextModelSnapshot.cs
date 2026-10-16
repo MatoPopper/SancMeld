@@ -845,6 +845,95 @@ namespace SancMeld.Core.Data.Migrations
                     b.ToTable("designation_programme", (string)null);
                 });
 
+            modelBuilder.Entity("SancMeld.Core.Data.DesignationRelation", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTimeOffset?>("DecidedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("decided_at");
+
+                    b.Property<string>("DecidedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("decided_by");
+
+                    b.Property<DateOnly?>("EndDate")
+                        .HasColumnType("date")
+                        .HasColumnName("end_date");
+
+                    b.Property<string>("EvidenceUrls")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("evidence_urls");
+
+                    b.Property<DateTimeOffset>("FirstSeenAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("first_seen_at");
+
+                    b.Property<long>("IdentityId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("identity_id");
+
+                    b.Property<bool>("IsCurrent")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_current");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("kind");
+
+                    b.Property<DateTimeOffset>("LastSeenAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_seen_at");
+
+                    b.Property<string>("Property")
+                        .HasColumnType("text")
+                        .HasColumnName("property");
+
+                    b.Property<long>("RelatedPartyId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("related_party_id");
+
+                    b.Property<Guid?>("RunId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("run_id");
+
+                    b.Property<decimal?>("Share")
+                        .HasPrecision(7, 4)
+                        .HasColumnType("numeric(7,4)")
+                        .HasColumnName("share");
+
+                    b.Property<DateOnly?>("StartDate")
+                        .HasColumnType("date")
+                        .HasColumnName("start_date");
+
+                    b.Property<string>("StatementId")
+                        .HasColumnType("text")
+                        .HasColumnName("statement_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.HasKey("Id")
+                        .HasName("pk_designation_relation");
+
+                    b.HasIndex("RelatedPartyId")
+                        .HasDatabaseName("ix_designation_relation_related_party_id");
+
+                    b.HasIndex("IdentityId", "RelatedPartyId", "Kind")
+                        .IsUnique()
+                        .HasDatabaseName("ix_designation_relation_identity_id_related_party_id_kind");
+
+                    b.ToTable("designation_relation", (string)null);
+                });
+
             modelBuilder.Entity("SancMeld.Core.Data.DesignationXref", b =>
                 {
                     b.Property<long>("Id")
@@ -959,6 +1048,104 @@ namespace SancMeld.Core.Data.Migrations
                             Provider = "OLLAMA",
                             Version = "1.0.0"
                         });
+                });
+
+            modelBuilder.Entity("SancMeld.Core.Data.ExternalIdentity", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<bool>("BirthDateMatched")
+                        .HasColumnType("boolean")
+                        .HasColumnName("birth_date_matched");
+
+                    b.Property<DateTimeOffset?>("DecidedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("decided_at");
+
+                    b.Property<string>("DecidedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("decided_by");
+
+                    b.Property<Guid>("DesignationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("designation_id");
+
+                    b.Property<string>("ExternalId")
+                        .HasColumnType("text")
+                        .HasColumnName("external_id");
+
+                    b.Property<string>("Label")
+                        .HasColumnType("text")
+                        .HasColumnName("label");
+
+                    b.Property<string>("MatchedLabel")
+                        .HasColumnType("text")
+                        .HasColumnName("matched_label");
+
+                    b.Property<string>("MatchedName")
+                        .HasColumnType("text")
+                        .HasColumnName("matched_name");
+
+                    b.Property<decimal?>("NameScore")
+                        .HasPrecision(6, 5)
+                        .HasColumnType("numeric(6,5)")
+                        .HasColumnName("name_score");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("text")
+                        .HasColumnName("note");
+
+                    b.Property<DateTimeOffset?>("RelationsFetchedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("relations_fetched_at");
+
+                    b.Property<DateTimeOffset>("ResolvedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("resolved_at");
+
+                    b.Property<Guid?>("RunId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("run_id");
+
+                    b.Property<Guid>("SourceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("source_id");
+
+                    b.Property<string>("SourceRecordKey")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("source_record_key");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<string>("System")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("system");
+
+                    b.HasKey("Id")
+                        .HasName("pk_external_identity");
+
+                    b.HasIndex("SourceId")
+                        .HasDatabaseName("ix_external_identity_source_id");
+
+                    b.HasIndex("System", "ExternalId")
+                        .HasDatabaseName("ix_external_identity_system_external_id")
+                        .HasFilter("external_id IS NOT NULL");
+
+                    b.HasIndex("System", "SourceId", "SourceRecordKey")
+                        .IsUnique()
+                        .HasDatabaseName("ix_external_identity_system_source_id_source_record_key");
+
+                    b.ToTable("external_identity", (string)null);
                 });
 
             modelBuilder.Entity("SancMeld.Core.Data.ImportRun", b =>
@@ -1276,6 +1463,160 @@ namespace SancMeld.Core.Data.Migrations
                             NameNormVersion = (short)1,
                             Version = "1.0.0"
                         });
+                });
+
+            modelBuilder.Entity("SancMeld.Core.Data.RelatedParty", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("CountryIso2")
+                        .HasMaxLength(2)
+                        .HasColumnType("character varying(2)")
+                        .HasColumnName("country_iso2");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<string>("ExternalId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("external_id");
+
+                    b.Property<string>("Identifiers")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("identifiers");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("kind");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("label");
+
+                    b.Property<DateTimeOffset>("RetrievedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("retrieved_at");
+
+                    b.Property<string>("System")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("system");
+
+                    b.HasKey("Id")
+                        .HasName("pk_related_party");
+
+                    b.HasIndex("System", "ExternalId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_related_party_system_external_id");
+
+                    b.ToTable("related_party", (string)null);
+                });
+
+            modelBuilder.Entity("SancMeld.Core.Data.RelatedPartyName", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("NameNormalized")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("text")
+                        .HasColumnName("name_normalized")
+                        .HasComputedColumnSql("sm_normalize_name(name_original)", true);
+
+                    b.Property<string>("NameOriginal")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("name_original");
+
+                    b.Property<long>("RelatedPartyId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("related_party_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_related_party_name");
+
+                    b.HasIndex("NameNormalized")
+                        .HasDatabaseName("related_party_name_trgm_ix");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("NameNormalized"), "gin");
+                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("NameNormalized"), new[] { "gin_trgm_ops" });
+
+                    b.HasIndex("RelatedPartyId")
+                        .HasDatabaseName("ix_related_party_name_related_party_id");
+
+                    b.ToTable("related_party_name", (string)null);
+                });
+
+            modelBuilder.Entity("SancMeld.Core.Data.RelationRun", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("ErrorSummary")
+                        .HasColumnType("text")
+                        .HasColumnName("error_summary");
+
+                    b.Property<DateTimeOffset?>("FinishedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("finished_at");
+
+                    b.Property<int>("PartiesSeen")
+                        .HasColumnType("integer")
+                        .HasColumnName("parties_seen");
+
+                    b.Property<int>("PersonsAttempted")
+                        .HasColumnType("integer")
+                        .HasColumnName("persons_attempted");
+
+                    b.Property<int>("PersonsResolved")
+                        .HasColumnType("integer")
+                        .HasColumnName("persons_resolved");
+
+                    b.Property<int>("Queries")
+                        .HasColumnType("integer")
+                        .HasColumnName("queries");
+
+                    b.Property<int>("RelationsSeen")
+                        .HasColumnType("integer")
+                        .HasColumnName("relations_seen");
+
+                    b.Property<DateTimeOffset>("StartedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("started_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<string>("System")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("system");
+
+                    b.HasKey("Id")
+                        .HasName("pk_relation_run");
+
+                    b.HasIndex("System", "StartedAt")
+                        .IsDescending(false, true)
+                        .HasDatabaseName("ix_relation_run_system_started_at");
+
+                    b.ToTable("relation_run", (string)null);
                 });
 
             modelBuilder.Entity("SancMeld.Core.Data.SanctionProgramme", b =>
@@ -1976,6 +2317,27 @@ namespace SancMeld.Core.Data.Migrations
                     b.Navigation("Programme");
                 });
 
+            modelBuilder.Entity("SancMeld.Core.Data.DesignationRelation", b =>
+                {
+                    b.HasOne("SancMeld.Core.Data.ExternalIdentity", "Identity")
+                        .WithMany("Relations")
+                        .HasForeignKey("IdentityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_designation_relation_external_identity_identity_id");
+
+                    b.HasOne("SancMeld.Core.Data.RelatedParty", "Party")
+                        .WithMany("Relations")
+                        .HasForeignKey("RelatedPartyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_designation_relation_related_party_related_party_id");
+
+                    b.Navigation("Identity");
+
+                    b.Navigation("Party");
+                });
+
             modelBuilder.Entity("SancMeld.Core.Data.DesignationXref", b =>
                 {
                     b.HasOne("SancMeld.Core.Data.Designation", "Designation")
@@ -1986,6 +2348,18 @@ namespace SancMeld.Core.Data.Migrations
                         .HasConstraintName("fk_designation_xref_designation_designation_id");
 
                     b.Navigation("Designation");
+                });
+
+            modelBuilder.Entity("SancMeld.Core.Data.ExternalIdentity", b =>
+                {
+                    b.HasOne("SancMeld.Core.Data.SanctionsSource", "Source")
+                        .WithMany()
+                        .HasForeignKey("SourceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_external_identity_sanctions_source_source_id");
+
+                    b.Navigation("Source");
                 });
 
             modelBuilder.Entity("SancMeld.Core.Data.ImportRun", b =>
@@ -2022,6 +2396,18 @@ namespace SancMeld.Core.Data.Migrations
                         .HasConstraintName("fk_legal_instrument_jurisdiction_jurisdiction_id");
 
                     b.Navigation("Jurisdiction");
+                });
+
+            modelBuilder.Entity("SancMeld.Core.Data.RelatedPartyName", b =>
+                {
+                    b.HasOne("SancMeld.Core.Data.RelatedParty", "Party")
+                        .WithMany("Names")
+                        .HasForeignKey("RelatedPartyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_related_party_name_related_party_related_party_id");
+
+                    b.Navigation("Party");
                 });
 
             modelBuilder.Entity("SancMeld.Core.Data.SanctionProgramme", b =>
@@ -2144,9 +2530,21 @@ namespace SancMeld.Core.Data.Migrations
                     b.Navigation("Programmes");
                 });
 
+            modelBuilder.Entity("SancMeld.Core.Data.ExternalIdentity", b =>
+                {
+                    b.Navigation("Relations");
+                });
+
             modelBuilder.Entity("SancMeld.Core.Data.Jurisdiction", b =>
                 {
                     b.Navigation("Sources");
+                });
+
+            modelBuilder.Entity("SancMeld.Core.Data.RelatedParty", b =>
+                {
+                    b.Navigation("Names");
+
+                    b.Navigation("Relations");
                 });
 
             modelBuilder.Entity("SancMeld.Core.Data.ScreeningRequest", b =>

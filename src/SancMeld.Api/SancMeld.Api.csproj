@@ -25,6 +25,7 @@
     <ProjectReference Include="../SancMeld.Connectors.PlMswia/SancMeld.Connectors.PlMswia.csproj" />
     <ProjectReference Include="../SancMeld.Connectors.UkFcdo/SancMeld.Connectors.UkFcdo.csproj" />
     <ProjectReference Include="../SancMeld.Connectors.UnSc/SancMeld.Connectors.UnSc.csproj" />
+    <ProjectReference Include="../SancMeld.Connectors.Wikidata/SancMeld.Connectors.Wikidata.csproj" />
   </ItemGroup>
 
 </Project>

@@ -216,7 +216,7 @@ public sealed class ComplianceCheckTests(DatabaseFixture fixture) : IAsyncLifeti
         var queries = new DesignationQueryService(db, options);
         var screening = new ScreeningService(db, queries, new RulesScoringStrategy(), TestServices.Semantic(fixture, options), options, TimeProvider.System);
 
-        return await new ComplianceCheckService(screening, queries, TimeProvider.System)
+        return await new ComplianceCheckService(screening, queries, TestServices.RelatedParties(db, queries), TimeProvider.System)
             .CheckAsync(query, CancellationToken.None);
     }
 

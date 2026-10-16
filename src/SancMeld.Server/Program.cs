@@ -3,13 +3,16 @@ using Hangfire.PostgreSql;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi;
+using Microsoft.Extensions.Options;
 using SancMeld.Api;
+using SancMeld.Connectors.Wikidata;
 using SancMeld.Core.Access;
 using SancMeld.Core.Configuration;
 using SancMeld.Core.Data;
 using SancMeld.Core.Embeddings;
 using SancMeld.Core.Ingest;
 using SancMeld.Core.Learning;
+using SancMeld.Core.Relations;
 
 // The open-source host is intentionally this short. Everything of substance
 // lives in SancMeld.Api / SancMeld.Core so the hosted edition can reuse it
@@ -293,6 +296,62 @@ if (args is ["embeddings", var action, ..])
     }
 }
 
+// Related parties from Wikidata — who the listed persons own, founded and run:
+//
+//   dotnet run --project src/SancMeld.Server -- related-parties sync [--max-dates N]
+//   dotnet run --project src/SancMeld.Server -- related-parties status
+//
+// The first fill is one query per distinct birth date on the lists (4 270 on 2026-10-16,
+// at two to five seconds each), so it is meant to be run here, detached, rather than
+// left to the nightly job, which caps itself. Resumable: every lookup is committed as it
+// comes, and a second run picks up where the first stopped.
+if (args is ["related-parties", var relatedAction, ..])
+{
+    using var scope = app.Services.CreateScope();
+
+    switch (relatedAction)
+    {
+        case "sync":
+            {
+                if (!app.Configuration.GetValue("SancMeld:Wikidata:Enabled", defaultValue: true))
+                {
+                    Console.Error.WriteLine("SancMeld:Wikidata:Enabled is false, so nothing would be read. Enable it first.");
+                    return 1;
+                }
+
+                var maxDates = int.TryParse(Flag(args, "--max-dates"), out var parsedMax) ? parsedMax : 0;
+                var sync = scope.ServiceProvider.GetRequiredService<WikidataSyncService>();
+                var run = await sync.RunAsync(maxDates, new Progress<string>(Console.Error.WriteLine), CancellationToken.None);
+
+                Console.WriteLine($"WIKIDATA: {run.Status} — {run.PersonsResolved} of {run.PersonsAttempted} persons resolved, " +
+                                  $"{run.RelationsSeen} relations across {run.PartiesSeen} parties, {run.Queries} queries.");
+
+                if (run.ErrorSummary is not null)
+                {
+                    Console.WriteLine($"  {run.ErrorSummary}");
+                }
+
+                return run.Status == "SUCCESS" ? 0 : 1;
+            }
+
+        case "status":
+            {
+                var store = scope.ServiceProvider.GetRequiredService<RelatedPartyStore>();
+                var coverage = await store.CoverageAsync(RelationSystems.Wikidata, CancellationToken.None);
+
+                Console.WriteLine("WIKIDATA");
+                Console.WriteLine($"  persons looked up  {coverage.Attempted,8:N0}   resolved {coverage.Resolved:N0}, confirmed {coverage.Confirmed:N0}, rejected {coverage.Rejected:N0}");
+                Console.WriteLine($"  still pending      {coverage.PendingPersons,8:N0}");
+                Console.WriteLine($"  related parties    {coverage.Parties,8:N0}   relations {coverage.Relations:N0}");
+                return 0;
+            }
+
+        default:
+            Console.Error.WriteLine("Usage: related-parties sync [--max-dates N] | related-parties status");
+            return 1;
+    }
+}
+
 // Opt-in, and off by default: a process that rewrites the schema it happens to find is
 // the wrong default for anyone running more than one instance. For a single-container
 // deployment it is the difference between one command and shipping the .NET SDK to the
@@ -370,6 +429,23 @@ static async Task ScheduleImportsAsync(WebApplication app)
         }
 
         logger.LogInformation("Scheduled {Count} sanctions import job(s).", sources.Count);
+
+        // The register job caps itself per night, so the first fill does not sit on the
+        // single worker for hours while the list imports wait behind it.
+        var wikidata = scope.ServiceProvider.GetRequiredService<IOptions<WikidataOptions>>().Value;
+        const string wikidataJob = "related-parties:wikidata";
+
+        if (wikidata.Enabled)
+        {
+            schedule.AddOrUpdate<WikidataSyncService>(
+                recurringJobId: wikidataJob,
+                methodCall: sync => sync.RunAsync(wikidata.MaxDatesPerScheduledRun, null, CancellationToken.None),
+                cronExpression: wikidata.CronExpression);
+        }
+        else
+        {
+            schedule.RemoveIfExists(wikidataJob);
+        }
     }
     catch (Exception ex)
     {

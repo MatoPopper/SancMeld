@@ -13,12 +13,14 @@ using SancMeld.Connectors.NlBz;
 using SancMeld.Connectors.PlMswia;
 using SancMeld.Connectors.UkFcdo;
 using SancMeld.Connectors.UnSc;
+using SancMeld.Connectors.Wikidata;
 using SancMeld.Core.Abstractions;
 using SancMeld.Core.Configuration;
 using SancMeld.Core.Data;
 using SancMeld.Core.Embeddings;
 using SancMeld.Core.Ingest;
 using SancMeld.Core.Learning;
+using SancMeld.Core.Relations;
 using SancMeld.Core.Search;
 
 namespace SancMeld.Api;
@@ -98,6 +100,8 @@ public static class SancMeldExtensions
         services.AddScoped<DesignationQueryService>();
         services.AddScoped<IScoringStrategy, RulesScoringStrategy>();
         services.AddSancMeldEmbeddings();
+        services.AddScoped<RelatedPartyStore>();
+        services.AddScoped<RelatedPartyQueryService>();
         services.AddScoped<ScreeningService>();
         services.AddScoped<ComplianceCheckService>();
         services.AddScoped<AdjudicationService>();
@@ -116,6 +120,10 @@ public static class SancMeldExtensions
         services.AddCzMzvConnector(configuration);
         services.AddNlBzConnector(configuration);
         services.AddUkFcdoConnector(configuration);
+
+        // Not a sanctions source: a register of who owns and runs what, read for the
+        // listed persons the lists already hold.
+        services.AddWikidataConnector(configuration);
 
         // TODO: adjudication capture, and scheduled runs of the import.
         // Defaults are single-tenant and unauthenticated by design; the hosted

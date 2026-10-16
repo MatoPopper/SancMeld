@@ -1,4 +1,5 @@
 using SancMeld.Core.Domain;
+using SancMeld.Core.Relations;
 
 namespace SancMeld.Core.Search;
 
@@ -94,6 +95,69 @@ public sealed record CheckResult
     /// re-reading the check months later, who will not remember what was typed.
     /// </summary>
     public required CheckInputs Inputs { get; init; }
+
+    /// <summary>
+    /// Parties no list names but an open register ties to a listed subject: the company
+    /// a sanctioned person owns, the foundation they chair. Beside the groups, never in
+    /// them — a listing is a legal fact and this is a register's assertion, matched by a
+    /// machine, for a person to confirm. Advisory by construction, and it does not move
+    /// <see cref="Outcome"/>.
+    /// </summary>
+    public IReadOnlyList<CheckRelatedParty> RelatedParties { get; init; } = [];
+}
+
+/// <summary>A related party whose name resembles the query, with the listed subjects it is tied to.</summary>
+public sealed record CheckRelatedParty
+{
+    public required string Name { get; init; }
+    public required string MatchedName { get; init; }
+    public required double NameScore { get; init; }
+    public required RelatedPartyKind Kind { get; init; }
+    public string? Description { get; init; }
+    public string? CountryIso2 { get; init; }
+    public IReadOnlyList<RelatedPartyIdentifierView> Identifiers { get; init; } = [];
+
+    /// <summary>The register and the record in it, so the reader can open it.</summary>
+    public required string System { get; init; }
+    public required string ExternalId { get; init; }
+    public required string Url { get; init; }
+    public required DateTimeOffset RetrievedAt { get; init; }
+
+    public IReadOnlyList<CheckRelation> Relations { get; init; } = [];
+}
+
+/// <summary>One register statement tying the party to one listed subject, with the evidence for both ends.</summary>
+public sealed record CheckRelation
+{
+    public required RelationKind Kind { get; init; }
+    public required LinkStatus Status { get; init; }
+
+    /// <summary>The listed subject, as the sanctions list has them.</summary>
+    public required string SubjectName { get; init; }
+    public required SubjectType SubjectType { get; init; }
+    public required Guid DesignationId { get; init; }
+    public required string Source { get; init; }
+    public required LegalEffect LegalEffect { get; init; }
+    public required DesignationStatus ListingStatus { get; init; }
+    public DateOnly? ListedAt { get; init; }
+
+    /// <summary>How the listed subject was tied to the register record: the matched spellings, the score, the birth date.</summary>
+    public required LinkStatus IdentityStatus { get; init; }
+    public required string IdentityUrl { get; init; }
+    public string? MatchedName { get; init; }
+    public string? MatchedLabel { get; init; }
+    public double? NameScore { get; init; }
+    public required bool BirthDateMatched { get; init; }
+
+    public decimal? Share { get; init; }
+    public DateOnly? StartDate { get; init; }
+    public DateOnly? EndDate { get; init; }
+
+    /// <summary>What the register cites. Often nothing, which the reader should see.</summary>
+    public IReadOnlyList<string> EvidenceUrls { get; init; } = [];
+
+    /// <summary>One sentence, safe to show.</summary>
+    public required string Explanation { get; init; }
 }
 
 public sealed record CheckInputs(

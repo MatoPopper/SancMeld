@@ -1,4 +1,5 @@
 using SancMeld.Core.Domain;
+using SancMeld.Core.Relations;
 
 namespace SancMeld.Core.Search;
 
@@ -20,8 +21,15 @@ namespace SancMeld.Core.Search;
 public sealed class ComplianceCheckService(
     ScreeningService screening,
     DesignationQueryService queries,
+    RelatedPartyQueryService relatedParties,
     TimeProvider clock)
 {
+    /// <summary>
+    /// Related parties shown per check. Ten is a page; a name that resembles more
+    /// companies than that is a name the officer has to narrow anyway.
+    /// </summary>
+    private const int RelatedPartyCap = 10;
+
     /// <summary>
     /// A common surname matches hundreds of listings whose dates of birth all disagree.
     /// Returning every one of them buries the three that matter, so the contradicted band
@@ -52,6 +60,11 @@ public sealed class ComplianceCheckService(
         var groups = Band(subjects);
         var outcome = Decide(groups);
 
+        // After the lists, not instead of them: a company a listed person owns is a
+        // finding whether or not the company's own name is on any list.
+        var related = await relatedParties.SearchAsync(query.Name, RelatedPartyCap, ct).ConfigureAwait(false);
+        var relatedViews = related.Select(ToCheckRelatedParty).ToList();
+
         return new CheckResult
         {
             CheckId = screened.RequestId,
@@ -59,14 +72,111 @@ public sealed class ComplianceCheckService(
             Reference = query.Reference,
             CheckedAt = clock.GetUtcNow(),
             Outcome = outcome,
-            Summary = Summarise(outcome, groups, birthYear, query),
+            Summary = Summarise(outcome, groups, birthYear, query, relatedViews.Count),
             Groups = groups,
             Inputs = new CheckInputs(
                 query.Name, birthYear, query.Country,
                 DocumentSupplied: query.DocumentNumber is { Length: > 0 },
                 query.SubjectType),
+            RelatedParties = relatedViews,
         };
     }
+
+    private static CheckRelatedParty ToCheckRelatedParty(RelatedPartyHit hit) => new()
+    {
+        Name = hit.Party.Name,
+        MatchedName = hit.MatchedName,
+        NameScore = hit.NameScore,
+        Kind = hit.Party.Kind,
+        Description = hit.Party.Description,
+        CountryIso2 = hit.Party.CountryIso2,
+        Identifiers = hit.Party.Identifiers,
+        System = hit.Party.System,
+        ExternalId = hit.Party.ExternalId,
+        Url = hit.Party.Url,
+        RetrievedAt = hit.Party.RetrievedAt,
+        Relations =
+        [
+            .. hit.Relations.Select(r => new CheckRelation
+            {
+                Kind = r.Kind,
+                Status = r.Status,
+                SubjectName = r.Designation.Names.FirstOrDefault()?.Value ?? r.Designation.SourceRecordKey,
+                SubjectType = r.Designation.SubjectType,
+                DesignationId = r.Designation.Id,
+                Source = r.Designation.Source,
+                LegalEffect = r.Designation.LegalEffect,
+                ListingStatus = r.Designation.Status,
+                ListedAt = r.Designation.ListedAt,
+                IdentityStatus = r.IdentityStatus,
+                IdentityUrl = r.IdentityUrl,
+                MatchedName = r.MatchedName,
+                MatchedLabel = r.MatchedLabel,
+                NameScore = r.NameScore,
+                BirthDateMatched = r.BirthDateMatched,
+                Share = r.Share,
+                StartDate = r.StartDate,
+                EndDate = r.EndDate,
+                EvidenceUrls = r.EvidenceUrls,
+                Explanation = Explain(hit.Party, r),
+            }),
+        ],
+    };
+
+    /// <summary>
+    /// Both ends of the chain in one sentence, because the chain is the finding: what the
+    /// register says about the party, and why the register's person is taken to be the
+    /// listed one.
+    /// </summary>
+    private static string Explain(RelatedPartyView party, RelationView r)
+    {
+        var subject = r.Designation.Names.FirstOrDefault()?.Value ?? r.Designation.SourceRecordKey;
+        var relation = r.Kind switch
+        {
+            RelationKind.OwnerOf => "owns",
+            RelationKind.OwnedBy => "is owned by",
+            RelationKind.FounderOf => "founded",
+            RelationKind.ChiefExecutiveOf => "is chief executive of",
+            RelationKind.ChairpersonOf => "chairs",
+            RelationKind.BoardMemberOf => "sits on the board of",
+            RelationKind.DirectorOf => "directs",
+            RelationKind.ParentOrganisationOf => "is the parent organisation of",
+            RelationKind.SubsidiaryOf => "is a subsidiary of",
+            _ => "is related to",
+        };
+
+        var when = (r.StartDate, r.EndDate) switch
+        {
+            (null, null) => string.Empty,
+            ({ } s, null) => $" since {s:yyyy-MM-dd}",
+            (null, { } e) => $" until {e:yyyy-MM-dd}",
+            ({ } s, { } e) => $" from {s:yyyy-MM-dd} to {e:yyyy-MM-dd}",
+        };
+
+        var ended = r.EndDate is { } end && end < DateOnly.FromDateTime(DateTime.UtcNow)
+            ? " The register records this as ended."
+            : string.Empty;
+
+        var identity = r.NameScore is { } score
+            ? $" The listed name '{r.MatchedName}' was matched to the register's '{r.MatchedLabel}' (similarity {score:0.00}) with the same date of birth."
+            : string.Empty;
+
+        var evidence = r.EvidenceUrls.Count == 0
+            ? " The register cites no source for the statement."
+            : $" The register cites {r.EvidenceUrls.Count} source{(r.EvidenceUrls.Count == 1 ? string.Empty : "s")}.";
+
+        var status = r.IdentityStatus == LinkStatus.Confirmed && r.Status == LinkStatus.Confirmed
+            ? " Confirmed by an analyst."
+            : " Not yet confirmed by an analyst.";
+
+        return $"{RegisterName(party.System)} records that {subject} ({r.Designation.Source}) {relation} {party.Name}{when}.{ended}{identity}{evidence}{status}";
+    }
+
+    private static string RegisterName(string system) => system switch
+    {
+        RelationSystems.Wikidata => "Wikidata",
+        _ => system,
+    };
 
     /// <summary>
     /// Collapses the hits into subjects, following the publishers' own cross-references.
@@ -364,11 +474,18 @@ public sealed class ComplianceCheckService(
     };
 
     private static string Summarise(
-        CheckOutcome outcome, List<CheckGroup> groups, short? birthYear, CheckQuery query)
+        CheckOutcome outcome, List<CheckGroup> groups, short? birthYear, CheckQuery query, int relatedParties)
     {
+        var related = relatedParties switch
+        {
+            0 => string.Empty,
+            1 => " One party on an open register is tied to a listed subject — see related parties.",
+            _ => $" {relatedParties} parties on an open register are tied to listed subjects — see related parties.",
+        };
+
         if (outcome == CheckOutcome.NoMatch)
         {
-            return "No subject on any sanctions list resembles this name.";
+            return "No subject on any sanctions list resembles this name." + related;
         }
 
         var identifier = Count(groups, CheckBand.IdentifierMatch);
@@ -416,7 +533,7 @@ public sealed class ComplianceCheckService(
                 + "A year of birth, a country or a document number would narrow this.";
         }
 
-        return sentence;
+        return sentence + related;
     }
 
     private static int Count(List<CheckGroup> groups, CheckBand band) =>

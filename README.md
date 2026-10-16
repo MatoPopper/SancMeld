@@ -61,6 +61,32 @@ designations that are the UK's own and for the UN references its transpositions 
 Most EU member states publish no separate national list and rely on EU/UN designations.
 That is recorded explicitly per jurisdiction rather than left as an unexplained gap.
 
+### Related parties, from Wikidata
+
+A sanction reaches the companies a listed person owns or controls, and no list names
+them. Wikidata (CC0) records who owns, founded, chairs and runs what, with a source cited
+on many statements, and the `related-parties` job reads it for the persons the lists
+already hold. A person is looked up by their **exact date of birth** — the one qualifier
+that makes a name match on an open register defensible — and the humans born that day
+are compared, every listed spelling against every label in every language, with the same
+trigram similarity the screening runs on. Then the item's statements become
+`designation_relation` rows: the party, the kind of tie from the person's side (owner of,
+founder of, chairs…), the period, the share, and whatever the register cites.
+
+Measured on 2026-10-16 over a random 120 of the 4 270 birth dates on the lists: 140 of
+306 persons with a day-precise date resolve (46 %; UK 56 %, EU 48 %, FR 45 %), and 16 of
+the 56 distinct items they resolve to carry at least one ownership or control statement.
+The query service answers in two to eight seconds a date, so the first fill is a matter
+of hours and is run by hand (`related-parties sync`); the nightly job caps itself at
+`MaxDatesPerScheduledRun` and drains the rest.
+
+What this is not: a listing. A check whose name resembles a related party gets the party
+**beside** the bands, never in them, with both ends of the chain shown — what the register
+says about the tie and why the register's person is taken to be the listed one — as a
+candidate until an analyst confirms it, and advisory whichever list the owner is on.
+Anyone can edit Wikidata; that is why the evidence travels with every link, and why a
+person without a day-precise date of birth is not looked up at all.
+
 ---
 
 ## Quick start
@@ -100,6 +126,7 @@ obvious lines of Hangfire in `SancMeld.Server`; the job itself is the same call 
 |---|---|
 | `GET /designations` · `/designations/{id}` | every current listing, cursor-paged |
 | `GET /designations/search?q=` | trigram search over every recorded spelling |
+| `GET /designations/{id}/related` | what open registers say the subject owns, founded or runs |
 | `POST /check` | a name plus whatever is known, answered as a decision — **writes** |
 | `POST /screen` | the same evidence as scores and feature vectors — **writes** |
 | `POST /adjudications` | what the analyst concluded — **writes** |
@@ -277,6 +304,9 @@ failure that looks like a SancMeld bug.
 | `SancMeld:Embeddings:Endpoint` | `http://localhost:11434` | An Ollama-compatible `/api/embed` |
 | `SancMeld:Embeddings:ModelCode` | `BGE_M3` | A row in `embedding_model`; the row says which model file and how many dimensions |
 | `SancMeld:Embeddings:IndexSettleSeconds` | `10` | The in-memory index reloads once the vector table has been quiet this long; a running backfill writes every second or two |
+| `SancMeld:Wikidata:Enabled` | `true` | Read Wikidata for what listed persons own and run; off means no query and no job, the stored links still serve |
+| `SancMeld:Wikidata:CronExpression` | `30 2 * * *` | The nightly run, capped at `MaxDatesPerScheduledRun` (300) birth dates |
+| `SancMeld:Wikidata:MinNameScore` | `0.6` | Trigram similarity a listed spelling must reach against a register label, once the birth date agrees |
 | `SancMeld:Jobs:Enabled` | `true` | Off means no Hangfire and no `/jobs` |
 | `SancMeld:Database:AutoMigrate` | `false` | Migrate on start; for single-container deployments |
 

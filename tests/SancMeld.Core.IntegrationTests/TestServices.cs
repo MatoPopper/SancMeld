@@ -6,6 +6,7 @@ using SancMeld.Core.Configuration;
 using SancMeld.Core.Data;
 using SancMeld.Core.Embeddings;
 using SancMeld.Core.Ingest;
+using SancMeld.Core.Relations;
 using SancMeld.Core.Search;
 
 namespace SancMeld.Core.IntegrationTests;
@@ -86,6 +87,12 @@ internal static class TestServices
         SemanticNameIndex? index = null) =>
         new(embedder ?? new FakeNameEmbedder(), index ?? Index(fixture, options), options,
             NullLogger<SemanticCandidateSource>.Instance);
+
+    public static RelatedPartyQueryService RelatedParties(SancMeldDbContext db, DesignationQueryService queries) =>
+        new(db, queries, Options(Path.GetTempPath()));
+
+    public static RelatedPartyStore RelatedPartyStore(SancMeldDbContext db, TimeProvider? clock = null) =>
+        new(db, clock ?? TimeProvider.System, NullLogger<RelatedPartyStore>.Instance);
 
     public static ScreeningService Screening(
         DatabaseFixture fixture,

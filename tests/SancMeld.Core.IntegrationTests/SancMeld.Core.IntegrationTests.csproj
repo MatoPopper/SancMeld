@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../../src/SancMeld.Core/SancMeld.Core.csproj" />
+    <ProjectReference Include="../../src/SancMeld.Connectors.Wikidata/SancMeld.Connectors.Wikidata.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SancMeld.Core.Domain;
+using SancMeld.Core.Relations;
 
 namespace SancMeld.Core.Data;
 
@@ -48,6 +49,12 @@ public class SancMeldDbContext(DbContextOptions<SancMeldDbContext> options) : Db
     public DbSet<AdjudicationReason> AdjudicationReasons => Set<AdjudicationReason>();
     public DbSet<Adjudication> Adjudications => Set<Adjudication>();
     public DbSet<TrainingSample> TrainingSamples => Set<TrainingSample>();
+
+    public DbSet<ExternalIdentity> ExternalIdentities => Set<ExternalIdentity>();
+    public DbSet<RelatedParty> RelatedParties => Set<RelatedParty>();
+    public DbSet<RelatedPartyName> RelatedPartyNames => Set<RelatedPartyName>();
+    public DbSet<DesignationRelation> DesignationRelations => Set<DesignationRelation>();
+    public DbSet<RelationRun> RelationRuns => Set<RelationRun>();
 
     public DbSet<EmbeddingModel> EmbeddingModels => Set<EmbeddingModel>();
     public DbSet<DesignationNameEmbedding> NameEmbeddings => Set<DesignationNameEmbedding>();
@@ -472,6 +479,63 @@ public class SancMeldDbContext(DbContextOptions<SancMeldDbContext> options) : Db
             // and everyone would inherit the same one — the first administrator is added
             // by 'SancMeld.Server admin add', which requires access to the server.
         });
+
+        b.Entity<ExternalIdentity>(e =>
+        {
+            e.ToTable("external_identity");
+            e.HasOne(x => x.Source).WithMany()
+             .HasForeignKey(x => x.SourceId).OnDelete(DeleteBehavior.Cascade);
+
+            // One answer per register per publisher record; the revision id is evidence,
+            // not part of the key.
+            e.HasIndex(x => new { x.System, x.SourceId, x.SourceRecordKey }).IsUnique();
+            e.HasIndex(x => new { x.System, x.ExternalId }).HasFilter("external_id IS NOT NULL");
+            e.Property(x => x.NameScore).HasPrecision(6, 5);
+        });
+
+        b.Entity<RelatedParty>(e =>
+        {
+            e.ToTable("related_party");
+            e.HasIndex(x => new { x.System, x.ExternalId }).IsUnique();
+            e.Property(x => x.Identifiers).HasColumnType("jsonb");
+            e.Property(x => x.CountryIso2).HasMaxLength(2);
+        });
+
+        b.Entity<RelatedPartyName>(e =>
+        {
+            e.ToTable("related_party_name");
+            e.HasOne(x => x.Party).WithMany(x => x.Names)
+             .HasForeignKey(x => x.RelatedPartyId).OnDelete(DeleteBehavior.Cascade);
+
+            // The same normal form and the same index as designation_name, so a query
+            // reaches a related party exactly as it reaches a listing.
+            e.Property(x => x.NameNormalized)
+             .HasComputedColumnSql("sm_normalize_name(name_original)", stored: true);
+            e.HasIndex(x => x.NameNormalized)
+             .HasMethod("gin")
+             .HasOperators("gin_trgm_ops")
+             .HasDatabaseName("related_party_name_trgm_ix");
+            e.HasIndex(x => x.RelatedPartyId);
+        });
+
+        b.Entity<DesignationRelation>(e =>
+        {
+            e.ToTable("designation_relation");
+            e.HasOne(x => x.Identity).WithMany(x => x.Relations)
+             .HasForeignKey(x => x.IdentityId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Party).WithMany(x => x.Relations)
+             .HasForeignKey(x => x.RelatedPartyId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(x => new { x.IdentityId, x.RelatedPartyId, x.Kind }).IsUnique();
+            e.HasIndex(x => x.RelatedPartyId);
+            e.Property(x => x.EvidenceUrls).HasColumnType("jsonb");
+            e.Property(x => x.Share).HasPrecision(7, 4);
+        });
+
+        b.Entity<RelationRun>(e =>
+        {
+            e.ToTable("relation_run");
+            e.HasIndex(x => new { x.System, x.StartedAt }).IsDescending(false, true);
+        });
     }
 
     /// <summary>
@@ -491,6 +555,9 @@ public class SancMeldDbContext(DbContextOptions<SancMeldDbContext> options) : Db
         c.Properties<IdentifierType>().HaveConversion<EnumAsSnakeCaseText<IdentifierType>>();
         c.Properties<AdjudicationDecision>().HaveConversion<EnumAsSnakeCaseText<AdjudicationDecision>>();
         c.Properties<CandidateOrigin>().HaveConversion<EnumAsSnakeCaseText<CandidateOrigin>>();
+        c.Properties<RelationKind>().HaveConversion<EnumAsSnakeCaseText<RelationKind>>();
+        c.Properties<RelatedPartyKind>().HaveConversion<EnumAsSnakeCaseText<RelatedPartyKind>>();
+        c.Properties<LinkStatus>().HaveConversion<EnumAsSnakeCaseText<LinkStatus>>();
     }
 
     /// <summary>Shared configuration for the one-to-many detail tables hanging off a designation.</summary>

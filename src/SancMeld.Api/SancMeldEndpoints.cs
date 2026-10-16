@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 using SancMeld.Core.Domain;
 using SancMeld.Core.Learning;
+using SancMeld.Core.Relations;
 using SancMeld.Core.Search;
 
 namespace SancMeld.Api;
@@ -80,6 +81,16 @@ internal static class SancMeldEndpoints
                 ? TypedResults.Ok(designation)
                 : TypedResults.NotFound())
         .WithName("GetDesignation");
+
+        group.MapGet("/{id:guid}/related", async (RelatedPartyQueryService related, Guid id, CancellationToken ct) =>
+            TypedResults.Ok(await related.ForDesignationAsync(id, ct)))
+        .WithName("GetDesignationRelatedParties")
+        .WithSummary("What open registers say this subject owns, founded or runs.")
+        .WithDescription(
+            "Wikidata's statements about the listed person, with the evidence the register cites " +
+            "and the evidence for taking the register's person to be the listed one (name match and " +
+            "date of birth). Candidates until an analyst confirms them; advisory by construction, " +
+            "because no sanctions list names these parties.");
 
         return endpoints;
     }

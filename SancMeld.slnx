@@ -8,6 +8,7 @@
     <Project Path="src/SancMeld.Connectors.PlMswia/SancMeld.Connectors.PlMswia.csproj" />
     <Project Path="src/SancMeld.Connectors.UkFcdo/SancMeld.Connectors.UkFcdo.csproj" />
     <Project Path="src/SancMeld.Connectors.UnSc/SancMeld.Connectors.UnSc.csproj" />
+    <Project Path="src/SancMeld.Connectors.Wikidata/SancMeld.Connectors.Wikidata.csproj" />
     <Project Path="src/SancMeld.Core/SancMeld.Core.csproj" />
     <Project Path="src/SancMeld.Server/SancMeld.Server.csproj" />
   </Folder>
@@ -22,6 +23,7 @@
     <Project Path="tests/SancMeld.Connectors.PlMswia.Tests/SancMeld.Connectors.PlMswia.Tests.csproj" />
     <Project Path="tests/SancMeld.Connectors.UkFcdo.Tests/SancMeld.Connectors.UkFcdo.Tests.csproj" />
     <Project Path="tests/SancMeld.Connectors.UnSc.Tests/SancMeld.Connectors.UnSc.Tests.csproj" />
+    <Project Path="tests/SancMeld.Connectors.Wikidata.Tests/SancMeld.Connectors.Wikidata.Tests.csproj" />
     <Project Path="tests/SancMeld.Core.IntegrationTests/SancMeld.Core.IntegrationTests.csproj" />
     <Project Path="tests/SancMeld.Core.Tests/SancMeld.Core.Tests.csproj" />
   </Folder>
