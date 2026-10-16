@@ -61,6 +61,9 @@ public sealed class WikidataSyncService(
 
         try
         {
+            // Persons an earlier, interrupted run resolved come first: their relations are
+            // the cheapest thing a run can add.
+            await FetchRelationsAsync(run, progress, ct, onlyDesignations).ConfigureAwait(false);
             await ResolvePersonsAsync(run, maxDates, progress, ct, onlyDesignations).ConfigureAwait(false);
             await FetchRelationsAsync(run, progress, ct, onlyDesignations).ConfigureAwait(false);
             await store.FinishRunAsync(run, "SUCCESS", null, ct).ConfigureAwait(false);
@@ -111,6 +114,11 @@ public sealed class WikidataSyncService(
 
         for (var i = 0; i < byDate.Count; i++)
         {
+            if (i > 0 && i % settings.RelationsEveryDates == 0)
+            {
+                await FetchRelationsAsync(run, progress, ct, onlyDesignations).ConfigureAwait(false);
+            }
+
             var (date, persons) = byDate[i];
             IReadOnlyList<SparqlRow> rows;
 

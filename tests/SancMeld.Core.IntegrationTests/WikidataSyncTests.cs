@@ -330,10 +330,36 @@ public sealed class WikidataSyncTests(DatabaseFixture fixture) : IAsyncLifetime
         Assert.Equal("https://www.wikidata.org/wiki/" + _party, relation.Party.Url);
     }
 
-    private async Task<RelationRun> SyncAsync(FakeSparqlClient sparql, int refreshRelationsAfterDays = 7)
+    [Fact]
+    public async Task ARunThatDiesHalfWayKeepsTheRelationsOfThePersonsItResolved()
+    {
+        // Two persons, born on different days; the service answers the first day and
+        // then goes away for good. The run fails, and the first person's company is in.
+        await ImportAsync(
+            Person("a", Named("Ramzan Akhmadovitch KADYROV"), new DateOnly(1976, 10, 5)),
+            Person("b", Named("Ivan Petrovich SIDOROV"), new DateOnly(1980, 2, 2)));
+
+        var sparql = new FakeSparqlClient { FailBornOn = new DateOnly(1980, 2, 2) }
+            .BornOn(new DateOnly(1976, 10, 5), (_person, Named("Ramzan Kadyrov"), "en"))
+            .Relation(_person, "P1830", outgoing: true, target: _party)
+            .Party(_party, Named("Akhmat Fund"), null, "RU", organisation: true, names: [Named("Akhmat Fund")]);
+
+        var run = await SyncAsync(sparql, relationsEveryDates: 1, maxConsecutiveFailures: 1);
+
+        Assert.Equal("FAILED", run.Status);
+        Assert.Single(Mine(await CheckAsync(Named("Akhmat Fund"))));
+    }
+
+    private async Task<RelationRun> SyncAsync(FakeSparqlClient sparql, int refreshRelationsAfterDays = 7, int relationsEveryDates = 200, int maxConsecutiveFailures = 5)
     {
         await using var db = fixture.CreateContext();
-        var options = Options.Create(new WikidataOptions { RefreshRelationsAfterDays = refreshRelationsAfterDays, QueryDelayMs = 0 });
+        var options = Options.Create(new WikidataOptions
+        {
+            RefreshRelationsAfterDays = refreshRelationsAfterDays,
+            QueryDelayMs = 0,
+            RelationsEveryDates = relationsEveryDates,
+            MaxConsecutiveFailures = maxConsecutiveFailures,
+        });
 
         var service = new WikidataSyncService(sparql, TestServices.RelatedPartyStore(db), options, NullLogger<WikidataSyncService>.Instance);
         return await service.RunAsync(maxDates: 0, progress: null, CancellationToken.None);
@@ -407,6 +433,9 @@ internal sealed class FakeSparqlClient : ISparqlClient
     /// <summary>The next relation query ends as the live service once did: the connection closed mid-response.</summary>
     public bool DropNextRelationQuery { get; set; }
 
+    /// <summary>Every lookup of persons born on this day fails, as a service that has gone away.</summary>
+    public DateOnly? FailBornOn { get; set; }
+
     public Task<IReadOnlyList<SparqlRow>> QueryAsync(string sparql, CancellationToken ct = default)
     {
         Queries++;
@@ -414,6 +443,12 @@ internal sealed class FakeSparqlClient : ISparqlClient
         if (DropNextRelationQuery && sparql.Contains("wdt:P1830 ?target", StringComparison.Ordinal))
         {
             DropNextRelationQuery = false;
+            throw new IOException("The response ended prematurely. (ResponseEnded)");
+        }
+
+        if (FailBornOn is { } failing && sparql.Contains("wdt:P569", StringComparison.Ordinal)
+            && sparql.Contains(failing.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture), StringComparison.Ordinal))
+        {
             throw new IOException("The response ended prematurely. (ResponseEnded)");
         }
         IReadOnlyList<SparqlRow> rows;

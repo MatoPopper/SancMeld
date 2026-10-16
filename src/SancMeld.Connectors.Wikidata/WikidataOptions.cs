@@ -66,6 +66,15 @@ public sealed class WikidataOptions
     [Range(0, 60_000)]
     public int QueryDelayMs { get; set; } = 500;
 
+    /// <summary>
+    /// Birth dates resolved before the relations of the persons found so far are read.
+    /// The first fill is hours of birth-date queries; reading relations only at the end
+    /// meant a run cut short — a deploy, a dropped connection — kept thousands of resolved
+    /// persons and not one relation.
+    /// </summary>
+    [Range(1, 100_000)]
+    public int RelationsEveryDates { get; set; } = 200;
+
     /// <summary>Resolved persons whose relations are read in one query.</summary>
     [Range(1, 200)]
     public int RelationBatchSize { get; set; } = 50;
