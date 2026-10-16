@@ -103,6 +103,7 @@ public static class SancMeldExtensions
         services.AddScoped<RelatedPartyStore>();
         services.AddScoped<RelatedPartyQueryService>();
         services.AddScoped<DesignationGraphService>();
+        services.AddScoped<CuratedRelationsImporter>();
         services.AddScoped<ScreeningService>();
         services.AddScoped<ComplianceCheckService>();
         services.AddScoped<AdjudicationService>();

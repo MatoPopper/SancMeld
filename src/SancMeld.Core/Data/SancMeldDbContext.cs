@@ -55,6 +55,7 @@ public class SancMeldDbContext(DbContextOptions<SancMeldDbContext> options) : Db
     public DbSet<RelatedPartyName> RelatedPartyNames => Set<RelatedPartyName>();
     public DbSet<DesignationRelation> DesignationRelations => Set<DesignationRelation>();
     public DbSet<RelationRun> RelationRuns => Set<RelationRun>();
+    public DbSet<PartyRelation> PartyRelations => Set<PartyRelation>();
 
     public DbSet<EmbeddingModel> EmbeddingModels => Set<EmbeddingModel>();
     public DbSet<DesignationNameEmbedding> NameEmbeddings => Set<DesignationNameEmbedding>();
@@ -540,6 +541,18 @@ public class SancMeldDbContext(DbContextOptions<SancMeldDbContext> options) : Db
             e.HasIndex(x => x.RelatedPartyId);
             e.Property(x => x.EvidenceUrls).HasColumnType("jsonb");
             e.Property(x => x.Share).HasPrecision(7, 4);
+        });
+
+        b.Entity<PartyRelation>(e =>
+        {
+            e.ToTable("party_relation");
+            e.HasOne(x => x.From).WithMany()
+             .HasForeignKey(x => x.FromPartyId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.To).WithMany()
+             .HasForeignKey(x => x.ToPartyId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(x => new { x.FromPartyId, x.ToPartyId, x.Kind, x.System }).IsUnique();
+            e.HasIndex(x => x.ToPartyId);
+            e.Property(x => x.EvidenceUrls).HasColumnType("jsonb");
         });
 
         b.Entity<RelationRun>(e =>

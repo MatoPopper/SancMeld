@@ -792,6 +792,9 @@ public class RelatedParty
     /// <summary>Register identifiers the record carries (LEI, Companies House, OGRN…), as a JSON array of {kind, value}.</summary>
     public string? Identifiers { get; set; }
 
+    /// <summary>Where a reader can see the record, for a register whose ids are not addresses (the curated one).</summary>
+    public string? SourceUrl { get; set; }
+
     public DateTimeOffset RetrievedAt { get; set; }
 
     public List<RelatedPartyName> Names { get; set; } = [];
@@ -844,6 +847,35 @@ public class DesignationRelation
     public DateTimeOffset FirstSeenAt { get; set; }
     public DateTimeOffset LastSeenAt { get; set; }
     public Guid? RunId { get; set; }
+}
+
+/// <summary>
+/// A tie between two parties, neither of them a listing: a group and the brand it runs,
+/// a brand and the company that operates it in one country, a holding and its owner.
+/// The chains no sanctions list draws, and the reason a graph can reach a Slovak
+/// operating company from a Russian owner. "From is Kind of To".
+/// </summary>
+public class PartyRelation
+{
+    public long Id { get; set; }
+    public long FromPartyId { get; set; }
+    public RelatedParty? From { get; set; }
+    public long ToPartyId { get; set; }
+    public RelatedParty? To { get; set; }
+
+    public RelationKind Kind { get; set; }
+    public required string System { get; set; }
+
+    public LinkStatus Status { get; set; } = LinkStatus.Candidate;
+
+    /// <summary>The articles, rulings and registers the link rests on, as a JSON array of URLs.</summary>
+    public string? EvidenceUrls { get; set; }
+    public string? Note { get; set; }
+
+    public string? CreatedBy { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset LastSeenAt { get; set; }
+    public bool IsCurrent { get; set; } = true;
 }
 
 /// <summary>One run of a register connector, for the audit trail and the status command.</summary>

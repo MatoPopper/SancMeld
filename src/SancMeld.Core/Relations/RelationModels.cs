@@ -21,6 +21,9 @@ public enum RelationKind
     DirectorOf,
     ParentOrganisationOf,
     SubsidiaryOf,
+
+    /// <summary>Runs the stores or the business of a brand it need not own: ChainStores SK runs MERE in Slovakia.</summary>
+    OperatorOf,
 }
 
 /// <summary>What an external register says a related party is. Decides which screening a party can answer.</summary>
@@ -36,6 +39,13 @@ public enum LinkStatus { Candidate, Confirmed, Rejected }
 public static class RelationSystems
 {
     public const string Wikidata = "WIKIDATA";
+
+    /// <summary>
+    /// What an analyst entered by hand from articles, rulings and registers: the links
+    /// no open register carries, such as a Slovak operating company to the group whose
+    /// owners are listed. Every link names its source.
+    /// </summary>
+    public const string Curated = "CURATED";
 }
 
 /// <summary>One related party as a screening sees it.</summary>
@@ -87,6 +97,16 @@ public sealed record RelationView
 
     /// <summary>The current listing of the subject on the other end.</summary>
     public required DesignationView Designation { get; init; }
+
+    /// <summary>The party the listed subject is tied to directly — not the searched one when <see cref="Via"/> is set.</summary>
+    public string? PartyName { get; init; }
+
+    /// <summary>
+    /// The chain from the searched party up to <see cref="PartyName"/>, when the tie is
+    /// not direct: ["Hung Trade DOO"… ] reads "ChainStores SK → MERE → Svetofor Group".
+    /// Empty for a direct tie.
+    /// </summary>
+    public IReadOnlyList<string> Via { get; init; } = [];
 }
 
 /// <summary>A party whose name resembles the query, with every listed subject it is related to.</summary>

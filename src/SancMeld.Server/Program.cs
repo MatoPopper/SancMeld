@@ -352,6 +352,29 @@ if (args is ["related-parties", var relatedAction, ..])
     }
 }
 
+// Hand-entered links into the internal register, from a case file kept outside the repo:
+//
+//   dotnet run --project src/SancMeld.Server -- relations import-curated case.json
+//   docker exec -i sancmeld-api dotnet SancMeld.Server.dll relations import-curated - < case.json
+//
+// Idempotent; '-' reads standard input so the file never has to be copied into a container.
+if (args is ["relations", "import-curated", var curatedPath, ..])
+{
+    using var scope = app.Services.CreateScope();
+    var importer = scope.ServiceProvider.GetRequiredService<CuratedRelationsImporter>();
+
+    await using var input = curatedPath == "-" ? Console.OpenStandardInput() : File.OpenRead(curatedPath);
+    var result = await importer.ImportAsync(input, "cli:" + Environment.UserName, CancellationToken.None);
+
+    Console.WriteLine($"CURATED: {result.Parties} parties, {result.ListingLinks} listing links, {result.PartyLinks} party links.");
+    foreach (var warning in result.Warnings)
+    {
+        Console.WriteLine($"  warning: {warning}");
+    }
+
+    return result.Warnings.Count == 0 ? 0 : 2;
+}
+
 // Opt-in, and off by default: a process that rewrites the schema it happens to find is
 // the wrong default for anyone running more than one instance. For a single-container
 // deployment it is the difference between one command and shipping the .NET SDK to the

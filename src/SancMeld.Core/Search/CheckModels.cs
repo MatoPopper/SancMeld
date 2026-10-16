@@ -187,6 +187,9 @@ public sealed record CheckRelation
     /// <summary>What the register cites. Often nothing, which the reader should see.</summary>
     public IReadOnlyList<string> EvidenceUrls { get; init; } = [];
 
+    /// <summary>The chain from the searched party to the one the listed subject is tied to; empty when direct.</summary>
+    public IReadOnlyList<string> Via { get; init; } = [];
+
     /// <summary>One sentence, safe to show.</summary>
     public required string Explanation { get; init; }
 }

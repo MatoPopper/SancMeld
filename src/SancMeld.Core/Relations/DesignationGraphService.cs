@@ -166,7 +166,7 @@ public sealed class DesignationGraphService(
             return;
         }
 
-        var partyIds = new List<long>();
+        List<long> partyIds = [];
 
         foreach (var r in mine.Relations)
         {
@@ -186,6 +186,12 @@ public sealed class DesignationGraphService(
             .Select(d => new { d.SourceId, d.SourceRecordKey })
             .FirstAsync(ct)
             .ConfigureAwait(false);
+
+        // Party to party: the brand a group runs, the company that operates the brand in
+        // one country. Breadth first from the parties tied to the subject.
+        var partyViews = mine.Relations.Select(r => r.Party).DistinctBy(p => p.Id).ToDictionary(p => p.Id);
+        await AddPartyChainsAsync(b, subject, partyViews, ct).ConfigureAwait(false);
+        partyIds = [.. partyViews.Keys];
 
         var others = await db.DesignationRelations
             .AsNoTracking()
@@ -213,7 +219,7 @@ public sealed class DesignationGraphService(
                 continue;
             }
 
-            var party = mine.Relations.First(m => m.Party.Id == r.RelatedPartyId).Party;
+            var party = partyViews[r.RelatedPartyId];
             var status = RelationStatus(r.Status, r.Identity.Status, r.Share, r.EndDate, listing.LegalEffect);
 
             b.Listing(listing, status);
@@ -224,6 +230,66 @@ public sealed class DesignationGraphService(
                 share: r.Share);
         }
     }
+
+    /// <summary>
+    /// Adds the parties reachable through party ties and the ties themselves, and grows
+    /// <paramref name="parties"/> with what it reached so the second hop can look for
+    /// listed subjects tied to them too.
+    /// </summary>
+    private async Task AddPartyChainsAsync(Builder b, DesignationView subject, Dictionary<long, RelatedPartyView> parties, CancellationToken ct)
+    {
+        var frontier = parties.Keys.ToList();
+
+        for (var depth = 0; depth < RelatedPartyQueryService.MaxChainDepth && frontier.Count > 0; depth++)
+        {
+            var ids = frontier;
+            var edges = await db.PartyRelations
+                .AsNoTracking()
+                .Include(r => r.From!).ThenInclude(p => p.Names)
+                .Include(r => r.To!).ThenInclude(p => p.Names)
+                .Where(r => r.IsCurrent && (ids.Contains(r.FromPartyId) || ids.Contains(r.ToPartyId)))
+                .AsSplitQuery()
+                .Take(PartyChainCap)
+                .ToListAsync(ct)
+                .ConfigureAwait(false);
+
+            frontier = [];
+
+            foreach (var e in edges)
+            {
+                var from = parties.GetValueOrDefault(e.FromPartyId) ?? RelatedPartyQueryService.ToView(e.From!);
+                var to = parties.GetValueOrDefault(e.ToPartyId) ?? RelatedPartyQueryService.ToView(e.To!);
+
+                foreach (var p in new[] { from, to })
+                {
+                    if (parties.TryAdd(p.Id, p))
+                    {
+                        frontier.Add(p.Id);
+                    }
+                }
+
+                var status = e.Status switch
+                {
+                    LinkStatus.Rejected => GraphStatus.Rejected,
+                    LinkStatus.Confirmed => GraphStatus.Confirmed,
+                    _ => subject.LegalEffect == LegalEffect.Binding ? GraphStatus.Review : GraphStatus.Candidate,
+                };
+
+                b.Party(from, status);
+                b.Party(to, status);
+
+                var urls = e.EvidenceUrls is null ? [] : System.Text.Json.JsonSerializer.Deserialize<List<string>>(e.EvidenceUrls) ?? [];
+                var source = e.System == RelationSystems.Curated ? "Internal register" : e.System;
+                b.Edge(b.PartyId(from), b.PartyId(to), e.Kind.ToString(), status,
+                    $"{source}: {from.Name} {Verb(e.Kind)} {to.Name}"
+                    + (e.Note is { Length: > 0 } note ? $" — {note}" : string.Empty)
+                    + (urls.Count == 0 ? "; no source cited." : $"; {urls.Count} source{(urls.Count == 1 ? string.Empty : "s")} cited."),
+                    urls);
+            }
+        }
+    }
+
+    private const int PartyChainCap = 60;
 
     private static GraphStatus RelationStatus(LinkStatus relation, LinkStatus identity, decimal? share, DateOnly? endDate, LegalEffect listing)
     {
@@ -247,6 +313,12 @@ public sealed class DesignationGraphService(
 
     private static string RelationEvidence(RelationKind kind, RelatedPartyView party, decimal? share, DateOnly? start, DateOnly? end, int references, LinkStatus identity)
     {
+        if (party.System == RelationSystems.Curated)
+        {
+            var refs = references == 0 ? "no source cited" : $"{references} source{(references == 1 ? string.Empty : "s")} cited";
+            return $"Internal register: {Verb(kind)} {party.Name}; {refs}; entered by hand from articles and rulings.";
+        }
+
         var when = (start, end) switch
         {
             (null, null) => string.Empty,
@@ -273,6 +345,7 @@ public sealed class DesignationGraphService(
         RelationKind.DirectorOf => "director of",
         RelationKind.ParentOrganisationOf => "parent organisation of",
         RelationKind.SubsidiaryOf => "subsidiary of",
+        RelationKind.OperatorOf => "operator of",
         _ => "related to",
     };
 

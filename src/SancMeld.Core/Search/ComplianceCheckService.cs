@@ -160,6 +160,7 @@ public sealed class ComplianceCheckService(
                 StartDate = r.StartDate,
                 EndDate = r.EndDate,
                 EvidenceUrls = r.EvidenceUrls,
+                Via = r.Via,
                 Explanation = Explain(hit.Party, r),
             }),
         ],
@@ -184,6 +185,7 @@ public sealed class ComplianceCheckService(
             RelationKind.DirectorOf => "directs",
             RelationKind.ParentOrganisationOf => "is the parent organisation of",
             RelationKind.SubsidiaryOf => "is a subsidiary of",
+            RelationKind.OperatorOf => "operates",
             _ => "is related to",
         };
 
@@ -211,12 +213,20 @@ public sealed class ComplianceCheckService(
             ? " Confirmed by an analyst."
             : " Not yet confirmed by an analyst.";
 
+        if (r.Via.Count > 0)
+        {
+            var chain = string.Join(" → ", new[] { party.Name }.Concat(r.Via));
+            return $"{party.Name} is tied through other parties to a listed subject: {chain}. "
+                + $"{subject} ({r.Designation.Source}) {relation} {r.PartyName}{when}.{ended}{evidence}{status}";
+        }
+
         return $"{RegisterName(party.System)} records that {subject} ({r.Designation.Source}) {relation} {party.Name}{when}.{ended}{identity}{evidence}{status}";
     }
 
     private static string RegisterName(string system) => system switch
     {
         RelationSystems.Wikidata => "Wikidata",
+        RelationSystems.Curated => "The internal register",
         _ => system,
     };
 
@@ -521,8 +531,8 @@ public sealed class ComplianceCheckService(
         var related = relatedParties switch
         {
             0 => string.Empty,
-            1 => " One party on an open register is tied to a listed subject — see related parties.",
-            _ => $" {relatedParties} parties on an open register are tied to listed subjects — see related parties.",
+            1 => " One party on a register of related parties is tied to a listed subject — see related parties.",
+            _ => $" {relatedParties} parties on a register of related parties are tied to listed subjects — see related parties.",
         };
 
         related += mentions switch

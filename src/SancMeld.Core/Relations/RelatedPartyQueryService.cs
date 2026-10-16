@@ -57,9 +57,13 @@ public sealed class RelatedPartyQueryService(
                 .ConfigureAwait(false);
         }
 
+        // A party is searched when it is tied to a listing, or to another party: the
+        // second is how "ChainStores SK" reaches the owners of the group it operates for.
         var names = db.RelatedPartyNames
             .Where(n => n.Party!.Relations.Any(r => r.IsCurrent && r.Status != LinkStatus.Rejected
-                && r.Identity!.ExternalId != null && r.Identity.Status != LinkStatus.Rejected))
+                    && r.Identity!.ExternalId != null && r.Identity.Status != LinkStatus.Rejected)
+                || db.PartyRelations.Any(pr => pr.IsCurrent && pr.Status != LinkStatus.Rejected
+                    && (pr.FromPartyId == n.RelatedPartyId || pr.ToPartyId == n.RelatedPartyId)))
             .Where(n => EF.Functions.TrigramsAreSimilar(n.NameNormalized!, normalized)
                 || (byWord && EF.Functions.TrigramsAreWordSimilar(normalized, n.NameNormalized!)));
 
@@ -128,9 +132,14 @@ public sealed class RelatedPartyQueryService(
                 .Where(r => r.Identity!.ExternalId != null && r.Identity.Status != LinkStatus.Rejected)
                 .Select(r => (Relation: r, Listing: listings.GetValueOrDefault((r.Identity!.SourceId, r.Identity.SourceRecordKey))))
                 .Where(x => x.Listing is not null)
-                .Select(x => ToView(x.Relation, x.Listing!))
+                .Select(x => ToView(x.Relation, x.Listing!) with { PartyName = party.Label })
                 .OrderBy(r => r.Designation.Source, StringComparer.Ordinal)
                 .ToList();
+
+            // And the listed subjects reached through other parties: the operator of a
+            // brand, the brand of a group, the group of its owners.
+            relations.AddRange(await ChainedRelationsAsync(party, ct).ConfigureAwait(false));
+            relations = [.. relations.DistinctBy(r => (r.Id, r.Designation.Id)).Take(MaxChainedRelations)];
 
             if (relations.Count == 0)
             {
@@ -149,6 +158,107 @@ public sealed class RelatedPartyQueryService(
 
         return hits;
     }
+
+    /// <summary>Hops followed from a searched party through party-to-party ties.</summary>
+    public const int MaxChainDepth = 4;
+
+    private const int MaxChainedRelations = 12;
+
+    /// <summary>
+    /// The listing relations of every party reachable from this one through party ties,
+    /// each carrying the chain that reached it. Breadth first, so the shortest chain is
+    /// the one shown.
+    /// </summary>
+    private async Task<List<RelationView>> ChainedRelationsAsync(RelatedParty start, CancellationToken ct)
+    {
+        var reached = await ChainAsync(start.Id, ct).ConfigureAwait(false);
+        if (reached.Count == 0)
+        {
+            return [];
+        }
+
+        var ids = reached.Keys.ToList();
+        var relations = await db.DesignationRelations
+            .AsNoTracking()
+            .Include(r => r.Identity)
+            .Include(r => r.Party)
+            .Where(r => ids.Contains(r.RelatedPartyId) && r.IsCurrent && r.Status != LinkStatus.Rejected)
+            .Where(r => r.Identity!.ExternalId != null && r.Identity.Status != LinkStatus.Rejected)
+            .OrderBy(r => r.Id)
+            .Take(MaxChainedRelations * 2)
+            .ToListAsync(ct)
+            .ConfigureAwait(false);
+
+        var listings = await CurrentListingsAsync(relations.Select(r => r.Identity!), ct).ConfigureAwait(false);
+
+        return
+        [
+            .. relations
+                .Select(r => (Relation: r, Listing: listings.GetValueOrDefault((r.Identity!.SourceId, r.Identity.SourceRecordKey))))
+                .Where(x => x.Listing is not null)
+                .OrderBy(x => reached[x.Relation.RelatedPartyId].Path.Count)
+                .Select(x => ToView(x.Relation, x.Listing!) with
+                {
+                    PartyName = x.Relation.Party!.Label,
+                    Via = reached[x.Relation.RelatedPartyId].Path,
+
+                    // A chain is as strong as its weakest link: a confirmed owner of a
+                    // group reached through a newspaper's operator link is a candidate.
+                    Status = Weakest(x.Relation.Status, reached[x.Relation.RelatedPartyId].Status),
+                }),
+        ];
+    }
+
+    /// <summary>
+    /// Parties reachable from <paramref name="startId"/> through current party ties, in
+    /// either direction, with the labels of the chain from the start to each (the start
+    /// excluded, the reached party included).
+    /// </summary>
+    public async Task<Dictionary<long, (IReadOnlyList<string> Path, LinkStatus Status)>> ChainAsync(long startId, CancellationToken ct = default)
+    {
+        var result = new Dictionary<long, (IReadOnlyList<string> Path, LinkStatus Status)>();
+        var frontier = new List<(long Id, IReadOnlyList<string> Path, LinkStatus Status)> { (startId, [], LinkStatus.Confirmed) };
+        var seen = new HashSet<long> { startId };
+
+        for (var depth = 0; depth < MaxChainDepth && frontier.Count > 0; depth++)
+        {
+            var ids = frontier.Select(f => f.Id).ToList();
+            var edges = await db.PartyRelations
+                .AsNoTracking()
+                .Where(r => r.IsCurrent && r.Status != LinkStatus.Rejected)
+                .Where(r => ids.Contains(r.FromPartyId) || ids.Contains(r.ToPartyId))
+                .Select(r => new { r.FromPartyId, r.ToPartyId, r.Status, From = r.From!.Label, To = r.To!.Label })
+                .ToListAsync(ct)
+                .ConfigureAwait(false);
+
+            var next = new List<(long, IReadOnlyList<string>, LinkStatus)>();
+            foreach (var (id, path, status) in frontier)
+            {
+                foreach (var e in edges.Where(e => e.FromPartyId == id || e.ToPartyId == id))
+                {
+                    var (otherId, otherLabel) = e.FromPartyId == id ? (e.ToPartyId, e.To) : (e.FromPartyId, e.From);
+                    if (!seen.Add(otherId))
+                    {
+                        continue;
+                    }
+
+                    IReadOnlyList<string> otherPath = [.. path, otherLabel];
+                    var otherStatus = Weakest(status, e.Status);
+                    result[otherId] = (otherPath, otherStatus);
+                    next.Add((otherId, otherPath, otherStatus));
+                }
+            }
+
+            frontier = next;
+        }
+
+        return result;
+    }
+
+    private static LinkStatus Weakest(LinkStatus a, LinkStatus b) =>
+        a == LinkStatus.Rejected || b == LinkStatus.Rejected ? LinkStatus.Rejected
+        : a == LinkStatus.Candidate || b == LinkStatus.Candidate ? LinkStatus.Candidate
+        : LinkStatus.Confirmed;
 
     /// <summary>Everything a listed subject is related to, through whichever identity its record resolved to.</summary>
     public async Task<DesignationRelationsView> ForDesignationAsync(Guid designationId, CancellationToken ct = default)
@@ -260,7 +370,7 @@ public sealed class RelatedPartyQueryService(
         Id = p.Id,
         System = p.System,
         ExternalId = p.ExternalId,
-        Url = RecordUrl(p.System, p.ExternalId),
+        Url = RecordUrl(p.System, p.ExternalId, p.SourceUrl),
         Name = p.Label,
         Description = p.Description,
         Kind = p.Kind,
@@ -273,10 +383,10 @@ public sealed class RelatedPartyQueryService(
     };
 
     /// <summary>Where a reader can open the record. Only one register so far; a second adds a line here.</summary>
-    public static string RecordUrl(string system, string externalId) => system switch
+    public static string RecordUrl(string system, string externalId, string? sourceUrl = null) => system switch
     {
         RelationSystems.Wikidata => $"https://www.wikidata.org/wiki/{externalId}",
-        _ => externalId,
+        _ => sourceUrl ?? string.Empty,
     };
 
     private static IReadOnlyList<string> Urls(string? json) =>
