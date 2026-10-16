@@ -12,7 +12,19 @@ namespace SancMeld.Api;
 public sealed record AuthConfiguration(string GoogleClientId);
 
 /// <summary>Who the bearer token says the caller is, and whether this instance knows them.</summary>
-public sealed record SignedInUser(string Email, string? Name, string? Subject, bool IsAdmin);
+public sealed record SignedInUser(string Email, string? Name, string? Subject, bool IsAdmin)
+{
+    /// <summary>Whether this caller may screen: any verified address.</summary>
+    public bool CanWrite { get; init; }
+
+    /// <summary>The request budget and what is left of it; null on an unverified address.</summary>
+    public int? RequestLimit { get; init; }
+    public int? RequestsUsed { get; init; }
+    public int? RequestsRemaining { get; init; }
+
+    /// <summary>Whom to ask for more, when the host configured it.</summary>
+    public string? QuotaContactEmail { get; init; }
+}
 
 /// <summary>An address to add to the allow list.</summary>
 public sealed record GrantAdminRequest(string Email, string? DisplayName, string? Note);
@@ -46,7 +58,7 @@ internal static class AdminEndpoints
             "and it is not what protects anything here; the token's signature and audience are.");
 
         group.MapGet("/me", async (
-            ClaimsPrincipal user, AdminDirectory admins, CancellationToken ct) =>
+            ClaimsPrincipal user, AdminDirectory admins, ApiUserDirectory users, IOptions<SancMeldAuthOptions> options, CancellationToken ct) =>
         {
             var email = SancMeldClaims.EmailOf(user);
 
@@ -57,12 +69,23 @@ internal static class AdminEndpoints
                 return TypedResults.Ok(new SignedInUser(string.Empty, null, SancMeldClaims.SubjectOf(user), false));
             }
 
-            var admin = SancMeldClaims.EmailIsVerified(user)
-                ? await admins.FindActiveAsync(email, ct)
+            var verified = SancMeldClaims.EmailIsVerified(user);
+            var admin = verified ? await admins.FindActiveAsync(email, ct) : null;
+
+            // The first sign-in creates the user and their budget.
+            var account = verified
+                ? await users.EnsureAsync(email, SancMeldClaims.NameOf(user), SancMeldClaims.SubjectOf(user), options.Value.DefaultRequestLimit, ct)
                 : null;
 
             return TypedResults.Ok(new SignedInUser(
-                email, SancMeldClaims.NameOf(user), SancMeldClaims.SubjectOf(user), admin is not null));
+                email, SancMeldClaims.NameOf(user), SancMeldClaims.SubjectOf(user), admin is not null)
+            {
+                CanWrite = verified,
+                RequestLimit = account?.RequestLimit,
+                RequestsUsed = account?.RequestsUsed,
+                RequestsRemaining = account is null ? null : Math.Max(0, account.RequestLimit - account.RequestsUsed),
+                QuotaContactEmail = string.IsNullOrWhiteSpace(options.Value.QuotaContactEmail) ? null : options.Value.QuotaContactEmail,
+            });
         })
         .RequireAuthorization()
         .WithName("GetSignedInUser")

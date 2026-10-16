@@ -152,6 +152,7 @@ internal static class SancMeldEndpoints
             return TypedResults.Ok(await check.CheckAsync(WithCaller(query, user), ct));
         })
         .RequireWrite(requireSignIn)
+        .AddEndpointFilter<RequestBudgetFilter>()
         .WithTags("Screening")
         .WithName("Check")
         .WithSummary("Screen a name and get an answer a compliance officer can act on.")
@@ -200,6 +201,7 @@ internal static class SancMeldEndpoints
             return TypedResults.Ok(await ares.LookupAsync(request.Query, request.Depth, ct));
         })
         .RequireWrite(requireSignIn)
+        .AddEndpointFilter<RequestBudgetFilter>()
         .WithTags("Designations")
         .WithName("LookupAres")
         .WithSummary("Read a Czech company's shareholders and statutory body from ARES and link the listed ones — writes.")
@@ -331,6 +333,7 @@ internal static class SancMeldEndpoints
             return TypedResults.Ok(await screening.ScreenAsync(WithCaller(query, user), ct));
         })
         .RequireWrite(requireSignIn)
+        .AddEndpointFilter<RequestBudgetFilter>()
         .WithTags("Screening")
         .WithName("Screen")
         .WithSummary("Screen a name, with whatever else is known about the subject. Writes.")

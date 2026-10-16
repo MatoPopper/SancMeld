@@ -1,0 +1,84 @@
+using Microsoft.EntityFrameworkCore;
+using SancMeld.Core.Access;
+using Xunit;
+
+namespace SancMeld.Core.IntegrationTests;
+
+/// <summary>
+/// Anybody may sign in; the budget is what stops them. A new address starts with the
+/// default, every metered request spends one, the last one cannot be spent twice, and an
+/// exhausted budget refuses until someone raises it in the database.
+/// </summary>
+[Collection(DatabaseCollection.Name)]
+public sealed class ApiUserBudgetTests(DatabaseFixture fixture)
+{
+    private readonly string _email = $"User.{Guid.NewGuid():N}@Example.org";
+
+    [Fact]
+    public async Task ANewAddressGetsTheDefaultBudgetOnce()
+    {
+        await using var db = fixture.CreateContext();
+        var users = new ApiUserDirectory(db, TimeProvider.System);
+
+        var first = await users.EnsureAsync(_email, "Test", "sub-1", defaultLimit: 50);
+        var again = await users.EnsureAsync(_email.ToUpperInvariant(), "Test", "sub-1", defaultLimit: 999);
+
+        Assert.Equal(50, first.RequestLimit);
+        Assert.Equal(first.Id, again.Id);
+        Assert.Equal(50, again.RequestLimit);
+        Assert.Equal(_email.ToLowerInvariant(), again.Email);
+    }
+
+    [Fact]
+    public async Task TheBudgetIsSpentAndThenRefused()
+    {
+        await using var db = fixture.CreateContext();
+        var users = new ApiUserDirectory(db, TimeProvider.System);
+        await users.EnsureAsync(_email, null, null, defaultLimit: 3);
+
+        var results = new List<QuotaState>();
+        for (var i = 0; i < 4; i++)
+        {
+            results.Add(await users.TryConsumeAsync(_email));
+        }
+
+        Assert.Equal([true, true, true, false], results.Select(r => r.Allowed));
+        Assert.Equal(0, results[^1].Remaining);
+        Assert.Equal(3, results[^1].Used);
+
+        // Raised by hand in the database, as the operator does.
+        await db.ApiUsers.Where(u => u.Email == _email.ToLowerInvariant())
+            .ExecuteUpdateAsync(s => s.SetProperty(u => u.RequestLimit, 1_000_000));
+        Assert.True((await users.TryConsumeAsync(_email)).Allowed);
+    }
+
+    [Fact]
+    public async Task TheLastRequestCannotBeSpentTwice()
+    {
+        await using (var db = fixture.CreateContext())
+        {
+            await new ApiUserDirectory(db, TimeProvider.System).EnsureAsync(_email, null, null, defaultLimit: 5);
+        }
+
+        var attempts = await Task.WhenAll(Enumerable.Range(0, 20).Select(async _ =>
+        {
+            await using var db = fixture.CreateContext();
+            return await new ApiUserDirectory(db, TimeProvider.System).TryConsumeAsync(_email);
+        }));
+
+        Assert.Equal(5, attempts.Count(a => a.Allowed));
+
+        await using var check = fixture.CreateContext();
+        Assert.Equal(5, (await check.ApiUsers.SingleAsync(u => u.Email == _email.ToLowerInvariant())).RequestsUsed);
+    }
+
+    [Fact]
+    public async Task AnUnknownAddressHasNoBudget()
+    {
+        await using var db = fixture.CreateContext();
+        var state = await new ApiUserDirectory(db, TimeProvider.System).TryConsumeAsync(_email);
+
+        Assert.False(state.Allowed);
+        Assert.Equal(0, state.Limit);
+    }
+}

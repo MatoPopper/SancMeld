@@ -57,6 +57,7 @@ public class SancMeldDbContext(DbContextOptions<SancMeldDbContext> options) : Db
     public DbSet<RelationRun> RelationRuns => Set<RelationRun>();
     public DbSet<PartyRelation> PartyRelations => Set<PartyRelation>();
     public DbSet<RelationDecision> RelationDecisions => Set<RelationDecision>();
+    public DbSet<ApiUser> ApiUsers => Set<ApiUser>();
 
     public DbSet<EmbeddingModel> EmbeddingModels => Set<EmbeddingModel>();
     public DbSet<DesignationNameEmbedding> NameEmbeddings => Set<DesignationNameEmbedding>();
@@ -554,6 +555,14 @@ public class SancMeldDbContext(DbContextOptions<SancMeldDbContext> options) : Db
             e.HasIndex(x => new { x.FromPartyId, x.ToPartyId, x.Kind, x.System }).IsUnique();
             e.HasIndex(x => x.ToPartyId);
             e.Property(x => x.EvidenceUrls).HasColumnType("jsonb");
+        });
+
+        b.Entity<ApiUser>(e =>
+        {
+            e.ToTable("api_user", t => t.HasCheckConstraint("api_user_budget_ck", "request_limit >= 0 AND requests_used >= 0"));
+            e.HasIndex(x => x.Email).IsUnique();
+            e.Property(x => x.Email).HasMaxLength(320);
+            e.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
         });
 
         b.Entity<RelationDecision>(e =>

@@ -669,6 +669,30 @@ public class TrainingSample
 /// can obtain a valid Google token, and none of them are administrators of this
 /// deployment until an existing one says so.
 /// </summary>
+public class ApiUser
+{
+    public Guid Id { get; set; }
+
+    /// <summary>Lower-cased; matched against the verified address in the token.</summary>
+    public required string Email { get; set; }
+    public string? DisplayName { get; set; }
+    public string? GoogleSubject { get; set; }
+
+    /// <summary>Requests this address may make in total. Raised by hand in the database.</summary>
+    public int RequestLimit { get; set; }
+
+    /// <summary>Requests made so far: checks, screenings and register lookups.</summary>
+    public int RequestsUsed { get; set; }
+
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset? LastSeenAt { get; set; }
+}
+
+/// <summary>
+/// An administrator: may manage the allow list. Since 2026-10-16 any verified Google
+/// address may screen, within an <see cref="ApiUser"/> budget; this table no longer
+/// gates screening.
+/// </summary>
 public class Admin
 {
     public Guid Id { get; set; }

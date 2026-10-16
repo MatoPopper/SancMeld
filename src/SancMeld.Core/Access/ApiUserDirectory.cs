@@ -1,0 +1,86 @@
+using Microsoft.EntityFrameworkCore;
+using SancMeld.Core.Data;
+
+namespace SancMeld.Core.Access;
+
+/// <summary>
+/// Everyone who signs in, with a request budget.
+///
+/// Anybody with a verified Google address may screen; what keeps that from being a free
+/// screening service for the internet is the budget. A new address gets
+/// <see cref="ApiUserDirectory.DefaultLimit"/> requests in total, not per day; raising it
+/// is a row update in the database, by whoever runs the instance — there is no screen
+/// for it on purpose, so nobody can raise their own.
+///
+/// Separate from the admin allow list: an administrator manages who administers, a user
+/// screens. Being one says nothing about the other.
+/// </summary>
+public sealed class ApiUserDirectory(SancMeldDbContext db, TimeProvider clock)
+{
+    /// <summary>Budget of an address seen for the first time, unless the host configures another.</summary>
+    public const int DefaultLimit = 50;
+
+    /// <summary>The user behind an address, created with <paramref name="defaultLimit"/> on first sight.</summary>
+    public async Task<ApiUser> EnsureAsync(string email, string? name, string? subject, int defaultLimit, CancellationToken ct = default)
+    {
+        var key = Normalise(email);
+        var user = await db.ApiUsers.FirstOrDefaultAsync(u => u.Email == key, ct).ConfigureAwait(false);
+        var now = clock.GetUtcNow();
+
+        if (user is null)
+        {
+            user = new ApiUser { Id = Guid.CreateVersion7(), Email = key, RequestLimit = defaultLimit, CreatedAt = now };
+            db.ApiUsers.Add(user);
+
+            try
+            {
+                await db.SaveChangesAsync(ct).ConfigureAwait(false);
+            }
+            catch (DbUpdateException)
+            {
+                // Two first requests at once; the other one created the row.
+                db.ChangeTracker.Clear();
+                user = await db.ApiUsers.FirstAsync(u => u.Email == key, ct).ConfigureAwait(false);
+            }
+        }
+
+        if (user.DisplayName != name || user.GoogleSubject != subject || user.LastSeenAt is null || now - user.LastSeenAt > TimeSpan.FromMinutes(1))
+        {
+            user.DisplayName = name ?? user.DisplayName;
+            user.GoogleSubject = subject ?? user.GoogleSubject;
+            user.LastSeenAt = now;
+            await db.SaveChangesAsync(ct).ConfigureAwait(false);
+        }
+
+        return user;
+    }
+
+    /// <summary>
+    /// Spends one request, atomically: one UPDATE that only succeeds while the budget
+    /// lasts, so two requests at the same moment cannot both spend the last one.
+    /// </summary>
+    public async Task<QuotaState> TryConsumeAsync(string email, CancellationToken ct = default)
+    {
+        var key = Normalise(email);
+        var spent = await db.ApiUsers
+            .Where(u => u.Email == key && u.RequestsUsed < u.RequestLimit)
+            .ExecuteUpdateAsync(s => s.SetProperty(u => u.RequestsUsed, u => u.RequestsUsed + 1), ct)
+            .ConfigureAwait(false);
+
+        var state = await db.ApiUsers.AsNoTracking()
+            .Where(u => u.Email == key)
+            .Select(u => new { u.RequestLimit, u.RequestsUsed })
+            .FirstOrDefaultAsync(ct)
+            .ConfigureAwait(false);
+
+        return new QuotaState(spent == 1, state?.RequestLimit ?? 0, state?.RequestsUsed ?? 0);
+    }
+
+    private static string Normalise(string email) => email.Trim().ToLowerInvariant();
+}
+
+/// <summary>Whether the request was allowed, and the budget after it.</summary>
+public sealed record QuotaState(bool Allowed, int Limit, int Used)
+{
+    public int Remaining => Math.Max(0, Limit - Used);
+}

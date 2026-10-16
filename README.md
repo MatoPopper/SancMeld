@@ -344,6 +344,23 @@ rule: `requestedBy` and `decidedBy` exist for an unauthenticated host, but where
 present it wins — a self-declared identity beside a proven one is just a way to file work
 under a colleague's name.
 
+**Who may screen, and how much.** Since 2026-10-16 the `admin` table only decides who
+manages the allow list. Screening — `POST /check`, `POST /screen`, `POST
+/registers/ares/lookup` — is open to anybody whose Google address is verified, within a
+budget kept in `api_user`: an address seen for the first time gets
+`SancMeld:Auth:DefaultRequestLimit` requests (50) in total, not per day, and every metered
+request spends one in a single conditional UPDATE, so two requests at once cannot both
+spend the last. An exhausted budget answers `429` with `SancMeld:Auth:QuotaContactEmail`
+as the address to write to, and `GET /auth/me` reports the limit and what is left. There
+is no screen for raising a budget, on purpose — nobody can raise their own:
+
+```sql
+UPDATE api_user SET request_limit = 1000 WHERE email = 'someone@example.com';
+```
+
+The migration that introduced the table gave everyone then on the allow list a budget of
+a million.
+
 > **Google requires an `https` origin**, with `http://localhost` the single exception. A
 > deployment on plain http can accept tokens, but no browser on it can produce one.
 

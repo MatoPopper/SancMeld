@@ -2,6 +2,8 @@ using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -44,6 +46,20 @@ public sealed class SancMeldAuthOptions
     [Range(0, 300)]
     public int ClockSkewSeconds { get; set; } = 30;
 
+    /// <summary>
+    /// Requests a newly seen address may make in total (checks, screenings, register
+    /// lookups). Raised per user in the api_user table, by hand.
+    /// </summary>
+    [Range(0, int.MaxValue)]
+    public int DefaultRequestLimit { get; set; } = ApiUserDirectory.DefaultLimit;
+
+    /// <summary>
+    /// Whom a user who has used up their budget should write to. Configuration, not code:
+    /// it is a person's address and this repository is public. Empty means the message
+    /// tells them to contact the operator of the instance.
+    /// </summary>
+    public string QuotaContactEmail { get; set; } = string.Empty;
+
     public bool IsEnabled => !string.IsNullOrWhiteSpace(GoogleClientId);
 }
 
@@ -62,8 +78,9 @@ public static class SancMeldPolicies
     public const string Admin = "SancMeld.Admin";
 
     /// <summary>
-    /// May write: screen a name, record an adjudication. Same allow list as
-    /// <see cref="Admin"/> for now.
+    /// May write: screen a name, record an adjudication. Since 2026-10-16 any signed-in
+    /// caller with a verified address; what limits them is the request budget in
+    /// api_user, enforced per endpoint by <see cref="RequestBudgetFilter"/>.
     ///
     /// Reads are deliberately not covered. The aggregate is a published sanctions list;
     /// what this protects is the rows a caller can create in this database and the
@@ -103,6 +120,8 @@ public static class SancMeldAuthExtensions
         ArgumentNullException.ThrowIfNull(services);
 
         services.AddScoped<AdminDirectory>();
+        services.AddScoped<ApiUserDirectory>();
+        services.AddScoped<IAuthorizationHandler, VerifiedAddressHandler>();
 
         // Scoped, not singleton: it queries the database on every authorisation check and
         // needs the request's DbContext. ASP.NET resolves handlers from request services.
@@ -119,7 +138,7 @@ public static class SancMeldAuthExtensions
             options.AddPolicy(SancMeldPolicies.Write, policy =>
             {
                 policy.RequireAuthenticatedUser();
-                policy.AddRequirements(new AllowListedRequirement());
+                policy.AddRequirements(new VerifiedAddressRequirement());
             });
         });
 
@@ -234,8 +253,88 @@ public static class SancMeldClaims
         user?.FindFirstValue(Name);
 }
 
-/// <summary>Being on the allow list. Shared by both policies.</summary>
+/// <summary>Being on the allow list. The admin policy.</summary>
 internal sealed class AllowListedRequirement : IAuthorizationRequirement;
+
+/// <summary>A signed-in caller whose provider states the address is verified. The write policy.</summary>
+internal sealed class VerifiedAddressRequirement : IAuthorizationRequirement;
+
+/// <summary>
+/// Lets any verified address write, and makes sure it has a row — and with it a budget —
+/// in api_user. An unverified address could be somebody else's, and a budget kept under
+/// it could be spent by them.
+/// </summary>
+internal sealed class VerifiedAddressHandler(
+    ApiUserDirectory users,
+    IOptions<SancMeldAuthOptions> options,
+    ILogger<VerifiedAddressHandler> logger) : AuthorizationHandler<VerifiedAddressRequirement>
+{
+    protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, VerifiedAddressRequirement requirement)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        var email = SancMeldClaims.EmailOf(context.User);
+        if (string.IsNullOrEmpty(email))
+        {
+            return;
+        }
+
+        if (!SancMeldClaims.EmailIsVerified(context.User))
+        {
+            logger.LogWarning("Rejected {Email}: the provider does not state the address is verified.", email);
+            return;
+        }
+
+        await users.EnsureAsync(email, SancMeldClaims.NameOf(context.User), SancMeldClaims.SubjectOf(context.User),
+            options.Value.DefaultRequestLimit).ConfigureAwait(false);
+        context.Succeed(requirement);
+    }
+}
+
+/// <summary>
+/// Spends one request of the caller's budget before the endpoint runs, and answers 429
+/// with who to ask once it is gone. On a host without sign-in there are no users and no
+/// budgets, and the filter lets everything through.
+/// </summary>
+public sealed class RequestBudgetFilter : IEndpointFilter
+{
+    public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(next);
+
+        var http = context.HttpContext;
+        var email = SancMeldClaims.EmailOf(http.User);
+
+        if (http.RequestServices.GetService<SancMeldAuthMarker>() is null || string.IsNullOrEmpty(email))
+        {
+            return await next(context).ConfigureAwait(false);
+        }
+
+        var users = http.RequestServices.GetRequiredService<ApiUserDirectory>();
+        var options = http.RequestServices.GetRequiredService<IOptions<SancMeldAuthOptions>>().Value;
+        var state = await users.TryConsumeAsync(email, http.RequestAborted).ConfigureAwait(false);
+
+        http.Response.Headers["X-Request-Limit"] = state.Limit.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        http.Response.Headers["X-Requests-Remaining"] = state.Remaining.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+        if (!state.Allowed)
+        {
+            var contact = string.IsNullOrWhiteSpace(options.QuotaContactEmail) ? null : options.QuotaContactEmail;
+            return Results.Json(new QuotaExceeded(
+                "request_limit_reached",
+                contact is null
+                    ? $"You have used all {state.Limit} requests of your account. Ask the operator of this instance to raise the limit."
+                    : $"You have used all {state.Limit} requests of your account. Write to {contact} to ask for more.",
+                state.Limit, state.Used, contact), statusCode: StatusCodes.Status429TooManyRequests);
+        }
+
+        return await next(context).ConfigureAwait(false);
+    }
+}
+
+/// <summary>The body of a 429: what happened, the budget, and whom to ask.</summary>
+public sealed record QuotaExceeded(string Error, string Message, int Limit, int Used, string? Contact);
 
 /// <summary>
 /// Resolves the requirement against the admin table on every request.

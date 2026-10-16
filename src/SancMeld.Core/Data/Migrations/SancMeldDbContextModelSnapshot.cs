@@ -230,6 +230,58 @@ namespace SancMeld.Core.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("SancMeld.Core.Data.ApiUser", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<string>("DisplayName")
+                        .HasColumnType("text")
+                        .HasColumnName("display_name");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)")
+                        .HasColumnName("email");
+
+                    b.Property<string>("GoogleSubject")
+                        .HasColumnType("text")
+                        .HasColumnName("google_subject");
+
+                    b.Property<DateTimeOffset?>("LastSeenAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_seen_at");
+
+                    b.Property<int>("RequestLimit")
+                        .HasColumnType("integer")
+                        .HasColumnName("request_limit");
+
+                    b.Property<int>("RequestsUsed")
+                        .HasColumnType("integer")
+                        .HasColumnName("requests_used");
+
+                    b.HasKey("Id")
+                        .HasName("pk_api_user");
+
+                    b.HasIndex("Email")
+                        .IsUnique()
+                        .HasDatabaseName("ix_api_user_email");
+
+                    b.ToTable("api_user", null, t =>
+                        {
+                            t.HasCheckConstraint("api_user_budget_ck", "request_limit >= 0 AND requests_used >= 0");
+                        });
+                });
+
             modelBuilder.Entity("SancMeld.Core.Data.CanonicalSubject", b =>
                 {
                     b.Property<Guid>("Id")
