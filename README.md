@@ -61,6 +61,28 @@ designations that are the UK's own and for the UN references its transpositions 
 Most EU member states publish no separate national list and rely on EU/UN designations.
 That is recorded explicitly per jurisdiction rather than left as an unexplained gap.
 
+### The statement of reasons, searched
+
+The EU listed the three Schneiders on 2026-07-23 and not Svetofor, Torgservice or MERE,
+the chain their group runs across Europe; its statement of reasons says they are
+"co-founder and co-owner of the Svetofor Group, which runs over 2 200 discount stores …
+under brands such as Svetofor, Mere, and MyPrice". A check of the company's name had to
+reach that sentence or reach nothing, and until 2026-10-16 it reached nothing: the EU
+export carries the statement under each `nameAlias` as a `remark`, and the importer had
+been dropping it. It is now the listing's `reason` (1 691 EU subjects carry one; before
+2026 mostly a line like "Reportedly defunct", from 2026 the full justification), beside
+the UK's `UKStatementofReasons` and France's *motifs*, which were already kept.
+
+Every current listing's free text — reason, function, title, remarks — is indexed as
+words (PostgreSQL full-text search under the `simple` configuration, so a company name
+reads the same in English, French and Cyrillic text, and nothing is stemmed). A check
+whose name occurs in a listing's text gets that listing as a **mention** beside the
+bands, with the passage and the field it came from; `GET /designations/mentions?q=` is
+the same search on its own. Every word of the query must occur, so "Hung Trade" does not
+return every listing that mentions trade. A mention is not a hit: the company is on no
+list, and whether the listed person owns or controls it is what the statement says and
+the list does not decide.
+
 ### Related parties, from Wikidata
 
 A sanction reaches the companies a listed person owns or controls, and no list names
@@ -162,6 +184,7 @@ obvious lines of Hangfire in `SancMeld.Server`; the job itself is the same call 
 |---|---|
 | `GET /designations` · `/designations/{id}` | every current listing, cursor-paged |
 | `GET /designations/search?q=` | trigram search over every recorded spelling |
+| `GET /designations/mentions?q=` | listings whose statement of reasons mentions the words |
 | `GET /designations/{id}/related` | what open registers say the subject owns, founded or runs |
 | `POST /check` | a name plus whatever is known, answered as a decision — **writes** |
 | `POST /screen` | the same evidence as scores and feature vectors — **writes** |

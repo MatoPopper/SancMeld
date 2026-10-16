@@ -104,6 +104,7 @@ internal static partial class EuFsfXmlParser
             Function = FirstAliasAttribute(e, "function"),
             Title = FirstAliasAttribute(e, "title"),
 
+            Reason = JoinAliasRemarks(e),
             Remarks = JoinRemarks(e),
 
             Names = MapNames(e),
@@ -145,12 +146,31 @@ internal static partial class EuFsfXmlParser
             .FirstOrDefault(v => v is not null);
 
     /// <summary>
-    /// Everything the publisher attached as free text: the remark elements plus
-    /// designationDetails, which holds UN designation dates on 375 subjects.
-    ///
-    /// Neither is the reason for listing. The export simply does not carry one — the
-    /// narrative justification exists only in the Official Journal, which is why every
-    /// record carries the act's URL in LegalBasis.
+    /// The remark the publisher hangs on the nameAlias elements — the same text repeated
+    /// under every spelling — which is where the statement of reasons has lived since
+    /// 2026. On the list of 2026-10-16, 1 691 subjects carry one: before 2026 mostly a
+    /// line like "Reportedly defunct", from 2026 the full justification ("co-founder and
+    /// co-owner of the Svetofor Group, which runs over 2 200 discount stores … under
+    /// brands such as Svetofor, Mere, and MyPrice"). It is served as the reason because
+    /// that is what it is on the listings that matter now, and the company names in it
+    /// are what a screening of the company can reach.
+    /// </summary>
+    private static string? JoinAliasRemarks(XElement e)
+    {
+        var remarks = e.Elements(Ns + "nameAlias")
+            .Elements(Ns + "remark")
+            .Select(r => r.Value.Trim())
+            .Where(v => v.Length > 0)
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+
+        return remarks.Length == 0 ? null : string.Join("\n", remarks);
+    }
+
+    /// <summary>
+    /// Everything else the publisher attached as free text: the subject-level remark
+    /// elements plus designationDetails, which holds UN designation dates on 375 subjects.
+    /// Other information, not the reason; that is the alias remark above.
     /// </summary>
     private static string? JoinRemarks(XElement e)
     {

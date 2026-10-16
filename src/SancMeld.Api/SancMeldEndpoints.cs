@@ -82,6 +82,25 @@ internal static class SancMeldEndpoints
                 : TypedResults.NotFound())
         .WithName("GetDesignation");
 
+        group.MapGet("/mentions", async Task<Results<Ok<MentionPage>, BadRequest<string>>> (
+            DesignationQueryService queries, string? q, int? limit, CancellationToken ct) =>
+        {
+            if (string.IsNullOrWhiteSpace(q))
+            {
+                return TypedResults.BadRequest("Supply q.");
+            }
+
+            return TypedResults.Ok(await queries.MentionsAsync(q, limit ?? 10, ct));
+        })
+        .WithName("SearchMentions")
+        .WithSummary("Listings whose statement of reasons mentions the words — the owners of a company no list names.")
+        .WithDescription(
+            "Word search over the free text of every current listing (reason, function, title, " +
+            "remarks); every word of the query must occur, and quoted phrases are kept together. " +
+            "Not a name match and not scored as one: a company found here is on no list, and " +
+            "whether the listed person owns or controls it is what the statement says and the " +
+            "list does not decide.");
+
         group.MapGet("/{id:guid}/related", async (RelatedPartyQueryService related, Guid id, CancellationToken ct) =>
             TypedResults.Ok(await related.ForDesignationAsync(id, ct)))
         .WithName("GetDesignationRelatedParties")

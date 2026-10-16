@@ -36,6 +36,14 @@ public sealed record DesignationView
     /// instead — sometimes the only one. Show both this and Function.
     /// </summary>
     public string? Title { get; init; }
+
+    /// <summary>
+    /// The publisher's statement of reasons, where the export carries it: the UK and
+    /// France on most listings, the EU on those of 2026 (older EU remarks under this
+    /// field are a line like "Reportedly defunct"). Named companies live here and
+    /// nowhere else on the list.
+    /// </summary>
+    public string? Reason { get; init; }
     public string? Remarks { get; init; }
 
     /// <summary>When this revision became current. The listing itself may be far older.</summary>
@@ -115,3 +123,12 @@ public sealed record Page<T>(IReadOnlyList<T> Items, Guid? NextCursor)
 
 /// <summary>One search result: the listing, plus how well and on which spelling it matched.</summary>
 public sealed record SearchHit(DesignationView Designation, string MatchedName, double NameScore);
+
+/// <summary>
+/// A listing whose free text mentions the query: the person listed <em>for</em> a
+/// company, found by the company's name. Not a name match and never scored as one.
+/// </summary>
+public sealed record MentionHit(DesignationView Designation, string Field, string Snippet, double Rank);
+
+/// <summary>The mentions shown, and how many there were before the cap.</summary>
+public sealed record MentionPage(IReadOnlyList<MentionHit> Hits, int TotalCount);

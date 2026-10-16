@@ -65,6 +65,16 @@ public sealed class ComplianceCheckService(
         var related = await relatedParties.SearchAsync(query.Name, RelatedPartyCap, ct).ConfigureAwait(false);
         var relatedViews = related.Select(ToCheckRelatedParty).ToList();
 
+        // And the listings that name the company in their reasons: a subject already
+        // among the hits is not repeated here, the hit says more.
+        var shown = screened.Hits.Select(h => h.Designation.Id).ToHashSet();
+        var mentioned = await queries.MentionsAsync(query.Name, MentionCap, ct).ConfigureAwait(false);
+        var mentions = mentioned.Hits
+            .Where(m => !shown.Contains(m.Designation.Id))
+            .Select(ToCheckMention)
+            .ToList();
+        var mentionsTotal = mentioned.TotalCount - (mentioned.Hits.Count - mentions.Count);
+
         return new CheckResult
         {
             CheckId = screened.RequestId,
@@ -72,15 +82,47 @@ public sealed class ComplianceCheckService(
             Reference = query.Reference,
             CheckedAt = clock.GetUtcNow(),
             Outcome = outcome,
-            Summary = Summarise(outcome, groups, birthYear, query, relatedViews.Count),
+            Summary = Summarise(outcome, groups, birthYear, query, relatedViews.Count, mentionsTotal),
             Groups = groups,
             Inputs = new CheckInputs(
                 query.Name, birthYear, query.Country,
                 DocumentSupplied: query.DocumentNumber is { Length: > 0 },
                 query.SubjectType),
             RelatedParties = relatedViews,
+            Mentions = mentions,
+            MentionsTotal = Math.Max(mentionsTotal, mentions.Count),
         };
     }
+
+    /// <summary>
+    /// Mentions shown per check. The real count is reported beside them; a word that
+    /// occurs in hundreds of justifications is a word, not a finding.
+    /// </summary>
+    private const int MentionCap = 10;
+
+    private static CheckMention ToCheckMention(MentionHit m) => new()
+    {
+        DesignationId = m.Designation.Id,
+        SubjectName = m.Designation.Names.FirstOrDefault()?.Value ?? m.Designation.SourceRecordKey,
+        SubjectType = m.Designation.SubjectType,
+        Source = m.Designation.Source,
+        LegalEffect = m.Designation.LegalEffect,
+        ListingStatus = m.Designation.Status,
+        ListedAt = m.Designation.ListedAt,
+        Field = m.Field,
+        Snippet = m.Snippet,
+        Explanation = $"The {m.Designation.Source} listing of {m.Designation.Names.FirstOrDefault()?.Value ?? m.Designation.SourceRecordKey} "
+            + $"mentions the name in its {FieldName(m.Field)}. The company itself is on no list; "
+            + "the person listed for it may own or control it, which the statement of reasons says and the list does not decide.",
+    };
+
+    private static string FieldName(string field) => field switch
+    {
+        "reason" => "statement of reasons",
+        "function" => "stated function",
+        "title" => "stated title",
+        _ => "publisher's remarks",
+    };
 
     private static CheckRelatedParty ToCheckRelatedParty(RelatedPartyHit hit) => new()
     {
@@ -474,13 +516,20 @@ public sealed class ComplianceCheckService(
     };
 
     private static string Summarise(
-        CheckOutcome outcome, List<CheckGroup> groups, short? birthYear, CheckQuery query, int relatedParties)
+        CheckOutcome outcome, List<CheckGroup> groups, short? birthYear, CheckQuery query, int relatedParties, int mentions)
     {
         var related = relatedParties switch
         {
             0 => string.Empty,
             1 => " One party on an open register is tied to a listed subject — see related parties.",
             _ => $" {relatedParties} parties on an open register are tied to listed subjects — see related parties.",
+        };
+
+        related += mentions switch
+        {
+            0 => string.Empty,
+            1 => " One listing mentions this name in its statement of reasons — see mentions.",
+            _ => $" {mentions} listings mention this name in their statements of reasons — see mentions.",
         };
 
         if (outcome == CheckOutcome.NoMatch)

@@ -45,7 +45,7 @@ public sealed class RelatedPartyStore(SancMeldDbContext db, TimeProvider clock, 
                 .OrderBy(i => i.Id)
                 .FirstOrDefault()
             where identity == null
-                  || (identity.Status == LinkStatus.Candidate
+                  || (identity.Status != LinkStatus.Rejected
                       && (identity.DesignationId != d.Id || (identity.ExternalId == null && identity.ResolvedAt < retryBefore)))
             orderby d.Id
             select new
@@ -53,6 +53,11 @@ public sealed class RelatedPartyStore(SancMeldDbContext db, TimeProvider clock, 
                 d.Id,
                 d.SourceId,
                 d.SourceRecordKey,
+                IdentityId = identity == null ? (long?)null : identity.Id,
+                IdentityHash = identity == null ? null : identity.MatchInputHash,
+                IdentityStatus = identity == null ? (LinkStatus?)null : identity.Status,
+                IdentityExternalId = identity == null ? null : identity.ExternalId,
+                IdentityResolvedAt = identity == null ? (DateTimeOffset?)null : identity.ResolvedAt,
                 Births = d.Births
                     .Where(b => b.Precision == DatePrecision.Day && b.Year != null && b.Month != null && b.Day != null)
                     .Select(b => new { b.Year, b.Month, b.Day })
@@ -62,16 +67,56 @@ public sealed class RelatedPartyStore(SancMeldDbContext db, TimeProvider clock, 
 
         // Two collections per person (dates, names): split, or EF joins them into one
         // row set of dates × names and warns about it.
-        var rows = await query.Take(limit).AsSplitQuery().ToListAsync(ct).ConfigureAwait(false);
+        var rows = await query.AsSplitQuery().ToListAsync(ct).ConfigureAwait(false);
 
-        return rows
-            .Select(r => new PendingPerson(
+        var pending = new List<PendingPerson>();
+        var unchanged = new List<(long IdentityId, Guid DesignationId)>();
+
+        foreach (var r in rows)
+        {
+            var person = new PendingPerson(
                 r.Id,
                 r.SourceId,
                 r.SourceRecordKey,
                 [.. r.Births.Select(b => new DateOnly(b.Year!.Value, b.Month!.Value, b.Day!.Value)).Distinct()],
-                r.Names))
-            .ToList();
+                r.Names);
+
+            // A new revision with the same spellings and dates is the same question, and
+            // the register gave its answer already. A publisher re-exporting its whole
+            // list with one field changed must not cost a day of queries.
+            var sameInputs = r.IdentityId is not null && r.IdentityHash == person.InputHash;
+            var missDue = r.IdentityExternalId is null && r.IdentityResolvedAt < retryBefore;
+
+            if (sameInputs && !missDue)
+            {
+                unchanged.Add((r.IdentityId!.Value, r.Id));
+                continue;
+            }
+
+            if (r.IdentityStatus == LinkStatus.Confirmed)
+            {
+                // The analyst's verdict stands whatever the publisher re-spelled.
+                unchanged.Add((r.IdentityId!.Value, r.Id));
+                continue;
+            }
+
+            pending.Add(person);
+
+            if (pending.Count >= limit)
+            {
+                break;
+            }
+        }
+
+        foreach (var (identityId, designationId) in unchanged)
+        {
+            await db.ExternalIdentities
+                .Where(i => i.Id == identityId)
+                .ExecuteUpdateAsync(s => s.SetProperty(i => i.DesignationId, designationId), ct)
+                .ConfigureAwait(false);
+        }
+
+        return pending;
     }
 
     /// <summary>
@@ -121,6 +166,7 @@ public sealed class RelatedPartyStore(SancMeldDbContext db, TimeProvider clock, 
         identity.NameScore = match is null ? null : (decimal)Math.Round(match.NameScore, 5);
         identity.BirthDateMatched = match is not null;
         identity.Note = match?.Note ?? note;
+        identity.MatchInputHash = person.InputHash;
         identity.ResolvedAt = clock.GetUtcNow();
         identity.RunId = runId;
 
@@ -309,7 +355,24 @@ public sealed record PendingPerson(
     Guid SourceId,
     string SourceRecordKey,
     IReadOnlyList<DateOnly> BirthDates,
-    IReadOnlyList<string> Names);
+    IReadOnlyList<string> Names)
+{
+    /// <summary>What a lookup compares, hashed: the normalised spellings and the dates, in a fixed order.</summary>
+    public string InputHash
+    {
+        get
+        {
+            var parts = Names.Select(n => NameNormalizer.Normalize(n).Trim())
+                .Where(n => n.Length > 0)
+                .Distinct(StringComparer.Ordinal)
+                .Order(StringComparer.Ordinal)
+                .Concat(BirthDates.Order().Select(d => d.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)));
+
+            var bytes = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(string.Join("\n", parts)));
+            return Convert.ToHexString(bytes).ToLowerInvariant();
+        }
+    }
+}
 
 /// <summary>Which external record a listed person was decided to be, and why.</summary>
 public sealed record IdentityMatch(

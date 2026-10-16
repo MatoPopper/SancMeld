@@ -104,6 +104,37 @@ public sealed record CheckResult
     /// <see cref="Outcome"/>.
     /// </summary>
     public IReadOnlyList<CheckRelatedParty> RelatedParties { get; init; } = [];
+
+    /// <summary>
+    /// Listings whose statement of reasons mentions the name: the owners of a company
+    /// the lists never name. Beside the groups, like the related parties, and for the
+    /// same reason — a sentence in a justification is not a listing of the company.
+    /// Capped; <see cref="MentionsTotal"/> is the real count.
+    /// </summary>
+    public IReadOnlyList<CheckMention> Mentions { get; init; } = [];
+
+    public int MentionsTotal { get; init; }
+}
+
+/// <summary>One listing that mentions the name in its free text, with the sentence it does it in.</summary>
+public sealed record CheckMention
+{
+    public required Guid DesignationId { get; init; }
+    public required string SubjectName { get; init; }
+    public required SubjectType SubjectType { get; init; }
+    public required string Source { get; init; }
+    public required LegalEffect LegalEffect { get; init; }
+    public required DesignationStatus ListingStatus { get; init; }
+    public DateOnly? ListedAt { get; init; }
+
+    /// <summary>Which free-text field: reason, function, title or remarks.</summary>
+    public required string Field { get; init; }
+
+    /// <summary>The passage around the words, trimmed.</summary>
+    public required string Snippet { get; init; }
+
+    /// <summary>One sentence, safe to show.</summary>
+    public required string Explanation { get; init; }
 }
 
 /// <summary>A related party whose name resembles the query, with the listed subjects it is tied to.</summary>

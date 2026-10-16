@@ -256,6 +256,37 @@ public sealed class WikidataSyncTests(DatabaseFixture fixture) : IAsyncLifetime
     }
 
     [Fact]
+    public async Task ARevisionThatKeptTheNamesAndDatesIsNotLookedUpAgain()
+    {
+        await ImportAsync(Person("a", Named("Ramzan Akhmadovitch KADYROV"), new DateOnly(1976, 10, 5)));
+
+        var sparql = new FakeSparqlClient()
+            .BornOn(new DateOnly(1976, 10, 5), (_person, Named("Ramzan Kadyrov"), "en"));
+
+        await SyncAsync(sparql);
+        var queriesAfterFirst = sparql.Queries;
+
+        // The publisher re-exports with a remark changed: a new revision, same person.
+        await ImportAsync(Person("a", Named("Ramzan Akhmadovitch KADYROV"), new DateOnly(1976, 10, 5)) with { Reason = "Head of the Chechen Republic." });
+
+        var second = await SyncAsync(sparql);
+
+        Assert.Equal(0, second.PersonsAttempted);
+        Assert.Equal(queriesAfterFirst, sparql.Queries);
+
+        await using var db = fixture.CreateContext();
+        var designation = await db.Designations.SingleAsync(d => d.SourceId == _sourceId && d.ValidTo == null);
+        var identity = await db.ExternalIdentities.SingleAsync(i => i.SourceId == _sourceId);
+        Assert.Equal(designation.Id, identity.DesignationId);
+        Assert.Equal(_person, identity.ExternalId);
+
+        // A changed spelling is a new question.
+        await ImportAsync(Person("a", Named("Ramzan KADYROV"), new DateOnly(1976, 10, 5)));
+        var third = await SyncAsync(sparql);
+        Assert.Equal(1, third.PersonsAttempted);
+    }
+
+    [Fact]
     public async Task ADetailViewListsWhatTheSubjectIsRelatedTo()
     {
         await ImportAsync(Person("a", Named("Ramzan Akhmadovitch KADYROV"), new DateOnly(1976, 10, 5)));
@@ -350,8 +381,11 @@ internal sealed class FakeSparqlClient : ISparqlClient
 
     public void ClearRelations() => _relations.Clear();
 
+    public int Queries { get; private set; }
+
     public Task<IReadOnlyList<SparqlRow>> QueryAsync(string sparql, CancellationToken ct = default)
     {
+        Queries++;
         IReadOnlyList<SparqlRow> rows;
 
         if (sparql.Contains("wdt:P569", StringComparison.Ordinal))

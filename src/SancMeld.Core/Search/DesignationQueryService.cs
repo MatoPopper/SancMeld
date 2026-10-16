@@ -318,6 +318,105 @@ public sealed class DesignationQueryService(SancMeldDbContext db, IOptions<SancM
                 n.NameOriginal,
                 EF.Functions.TrigramsSimilarity(n.NameNormalized!, normalizedQuery)));
 
+    /// <summary>
+    /// Listings whose free text — reason, function, title, remarks — contains every word
+    /// of the query. The EU lists the Schneiders, not Svetofor or MERE; it says in their
+    /// statement of reasons that they own the group that runs both, and a screening of
+    /// the company's name has to reach that sentence or it reaches nothing.
+    ///
+    /// Word search, not trigram: a company name is whole words, a sentence is many, and
+    /// a trigram over a paragraph would match everything a little. Every word of the
+    /// query must occur (websearch semantics: AND, with quoted phrases), so "Hung Trade"
+    /// does not return every listing that mentions trade.
+    /// </summary>
+    public async Task<MentionPage> MentionsAsync(string query, int limit = 10, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return new MentionPage([], 0);
+        }
+
+        var take = Math.Clamp(limit, 1, MaxPageSize);
+
+        // The tsquery is built inside the expression, twice: pulled into a variable, EF
+        // evaluates it on the client and refuses the query.
+        var matching = CurrentRevisions()
+            .Where(d => d.Status != DesignationStatus.Delisted)
+            .Where(d => d.SearchVector!.Matches(EF.Functions.WebSearchToTsQuery("simple", query)));
+
+        var total = await matching.CountAsync(ct).ConfigureAwait(false);
+        if (total == 0)
+        {
+            return new MentionPage([], 0);
+        }
+
+        var ranked = await matching
+            .Select(d => new { d.Id, Rank = d.SearchVector!.Rank(EF.Functions.WebSearchToTsQuery("simple", query)) })
+            .OrderByDescending(x => x.Rank)
+            .ThenBy(x => x.Id)
+            .Take(take)
+            .ToListAsync(ct)
+            .ConfigureAwait(false);
+
+        var ids = ranked.Select(r => r.Id).ToList();
+        var views = await Hydrate(CurrentRevisions().Where(d => ids.Contains(d.Id)))
+            .ToListAsync(ct)
+            .ConfigureAwait(false);
+        var byId = views.ToDictionary(v => v.Id);
+
+        var words = Words(query);
+        var hits = new List<MentionHit>(ranked.Count);
+
+        foreach (var r in ranked)
+        {
+            if (!byId.TryGetValue(r.Id, out var view))
+            {
+                continue;
+            }
+
+            var (field, snippet) = Snippet(view, words);
+            hits.Add(new MentionHit(view, field, snippet, (double)r.Rank));
+        }
+
+        return new MentionPage(hits, total);
+    }
+
+    private static string[] Words(string query) =>
+        NameNormalizer.Normalize(query).Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+    /// <summary>
+    /// The field and the sentence the query words occur in, for the reader. The database
+    /// decided the match; this only shows where. Falls back to the start of the reason.
+    /// </summary>
+    private static (string Field, string Snippet) Snippet(DesignationView view, string[] words)
+    {
+        foreach (var (field, text) in new[] { ("reason", view.Reason), ("function", view.Function), ("title", view.Title), ("remarks", view.Remarks) })
+        {
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                continue;
+            }
+
+            var normalized = NameNormalizer.Normalize(text);
+            var at = words.Select(w => normalized.IndexOf(w, StringComparison.Ordinal)).Where(i => i >= 0).DefaultIfEmpty(-1).Min();
+            if (at < 0)
+            {
+                continue;
+            }
+
+            // The normal form keeps one character per original character except where
+            // unaccent expands one into several, so the offset is close enough to cut by.
+            var start = Math.Max(0, Math.Min(at, text.Length) - 160);
+            var end = Math.Min(text.Length, Math.Min(at, text.Length) + 240);
+            var snippet = text[start..end].Trim();
+
+            return (field, (start > 0 ? "…" : string.Empty) + snippet + (end < text.Length ? "…" : string.Empty));
+        }
+
+        var fallback = view.Reason ?? view.Remarks ?? view.Function ?? view.Title ?? string.Empty;
+        return ("reason", fallback.Length > 400 ? fallback[..400] + "…" : fallback);
+    }
+
     private sealed record ScoredName(Guid DesignationId, string NameOriginal, double Score);
 
     internal IQueryable<Designation> CurrentRevisions() =>
@@ -340,6 +439,7 @@ public sealed class DesignationQueryService(SancMeldDbContext db, IOptions<SancM
             ListedAt = d.ListedAt,
             Function = d.Function,
             Title = d.Title,
+            Reason = d.Reason,
             Remarks = d.Remarks,
             ValidFrom = d.ValidFrom,
 

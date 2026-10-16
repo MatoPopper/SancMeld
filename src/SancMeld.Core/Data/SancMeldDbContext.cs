@@ -197,6 +197,17 @@ public class SancMeldDbContext(DbContextOptions<SancMeldDbContext> options) : Db
             e.Property(x => x.RawRecord).HasColumnType("jsonb");
             e.Property(x => x.ContentSha256).HasMaxLength(64).IsFixedLength();
 
+            // The free text, as words: 'simple' rather than 'english', because the text
+            // is English, French and Russian by turns and a company name must not be
+            // stemmed in one of them and not another.
+            e.HasGeneratedTsVectorColumn(
+                x => x.SearchVector!,
+                "simple",
+                x => new { x.Reason, x.Function, x.Title, x.Remarks })
+             .HasIndex(x => x.SearchVector)
+             .HasMethod("gin")
+             .HasDatabaseName("designation_search_ix");
+
             // At most one open revision per source record.
             e.HasIndex(x => new { x.SourceId, x.SourceRecordKey })
              .HasFilter("valid_to IS NULL")

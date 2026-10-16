@@ -332,13 +332,16 @@ public class EuFsfXmlParserTests : IAsyncLifetime
     [Fact]
     public void StatedRoleIsKeptBecauseItIsTheNearestThingToAReason()
     {
-        // The export carries no narrative reason for listing — that text exists only in
-        // the Official Journal. What it does carry is the role the publisher states, on
-        // 4 965 of 6 234 subjects, and dropping it threw away the only "why" available.
+        // The remark under the nameAlias elements is the publisher's text about the
+        // subject: a line like this one on older listings, the full statement of reasons
+        // on the listings of 2026. Repeated under every spelling, so it is taken once.
         var entity = Subject("983");
 
         Assert.Equal("Benevolence International Foundation", entity.Names[0].Value);
-        Assert.Null(entity.Reason);
+        // Two distinct remarks under its aliases, each once, in document order.
+        Assert.StartsWith("Reportedly defunct. No longer operates in Bosnia and Herzegovina.\n", entity.Reason, StringComparison.Ordinal);
+        Assert.Equal(2, entity.Reason!.Split('\n').Length);
+        Assert.DoesNotContain("Reportedly defunct", entity.Remarks ?? string.Empty, StringComparison.Ordinal);
 
         var person = Subject("54");
         Assert.NotNull(person.Function);

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+using NpgsqlTypes;
 using SancMeld.Core.Data;
 
 #nullable disable
@@ -323,6 +324,13 @@ namespace SancMeld.Core.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("remarks");
 
+                    b.Property<NpgsqlTsVector>("SearchVector")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("tsvector")
+                        .HasColumnName("search_vector")
+                        .HasAnnotation("Npgsql:TsVectorConfig", "simple")
+                        .HasAnnotation("Npgsql:TsVectorProperties", new[] { "Reason", "Function", "Title", "Remarks" });
+
                     b.Property<Guid>("SnapshotId")
                         .HasColumnType("uuid")
                         .HasColumnName("snapshot_id");
@@ -379,6 +387,11 @@ namespace SancMeld.Core.Data.Migrations
                         .HasDatabaseName("ix_designation_raw_record");
 
                     NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("RawRecord"), "gin");
+
+                    b.HasIndex("SearchVector")
+                        .HasDatabaseName("designation_search_ix");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("SearchVector"), "gin");
 
                     b.HasIndex("SnapshotId")
                         .HasDatabaseName("ix_designation_snapshot_id");
@@ -1082,6 +1095,10 @@ namespace SancMeld.Core.Data.Migrations
                     b.Property<string>("Label")
                         .HasColumnType("text")
                         .HasColumnName("label");
+
+                    b.Property<string>("MatchInputHash")
+                        .HasColumnType("text")
+                        .HasColumnName("match_input_hash");
 
                     b.Property<string>("MatchedLabel")
                         .HasColumnType("text")
