@@ -126,6 +126,8 @@ public sealed record DesignationRelationsView
 
 public sealed record DesignationRelationView
 {
+    public required long Id { get; init; }
+    public required long IdentityId { get; init; }
     public required RelatedPartyView Party { get; init; }
     public required RelationKind Kind { get; init; }
     public required LinkStatus Status { get; init; }

@@ -180,6 +180,43 @@ internal static class SancMeldEndpoints
     /// a model nobody can audit. It is an offline job producing a versioned artefact,
     /// which arrives here as a new row in match_algorithm.
     /// </summary>
+    /// <summary>
+    /// An analyst's verdict on a link the graph shows: a listed subject's tie to a party,
+    /// a tie between two parties, or the identity a register match rests on.
+    /// </summary>
+    public static IEndpointRouteBuilder MapRelationDecisions(this IEndpointRouteBuilder endpoints, bool requireSignIn)
+    {
+        endpoints.MapPost("/relations/decisions", async Task<Results<Ok<RelationDecisionResult>, BadRequest<string>, NotFound<string>>> (
+            RelationDecisionService decisions, RelationDecisionRequest request, ClaimsPrincipal user, CancellationToken ct) =>
+        {
+            // The token wins over the body, as for adjudications.
+            var decidedBy = SancMeldClaims.EmailOf(user) ?? request.DecidedBy;
+
+            try
+            {
+                return TypedResults.Ok(await decisions.DecideAsync(request with { DecidedBy = decidedBy }, ct));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return TypedResults.NotFound(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return TypedResults.BadRequest(ex.Message);
+            }
+        })
+        .RequireWrite(requireSignIn)
+        .WithTags("Designations")
+        .WithName("DecideRelation")
+        .WithSummary("Confirm, reject or reopen a link shown in the graph — writes.")
+        .WithDescription(
+            "Target is ListingRelation, PartyRelation or Identity, with the id the graph edge carries. " +
+            "Decision is Confirmed, Rejected, or Candidate to take a decision back. The latest decision " +
+            "is on the link; every decision is also appended to relation_decision with who and when.");
+
+        return endpoints;
+    }
+
     public static IEndpointRouteBuilder MapAdjudications(this IEndpointRouteBuilder endpoints, bool requireSignIn)
     {
         var group = endpoints.MapGroup("/adjudications").WithTags("Adjudications");

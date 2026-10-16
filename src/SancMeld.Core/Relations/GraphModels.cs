@@ -55,7 +55,44 @@ public sealed record GraphEdge
     public required string Evidence { get; init; }
     public IReadOnlyList<string> EvidenceUrls { get; init; } = [];
     public decimal? Share { get; init; }
+
+    /// <summary>
+    /// The stored link behind the edge, when an analyst can decide on it: a
+    /// <see cref="DecisionTarget"/> and its id. Null for edges that are a publisher's own
+    /// word (cross-references) or a search result (mentions, same name).
+    /// </summary>
+    public DecisionTarget? Target { get; init; }
+    public long? TargetId { get; init; }
+
+    /// <summary>For a listing-to-party edge, the identity it goes through: rejecting it says the register's person is someone else.</summary>
+    public long? IdentityId { get; init; }
 }
+
+/// <summary>What an analyst's decision is about.</summary>
+public enum DecisionTarget
+{
+    /// <summary>A listed subject's tie to a party (designation_relation).</summary>
+    ListingRelation,
+
+    /// <summary>A tie between two parties (party_relation).</summary>
+    PartyRelation,
+
+    /// <summary>The claim that a register's record is the listed subject (external_identity).</summary>
+    Identity,
+}
+
+public sealed record RelationDecisionRequest
+{
+    public required DecisionTarget Target { get; init; }
+    public required long Id { get; init; }
+
+    /// <summary>Confirmed, Rejected, or Candidate to take a decision back.</summary>
+    public required LinkStatus Decision { get; init; }
+    public string? Note { get; init; }
+    public string? DecidedBy { get; init; }
+}
+
+public sealed record RelationDecisionResult(DecisionTarget Target, long Id, LinkStatus Status, string DecidedBy, DateTimeOffset DecidedAt);
 
 /// <summary>Everything drawn around one subject: the subject itself, what it is tied to, and what ties it.</summary>
 public sealed record DesignationGraph

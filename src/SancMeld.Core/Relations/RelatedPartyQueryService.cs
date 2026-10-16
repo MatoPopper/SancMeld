@@ -292,6 +292,8 @@ public sealed class RelatedPartyQueryService(
             [
                 .. relations.Select(r => new DesignationRelationView
                 {
+                    Id = r.Id,
+                    IdentityId = r.IdentityId,
                     Party = ToView(r.Party!),
                     Kind = r.Kind,
                     Status = r.Status,

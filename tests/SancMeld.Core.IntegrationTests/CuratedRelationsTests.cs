@@ -129,5 +129,56 @@ public sealed class CuratedRelationsTests(DatabaseFixture fixture) : IAsyncLifet
         var operatorEdge = Assert.Single(graph.Edges, e => e.Kind == nameof(RelationKind.OperatorOf));
         Assert.Equal(GraphStatus.Review, operatorEdge.Status);
         Assert.Contains(graph.Nodes, n => n.Label == $"Operator {_tag} SK");
+        Assert.Equal(DecisionTarget.PartyRelation, operatorEdge.Target);
+        Assert.NotNull(operatorEdge.TargetId);
+
+        // An analyst confirms the operator link: the chain is confirmed end to end, and
+        // reloading the case file does not take the confirmation back.
+        var decisions = new RelationDecisionService(check, TimeProvider.System);
+        await decisions.DecideAsync(new RelationDecisionRequest
+        {
+            Target = DecisionTarget.PartyRelation,
+            Id = operatorEdge.TargetId!.Value,
+            Decision = LinkStatus.Confirmed,
+            DecidedBy = "analyst@example.org",
+            Note = "checked in ORSR",
+        });
+
+        await using (var reload = fixture.CreateContext())
+        {
+            await new CuratedRelationsImporter(reload, TimeProvider.System, NullLogger<CuratedRelationsImporter>.Instance)
+                .ImportAsync(new MemoryStream(Encoding.UTF8.GetBytes(file)), "test");
+        }
+
+        await using (var after = fixture.CreateContext())
+        {
+            var link = await after.PartyRelations.SingleAsync(r => r.Id == operatorEdge.TargetId);
+            Assert.Equal(LinkStatus.Confirmed, link.Status);
+            Assert.Equal("analyst@example.org", link.DecidedBy);
+            Assert.Equal(1, await after.RelationDecisions.CountAsync(d => d.Target == DecisionTarget.PartyRelation && d.TargetId == link.Id));
+
+            var q2 = new DesignationQueryService(after, options);
+            var s2 = new ScreeningService(after, q2, new RulesScoringStrategy(), TestServices.Semantic(fixture, options), options, TimeProvider.System);
+            var confirmed = await new ComplianceCheckService(s2, q2, TestServices.RelatedParties(after, q2), TimeProvider.System)
+                .CheckAsync(new CheckQuery { Name = $"Operator {_tag} SK" });
+            Assert.Equal(LinkStatus.Confirmed, confirmed.RelatedParties.Single(p => p.ExternalId == $"{_tag}-op").Relations.Single().Status);
+
+            // Rejecting the owner's tie to the group hides the chain from checks.
+            var ownerRelation = await after.DesignationRelations.SingleAsync(r => r.Party!.ExternalId == $"{_tag}-group");
+            await new RelationDecisionService(after, TimeProvider.System).DecideAsync(new RelationDecisionRequest
+            {
+                Target = DecisionTarget.ListingRelation,
+                Id = ownerRelation.Id,
+                Decision = LinkStatus.Rejected,
+                DecidedBy = "analyst@example.org",
+            });
+        }
+
+        await using var final = fixture.CreateContext();
+        var q3 = new DesignationQueryService(final, options);
+        var s3 = new ScreeningService(final, q3, new RulesScoringStrategy(), TestServices.Semantic(fixture, options), options, TimeProvider.System);
+        var rejected = await new ComplianceCheckService(s3, q3, TestServices.RelatedParties(final, q3), TimeProvider.System)
+            .CheckAsync(new CheckQuery { Name = $"Operator {_tag} SK" });
+        Assert.DoesNotContain(rejected.RelatedParties, p => p.ExternalId == $"{_tag}-op" && p.Relations.Count > 0);
     }
 }

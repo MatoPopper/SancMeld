@@ -875,6 +875,10 @@ namespace SancMeld.Core.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("decided_by");
 
+                    b.Property<string>("DecisionNote")
+                        .HasColumnType("text")
+                        .HasColumnName("decision_note");
+
                     b.Property<DateOnly?>("EndDate")
                         .HasColumnType("date")
                         .HasColumnName("end_date");
@@ -1083,6 +1087,10 @@ namespace SancMeld.Core.Data.Migrations
                     b.Property<string>("DecidedBy")
                         .HasColumnType("text")
                         .HasColumnName("decided_by");
+
+                    b.Property<string>("DecisionNote")
+                        .HasColumnType("text")
+                        .HasColumnName("decision_note");
 
                     b.Property<Guid>("DesignationId")
                         .HasColumnType("uuid")
@@ -1499,6 +1507,18 @@ namespace SancMeld.Core.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("created_by");
 
+                    b.Property<DateTimeOffset?>("DecidedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("decided_at");
+
+                    b.Property<string>("DecidedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("decided_by");
+
+                    b.Property<string>("DecisionNote")
+                        .HasColumnType("text")
+                        .HasColumnName("decision_note");
+
                     b.Property<string>("EvidenceUrls")
                         .HasColumnType("jsonb")
                         .HasColumnName("evidence_urls");
@@ -1648,6 +1668,58 @@ namespace SancMeld.Core.Data.Migrations
                         .HasDatabaseName("ix_related_party_name_related_party_id");
 
                     b.ToTable("related_party_name", (string)null);
+                });
+
+            modelBuilder.Entity("SancMeld.Core.Data.RelationDecision", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTimeOffset>("DecidedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("decided_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<string>("DecidedBy")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("decided_by");
+
+                    b.Property<string>("Decision")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("decision");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("text")
+                        .HasColumnName("note");
+
+                    b.Property<string>("PreviousStatus")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("previous_status");
+
+                    b.Property<string>("Target")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("target");
+
+                    b.Property<long>("TargetId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("target_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_relation_decision");
+
+                    b.HasIndex("Target", "TargetId", "DecidedAt")
+                        .HasDatabaseName("ix_relation_decision_target_target_id_decided_at");
+
+                    b.ToTable("relation_decision", (string)null);
                 });
 
             modelBuilder.Entity("SancMeld.Core.Data.RelationRun", b =>

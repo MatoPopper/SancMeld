@@ -762,6 +762,7 @@ public class ExternalIdentity
     public LinkStatus Status { get; set; } = LinkStatus.Candidate;
     public string? DecidedBy { get; set; }
     public DateTimeOffset? DecidedAt { get; set; }
+    public string? DecisionNote { get; set; }
 
     public DateTimeOffset ResolvedAt { get; set; }
     public DateTimeOffset? RelationsFetchedAt { get; set; }
@@ -847,6 +848,7 @@ public class DesignationRelation
     public DateTimeOffset FirstSeenAt { get; set; }
     public DateTimeOffset LastSeenAt { get; set; }
     public Guid? RunId { get; set; }
+    public string? DecisionNote { get; set; }
 }
 
 /// <summary>
@@ -876,6 +878,27 @@ public class PartyRelation
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset LastSeenAt { get; set; }
     public bool IsCurrent { get; set; } = true;
+
+    public string? DecidedBy { get; set; }
+    public DateTimeOffset? DecidedAt { get; set; }
+    public string? DecisionNote { get; set; }
+}
+
+/// <summary>
+/// Every decision an analyst took on a link, in order — the columns on the link hold the
+/// latest one, this holds them all, so "who confirmed this and when, and was it ever
+/// rejected" has an answer after the fact.
+/// </summary>
+public class RelationDecision
+{
+    public long Id { get; set; }
+    public DecisionTarget Target { get; set; }
+    public long TargetId { get; set; }
+    public LinkStatus PreviousStatus { get; set; }
+    public LinkStatus Decision { get; set; }
+    public string? Note { get; set; }
+    public required string DecidedBy { get; set; }
+    public DateTimeOffset DecidedAt { get; set; }
 }
 
 /// <summary>One run of a register connector, for the audit trail and the status command.</summary>

@@ -56,6 +56,7 @@ public class SancMeldDbContext(DbContextOptions<SancMeldDbContext> options) : Db
     public DbSet<DesignationRelation> DesignationRelations => Set<DesignationRelation>();
     public DbSet<RelationRun> RelationRuns => Set<RelationRun>();
     public DbSet<PartyRelation> PartyRelations => Set<PartyRelation>();
+    public DbSet<RelationDecision> RelationDecisions => Set<RelationDecision>();
 
     public DbSet<EmbeddingModel> EmbeddingModels => Set<EmbeddingModel>();
     public DbSet<DesignationNameEmbedding> NameEmbeddings => Set<DesignationNameEmbedding>();
@@ -555,6 +556,13 @@ public class SancMeldDbContext(DbContextOptions<SancMeldDbContext> options) : Db
             e.Property(x => x.EvidenceUrls).HasColumnType("jsonb");
         });
 
+        b.Entity<RelationDecision>(e =>
+        {
+            e.ToTable("relation_decision");
+            e.HasIndex(x => new { x.Target, x.TargetId, x.DecidedAt });
+            e.Property(x => x.DecidedAt).HasDefaultValueSql("now()");
+        });
+
         b.Entity<RelationRun>(e =>
         {
             e.ToTable("relation_run");
@@ -582,6 +590,7 @@ public class SancMeldDbContext(DbContextOptions<SancMeldDbContext> options) : Db
         c.Properties<RelationKind>().HaveConversion<EnumAsSnakeCaseText<RelationKind>>();
         c.Properties<RelatedPartyKind>().HaveConversion<EnumAsSnakeCaseText<RelatedPartyKind>>();
         c.Properties<LinkStatus>().HaveConversion<EnumAsSnakeCaseText<LinkStatus>>();
+        c.Properties<DecisionTarget>().HaveConversion<EnumAsSnakeCaseText<DecisionTarget>>();
     }
 
     /// <summary>Shared configuration for the one-to-many detail tables hanging off a designation.</summary>

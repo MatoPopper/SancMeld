@@ -130,15 +130,24 @@ public sealed class CuratedRelationsImporter(SancMeldDbContext db, TimeProvider 
             }
 
             relation.Property = "curated";
-            relation.Status = l.Status;
+
+            // An analyst's decision outranks the file: reloading the case file must not
+            // undo a confirmation or a rejection made in the graph.
+            var decided = relation.Id != 0 && await db.RelationDecisions
+                .AnyAsync(d => d.Target == DecisionTarget.ListingRelation && d.TargetId == relation.Id, ct).ConfigureAwait(false);
+            if (!decided)
+            {
+                relation.Status = l.Status;
+                relation.DecidedBy = l.Status == LinkStatus.Candidate ? null : importedBy;
+                relation.DecidedAt = l.Status == LinkStatus.Candidate ? null : now;
+            }
+
             relation.EvidenceUrls = l.Evidence.Count == 0 ? null : JsonSerializer.Serialize(l.Evidence);
             relation.Share = l.Share;
             relation.StartDate = l.Start;
             relation.EndDate = l.End;
             relation.LastSeenAt = now;
             relation.IsCurrent = true;
-            relation.DecidedBy = l.Status == LinkStatus.Candidate ? null : importedBy;
-            relation.DecidedAt = l.Status == LinkStatus.Candidate ? null : now;
             listingLinks++;
         }
 
@@ -163,7 +172,13 @@ public sealed class CuratedRelationsImporter(SancMeldDbContext db, TimeProvider 
                 db.PartyRelations.Add(link);
             }
 
-            link.Status = k.Status;
+            var linkDecided = link.Id != 0 && await db.RelationDecisions
+                .AnyAsync(d => d.Target == DecisionTarget.PartyRelation && d.TargetId == link.Id, ct).ConfigureAwait(false);
+            if (!linkDecided)
+            {
+                link.Status = k.Status;
+            }
+
             link.Note = k.Note;
             link.EvidenceUrls = k.Evidence.Count == 0 ? null : JsonSerializer.Serialize(k.Evidence);
             link.LastSeenAt = now;

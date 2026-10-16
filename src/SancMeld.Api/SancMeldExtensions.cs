@@ -104,6 +104,7 @@ public static class SancMeldExtensions
         services.AddScoped<RelatedPartyQueryService>();
         services.AddScoped<DesignationGraphService>();
         services.AddScoped<CuratedRelationsImporter>();
+        services.AddScoped<RelationDecisionService>();
         services.AddScoped<ScreeningService>();
         services.AddScoped<ComplianceCheckService>();
         services.AddScoped<AdjudicationService>();
@@ -153,6 +154,7 @@ public static class SancMeldExtensions
         endpoints.MapDesignations();
         endpoints.MapScreening(signInConfigured);
         endpoints.MapAdjudications(signInConfigured);
+        endpoints.MapRelationDecisions(signInConfigured);
         endpoints.MapTrainingData();
 
         if (signInConfigured)

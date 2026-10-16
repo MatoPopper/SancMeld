@@ -176,7 +176,7 @@ public sealed class DesignationGraphService(
 
             b.Edge(b.Id(subject), b.PartyId(r.Party), r.Kind.ToString(), status,
                 RelationEvidence(r.Kind, r.Party, r.Share, r.StartDate, r.EndDate, r.EvidenceUrls.Count, r.IdentityStatus),
-                r.EvidenceUrls, r.Share);
+                r.EvidenceUrls, r.Share, DecisionTarget.ListingRelation, r.Id, r.IdentityId);
         }
 
         // Second hop: the other listed subjects the same parties are tied to — the
@@ -227,7 +227,7 @@ public sealed class DesignationGraphService(
                 RelationEvidence(r.Kind, party, r.Share, r.StartDate, r.EndDate,
                     r.EvidenceUrls is null ? 0 : System.Text.Json.JsonSerializer.Deserialize<List<string>>(r.EvidenceUrls)?.Count ?? 0,
                     r.Identity.Status),
-                share: r.Share);
+                share: r.Share, target: DecisionTarget.ListingRelation, targetId: r.Id, identityId: r.IdentityId);
         }
     }
 
@@ -284,7 +284,7 @@ public sealed class DesignationGraphService(
                     $"{source}: {from.Name} {Verb(e.Kind)} {to.Name}"
                     + (e.Note is { Length: > 0 } note ? $" — {note}" : string.Empty)
                     + (urls.Count == 0 ? "; no source cited." : $"; {urls.Count} source{(urls.Count == 1 ? string.Empty : "s")} cited."),
-                    urls);
+                    urls, target: DecisionTarget.PartyRelation, targetId: e.Id);
             }
         }
     }
@@ -630,7 +630,10 @@ public sealed class DesignationGraphService(
             };
         }
 
-        public void Edge(string from, string to, string kind, GraphStatus status, string evidence, IReadOnlyList<string>? urls = null, decimal? share = null)
+        public void Edge(
+            string from, string to, string kind, GraphStatus status, string evidence,
+            IReadOnlyList<string>? urls = null, decimal? share = null,
+            DecisionTarget? target = null, long? targetId = null, long? identityId = null)
         {
             if (!_seen.Add((from, to, kind)))
             {
@@ -646,6 +649,9 @@ public sealed class DesignationGraphService(
                 Evidence = evidence,
                 EvidenceUrls = urls ?? [],
                 Share = share,
+                Target = target,
+                TargetId = targetId,
+                IdentityId = identityId,
             });
         }
 
