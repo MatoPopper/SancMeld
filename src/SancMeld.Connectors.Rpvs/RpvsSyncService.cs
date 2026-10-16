@@ -249,14 +249,21 @@ public sealed class RpvsSyncService(
         }
     }
 
+    /// <summary>
+    /// The company, keyed by its RPVS partner id. The register's "IČO" field is not one:
+    /// a foreign partner carries its home registration there (HRB93308, FN61689W) or a
+    /// placeholder ("NEPRIDELENÉ"), and a Czech and a Slovak IČO can be the same digits.
+    /// </summary>
     private async Task<RelatedParty> UpsertCompanyAsync(RpvsPartner partner, DateTimeOffset now, CancellationToken ct)
     {
-        var ico = partner.Company?.Ico;
-        var externalId = ico ?? $"partner:{partner.Id}";
+        var externalId = $"partner:{partner.Id}";
+        var url = PartnerUrl(partner.Id);
         var name = partner.Company?.Name ?? $"RPVS partner {partner.Id}";
 
+        // Rows written by the first version were keyed by that field; the page URL names
+        // the partner they belong to, so they are taken over rather than duplicated.
         var party = await db.RelatedParties.Include(p => p.Names)
-            .FirstOrDefaultAsync(p => p.System == System && p.ExternalId == externalId, ct).ConfigureAwait(false);
+            .FirstOrDefaultAsync(p => p.System == System && (p.ExternalId == externalId || p.SourceUrl == url), ct).ConfigureAwait(false);
 
         if (party is null)
         {
@@ -264,18 +271,24 @@ public sealed class RpvsSyncService(
             db.RelatedParties.Add(party);
         }
 
+        var country = await CountryAsync(partner.Id, ct).ConfigureAwait(false);
+        var registration = partner.Company?.Ico is { } raw && raw.Any(char.IsAsciiDigit) ? raw : null;
+
+        party.ExternalId = externalId;
         party.Label = name;
         party.Kind = partner.Company?.Form == "FyzickaOsobaPodnikatel" ? RelatedPartyKind.Person : RelatedPartyKind.Organisation;
-
-        // The service does not expand the address far enough to reach its country; an
-        // entry with an IČO is a Slovak registration.
-        party.CountryIso2 = ico is not null ? "SK" : null;
+        party.CountryIso2 = country;
         party.RetrievedAt = now;
-        party.SourceUrl = PartnerUrl(partner.Id);
-        party.Identifiers = JsonSerializer.Serialize(
-            ico is null
-                ? new[] { new RelatedPartyIdentifierView("RPVS", partner.Id.ToString(CultureInfo.InvariantCulture)) }
-                : [new RelatedPartyIdentifierView("IČO", ico), new RelatedPartyIdentifierView("RPVS", partner.Id.ToString(CultureInfo.InvariantCulture))]);
+        party.SourceUrl = url;
+
+        var identifiers = new List<RelatedPartyIdentifierView>();
+        if (registration is not null)
+        {
+            identifiers.Add(new RelatedPartyIdentifierView(country is "SK" or "CZ" ? "IČO" : "registration", registration));
+        }
+
+        identifiers.Add(new RelatedPartyIdentifierView("RPVS", partner.Id.ToString(CultureInfo.InvariantCulture)));
+        party.Identifiers = JsonSerializer.Serialize(identifiers);
 
         if (!party.Names.Any(n => NameNormalizer.Normalize(n.NameOriginal) == NameNormalizer.Normalize(name)))
         {
@@ -325,6 +338,20 @@ public sealed class RpvsSyncService(
         }
 
         await db.SaveChangesAsync(ct).ConfigureAwait(false);
+    }
+
+    private async Task<string?> CountryAsync(int partnerId, CancellationToken ct)
+    {
+        try
+        {
+            return IsoCountryCodes.Alpha2(await rpvs.GetPartnerCountryCodeAsync(partnerId, ct).ConfigureAwait(false));
+        }
+        catch (Exception ex) when (!ct.IsCancellationRequested && ex is HttpRequestException or IOException or TaskCanceledException or JsonException)
+        {
+            // A company without a flag is still worth its link.
+            logger.LogWarning("RPVS: country of partner {Partner} not read ({Error}).", partnerId, ex.Message);
+            return null;
+        }
     }
 
     private string PartnerUrl(int partnerId) =>

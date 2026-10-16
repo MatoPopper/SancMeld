@@ -75,7 +75,7 @@ public sealed class RpvsSyncTests(DatabaseFixture fixture) : IAsyncLifetime
         Assert.Single(result.ListingLinks);
 
         await using var db = fixture.CreateContext();
-        var party = await db.RelatedParties.SingleAsync(p => p.System == RelationSystems.Rpvs && p.ExternalId == _ico);
+        var party = await db.RelatedParties.SingleAsync(p => p.System == RelationSystems.Rpvs && p.ExternalId == $"partner:{_partnerId}");
         Assert.Equal($"Company {_tag} s.r.o.", party.Label);
         Assert.Equal("SK", party.CountryIso2);
         Assert.Equal($"https://rpvs.gov.sk/rpvs/Partner/Partner/Detail/{_partnerId}", party.SourceUrl);
@@ -92,7 +92,7 @@ public sealed class RpvsSyncTests(DatabaseFixture fixture) : IAsyncLifetime
         Assert.Contains("Ruská federácia", relation.Identity.Note, StringComparison.Ordinal);
 
         var check = await CheckAsync($"Company {_tag} s.r.o.");
-        Assert.Contains(check.RelatedParties, p => p.ExternalId == _ico && p.System == RelationSystems.Rpvs);
+        Assert.Contains(check.RelatedParties, p => p.ExternalId == $"partner:{_partnerId}" && p.System == RelationSystems.Rpvs);
     }
 
     [Fact]
@@ -104,7 +104,7 @@ public sealed class RpvsSyncTests(DatabaseFixture fixture) : IAsyncLifetime
 
         Assert.Empty(result.ListingLinks);
         await using var db = fixture.CreateContext();
-        Assert.False(await db.RelatedParties.AnyAsync(p => p.System == RelationSystems.Rpvs && p.ExternalId == _ico));
+        Assert.False(await db.RelatedParties.AnyAsync(p => p.System == RelationSystems.Rpvs && p.ExternalId == $"partner:{_partnerId}"));
     }
 
     [Fact]
@@ -117,7 +117,7 @@ public sealed class RpvsSyncTests(DatabaseFixture fixture) : IAsyncLifetime
         Assert.True(second.Complete);
 
         await using var db = fixture.CreateContext();
-        var party = await db.RelatedParties.SingleAsync(p => p.System == RelationSystems.Rpvs && p.ExternalId == _ico);
+        var party = await db.RelatedParties.SingleAsync(p => p.System == RelationSystems.Rpvs && p.ExternalId == $"partner:{_partnerId}");
         Assert.False((await db.DesignationRelations.SingleAsync(r => r.RelatedPartyId == party.Id)).IsCurrent);
     }
 
@@ -196,5 +196,8 @@ public sealed class RpvsSyncTests(DatabaseFixture fixture) : IAsyncLifetime
     {
         public Task<JsonDocument> GetPartnersPageAsync(string? nextLink, CancellationToken ct = default) =>
             Task.FromResult(JsonDocument.Parse(page));
+
+        public Task<string?> GetPartnerCountryCodeAsync(int partnerId, CancellationToken ct = default) =>
+            Task.FromResult<string?>("703");
     }
 }
