@@ -689,6 +689,28 @@ public class ApiUser
 }
 
 /// <summary>
+/// A user's request for a bigger budget: why they need it and what industry they work
+/// in, under the verified address they asked from. The operator reads these in the
+/// database and raises api_user.request_limit; one open request per address.
+/// </summary>
+public class QuotaRequest
+{
+    public long Id { get; set; }
+    public required string Email { get; set; }
+    public required string Reason { get; set; }
+    public required string Industry { get; set; }
+
+    /// <summary>The budget when they asked, so the operator sees how much was used.</summary>
+    public int RequestLimitAtRequest { get; set; }
+    public int RequestsUsedAtRequest { get; set; }
+
+    /// <summary>pending | granted | declined — set by the operator.</summary>
+    public string Status { get; set; } = "pending";
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset? UpdatedAt { get; set; }
+}
+
+/// <summary>
 /// An administrator: may manage the allow list. Since 2026-10-16 any verified Google
 /// address may screen, within an <see cref="ApiUser"/> budget; this table no longer
 /// gates screening.

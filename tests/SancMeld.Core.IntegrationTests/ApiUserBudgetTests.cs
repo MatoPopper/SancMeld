@@ -82,3 +82,25 @@ public sealed class ApiUserBudgetTests(DatabaseFixture fixture)
         Assert.Equal(0, state.Limit);
     }
 }
+
+[Collection(DatabaseCollection.Name)]
+public sealed class QuotaRequestTests(DatabaseFixture fixture)
+{
+    [Fact]
+    public async Task ASecondRequestUpdatesTheOpenOne()
+    {
+        var email = $"asker.{Guid.NewGuid():N}@example.org";
+        await using var db = fixture.CreateContext();
+        var users = new ApiUserDirectory(db, TimeProvider.System);
+        await users.EnsureAsync(email, null, null, defaultLimit: 50);
+
+        var first = await users.RequestMoreAsync(email, "We screen new clients daily.", "Banking");
+        var second = await users.RequestMoreAsync(email.ToUpperInvariant(), "We screen new clients and payments daily.", "Payments");
+
+        Assert.Equal(first.Id, second.Id);
+        Assert.Equal("Payments", second.Industry);
+        Assert.Equal(50, second.RequestLimitAtRequest);
+        Assert.NotNull(await users.PendingRequestAtAsync(email));
+        Assert.Equal(1, await db.QuotaRequests.CountAsync(r => r.Email == email));
+    }
+}

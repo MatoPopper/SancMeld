@@ -164,6 +164,7 @@ public static class SancMeldExtensions
         if (signInConfigured)
         {
             endpoints.MapSancMeldAuth();
+            endpoints.MapQuotaRequests();
             endpoints.MapAdmins();
         }
 

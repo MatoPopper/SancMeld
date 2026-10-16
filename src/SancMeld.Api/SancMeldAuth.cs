@@ -53,12 +53,6 @@ public sealed class SancMeldAuthOptions
     [Range(0, int.MaxValue)]
     public int DefaultRequestLimit { get; set; } = ApiUserDirectory.DefaultLimit;
 
-    /// <summary>
-    /// Whom a user who has used up their budget should write to. Configuration, not code:
-    /// it is a person's address and this repository is public. Empty means the message
-    /// tells them to contact the operator of the instance.
-    /// </summary>
-    public string QuotaContactEmail { get; set; } = string.Empty;
 
     public bool IsEnabled => !string.IsNullOrWhiteSpace(GoogleClientId);
 }
@@ -312,7 +306,6 @@ public sealed class RequestBudgetFilter : IEndpointFilter
         }
 
         var users = http.RequestServices.GetRequiredService<ApiUserDirectory>();
-        var options = http.RequestServices.GetRequiredService<IOptions<SancMeldAuthOptions>>().Value;
         var state = await users.TryConsumeAsync(email, http.RequestAborted).ConfigureAwait(false);
 
         http.Response.Headers["X-Request-Limit"] = state.Limit.ToString(System.Globalization.CultureInfo.InvariantCulture);
@@ -320,21 +313,18 @@ public sealed class RequestBudgetFilter : IEndpointFilter
 
         if (!state.Allowed)
         {
-            var contact = string.IsNullOrWhiteSpace(options.QuotaContactEmail) ? null : options.QuotaContactEmail;
             return Results.Json(new QuotaExceeded(
                 "request_limit_reached",
-                contact is null
-                    ? $"You have used all {state.Limit} requests of your account. Ask the operator of this instance to raise the limit."
-                    : $"You have used all {state.Limit} requests of your account. Write to {contact} to ask for more.",
-                state.Limit, state.Used, contact), statusCode: StatusCodes.Status429TooManyRequests);
+                $"You have used all {state.Limit} requests of your account. Ask for more with POST /quota-requests: the reason and your industry.",
+                state.Limit, state.Used), statusCode: StatusCodes.Status429TooManyRequests);
         }
 
         return await next(context).ConfigureAwait(false);
     }
 }
 
-/// <summary>The body of a 429: what happened, the budget, and whom to ask.</summary>
-public sealed record QuotaExceeded(string Error, string Message, int Limit, int Used, string? Contact);
+/// <summary>The body of a 429: what happened and the budget. More is asked for through /quota-requests.</summary>
+public sealed record QuotaExceeded(string Error, string Message, int Limit, int Used);
 
 /// <summary>
 /// Resolves the requirement against the admin table on every request.

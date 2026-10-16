@@ -76,6 +76,47 @@ public sealed class ApiUserDirectory(SancMeldDbContext db, TimeProvider clock)
         return new QuotaState(spent == 1, state?.RequestLimit ?? 0, state?.RequestsUsed ?? 0);
     }
 
+    /// <summary>
+    /// Records a request for a bigger budget, or updates the open one: an address has at
+    /// most one request waiting, so resubmitting corrects it instead of queueing another.
+    /// </summary>
+    public async Task<QuotaRequest> RequestMoreAsync(string email, string reason, string industry, CancellationToken ct = default)
+    {
+        var key = Normalise(email);
+        var now = clock.GetUtcNow();
+        var user = await db.ApiUsers.AsNoTracking().FirstOrDefaultAsync(u => u.Email == key, ct).ConfigureAwait(false);
+
+        var request = await db.QuotaRequests.FirstOrDefaultAsync(r => r.Email == key && r.Status == "pending", ct).ConfigureAwait(false);
+        if (request is null)
+        {
+            request = new QuotaRequest { Email = key, Reason = reason, Industry = industry, CreatedAt = now };
+            db.QuotaRequests.Add(request);
+        }
+        else
+        {
+            request.UpdatedAt = now;
+        }
+
+        request.Reason = reason.Trim();
+        request.Industry = industry.Trim();
+        request.RequestLimitAtRequest = user?.RequestLimit ?? 0;
+        request.RequestsUsedAtRequest = user?.RequestsUsed ?? 0;
+
+        await db.SaveChangesAsync(ct).ConfigureAwait(false);
+        return request;
+    }
+
+    /// <summary>When the open request of this address was sent, if there is one.</summary>
+    public async Task<DateTimeOffset?> PendingRequestAtAsync(string email, CancellationToken ct = default)
+    {
+        var key = Normalise(email);
+        return await db.QuotaRequests.AsNoTracking()
+            .Where(r => r.Email == key && r.Status == "pending")
+            .Select(r => (DateTimeOffset?)(r.UpdatedAt ?? r.CreatedAt))
+            .FirstOrDefaultAsync(ct)
+            .ConfigureAwait(false);
+    }
+
     private static string Normalise(string email) => email.Trim().ToLowerInvariant();
 }
 

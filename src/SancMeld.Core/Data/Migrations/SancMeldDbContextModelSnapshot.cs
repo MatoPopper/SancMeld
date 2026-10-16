@@ -1623,6 +1623,73 @@ namespace SancMeld.Core.Data.Migrations
                     b.ToTable("party_relation", (string)null);
                 });
 
+            modelBuilder.Entity("SancMeld.Core.Data.QuotaRequest", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)")
+                        .HasColumnName("email");
+
+                    b.Property<string>("Industry")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("industry");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("reason");
+
+                    b.Property<int>("RequestLimitAtRequest")
+                        .HasColumnType("integer")
+                        .HasColumnName("request_limit_at_request");
+
+                    b.Property<int>("RequestsUsedAtRequest")
+                        .HasColumnType("integer")
+                        .HasColumnName("requests_used_at_request");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_quota_request");
+
+                    b.HasIndex("Email")
+                        .IsUnique()
+                        .HasDatabaseName("ix_quota_request_email")
+                        .HasFilter("status = 'pending'");
+
+                    b.HasIndex("Status", "CreatedAt")
+                        .HasDatabaseName("ix_quota_request_status_created_at");
+
+                    b.ToTable("quota_request", null, t =>
+                        {
+                            t.HasCheckConstraint("quota_request_status_ck", "status IN ('pending','granted','declined')");
+                        });
+                });
+
             modelBuilder.Entity("SancMeld.Core.Data.RelatedParty", b =>
                 {
                     b.Property<long>("Id")

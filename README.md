@@ -350,8 +350,10 @@ manages the allow list. Screening — `POST /check`, `POST /screen`, `POST
 budget kept in `api_user`: an address seen for the first time gets
 `SancMeld:Auth:DefaultRequestLimit` requests (50) in total, not per day, and every metered
 request spends one in a single conditional UPDATE, so two requests at once cannot both
-spend the last. An exhausted budget answers `429` with `SancMeld:Auth:QuotaContactEmail`
-as the address to write to, and `GET /auth/me` reports the limit and what is left. There
+spend the last. An exhausted budget answers `429`, and the front end then offers a short
+form — why they need access and the industry they work in — that `POST /quota-requests`
+stores in `quota_request` beside the caller's verified address, one open request per
+address. `GET /auth/me` reports the limit, what is left, and whether a request is waiting. There
 is no screen for raising a budget, on purpose — nobody can raise their own:
 
 ```sql

@@ -22,9 +22,15 @@ public sealed record SignedInUser(string Email, string? Name, string? Subject, b
     public int? RequestsUsed { get; init; }
     public int? RequestsRemaining { get; init; }
 
-    /// <summary>Whom to ask for more, when the host configured it.</summary>
-    public string? QuotaContactEmail { get; init; }
+    /// <summary>A request for more that is waiting for the operator, if the caller sent one.</summary>
+    public DateTimeOffset? PendingQuotaRequestAt { get; init; }
 }
+
+/// <summary>What a user sends to ask for more requests.</summary>
+public sealed record QuotaRequestInput(string? Reason, string? Industry);
+
+/// <summary>The stored request: its id, status and when it was last sent.</summary>
+public sealed record QuotaRequestReceipt(long Id, string Status, DateTimeOffset SentAt);
 
 /// <summary>An address to add to the allow list.</summary>
 public sealed record GrantAdminRequest(string Email, string? DisplayName, string? Note);
@@ -84,7 +90,7 @@ internal static class AdminEndpoints
                 RequestLimit = account?.RequestLimit,
                 RequestsUsed = account?.RequestsUsed,
                 RequestsRemaining = account is null ? null : Math.Max(0, account.RequestLimit - account.RequestsUsed),
-                QuotaContactEmail = string.IsNullOrWhiteSpace(options.Value.QuotaContactEmail) ? null : options.Value.QuotaContactEmail,
+                PendingQuotaRequestAt = verified ? await users.PendingRequestAtAsync(email, ct) : null,
             });
         })
         .RequireAuthorization()
@@ -95,6 +101,54 @@ internal static class AdminEndpoints
             "both separately. Anybody with a Google account can obtain a token this endpoint accepts; " +
             "isAdmin is false for all of them until an existing administrator adds the address. A " +
             "front end uses that to show 'signed in, waiting for access' instead of a bare 403.");
+
+        return endpoints;
+    }
+
+    /// <summary>
+    /// Asking for a bigger request budget. Signed in, not metered: an exhausted budget is
+    /// exactly when this has to work.
+    /// </summary>
+    public static IEndpointRouteBuilder MapQuotaRequests(this IEndpointRouteBuilder endpoints)
+    {
+        endpoints.MapPost("/quota-requests", async Task<Results<Ok<QuotaRequestReceipt>, BadRequest<string>, ForbidHttpResult>> (
+            QuotaRequestInput input, ClaimsPrincipal user, ApiUserDirectory users, CancellationToken ct) =>
+        {
+            var email = SancMeldClaims.EmailOf(user);
+            if (string.IsNullOrEmpty(email) || !SancMeldClaims.EmailIsVerified(user))
+            {
+                return TypedResults.Forbid();
+            }
+
+            var reason = input?.Reason?.Trim() ?? string.Empty;
+            var industry = input?.Industry?.Trim() ?? string.Empty;
+
+            if (reason.Length < 10)
+            {
+                return TypedResults.BadRequest("Say in a sentence why you need more requests.");
+            }
+
+            if (industry.Length == 0)
+            {
+                return TypedResults.BadRequest("Say which industry you work in.");
+            }
+
+            if (reason.Length > 2000 || industry.Length > 100)
+            {
+                return TypedResults.BadRequest("The reason is limited to 2 000 characters and the industry to 100.");
+            }
+
+            var stored = await users.RequestMoreAsync(email, reason, industry, ct);
+            return TypedResults.Ok(new QuotaRequestReceipt(stored.Id, stored.Status, stored.UpdatedAt ?? stored.CreatedAt));
+        })
+        .RequireAuthorization()
+        .WithTags("Auth")
+        .WithName("RequestMoreRequests")
+        .WithSummary("Ask for a bigger request budget: why, and in which industry — writes.")
+        .WithDescription(
+            "Stored under the caller's verified address; one open request per address, so sending " +
+            "again updates it. The operator reads the requests in the quota_request table and raises " +
+            "api_user.request_limit by hand. Not metered.");
 
         return endpoints;
     }

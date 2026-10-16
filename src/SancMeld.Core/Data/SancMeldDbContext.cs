@@ -58,6 +58,7 @@ public class SancMeldDbContext(DbContextOptions<SancMeldDbContext> options) : Db
     public DbSet<PartyRelation> PartyRelations => Set<PartyRelation>();
     public DbSet<RelationDecision> RelationDecisions => Set<RelationDecision>();
     public DbSet<ApiUser> ApiUsers => Set<ApiUser>();
+    public DbSet<QuotaRequest> QuotaRequests => Set<QuotaRequest>();
 
     public DbSet<EmbeddingModel> EmbeddingModels => Set<EmbeddingModel>();
     public DbSet<DesignationNameEmbedding> NameEmbeddings => Set<DesignationNameEmbedding>();
@@ -563,6 +564,19 @@ public class SancMeldDbContext(DbContextOptions<SancMeldDbContext> options) : Db
             e.HasIndex(x => x.Email).IsUnique();
             e.Property(x => x.Email).HasMaxLength(320);
             e.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
+        });
+
+        b.Entity<QuotaRequest>(e =>
+        {
+            e.ToTable("quota_request", t => t.HasCheckConstraint("quota_request_status_ck", "status IN ('pending','granted','declined')"));
+            e.Property(x => x.Email).HasMaxLength(320);
+            e.Property(x => x.Reason).HasMaxLength(2000);
+            e.Property(x => x.Industry).HasMaxLength(100);
+            e.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
+            e.HasIndex(x => new { x.Status, x.CreatedAt });
+
+            // One open request per address: a second submission updates the first.
+            e.HasIndex(x => x.Email).IsUnique().HasFilter("status = 'pending'");
         });
 
         b.Entity<RelationDecision>(e =>
