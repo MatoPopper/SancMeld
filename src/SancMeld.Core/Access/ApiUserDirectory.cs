@@ -117,6 +117,44 @@ public sealed class ApiUserDirectory(SancMeldDbContext db, TimeProvider clock)
             .ConfigureAwait(false);
     }
 
+    /// <summary>Whether the address may see the additional information. False for an address never seen.</summary>
+    public async Task<bool> IsAllowedForAdditionalInfoAsync(string email, CancellationToken ct = default)
+    {
+        var key = Normalise(email);
+        return await db.ApiUsers.AsNoTracking()
+            .AnyAsync(u => u.Email == key && u.IsAllowedForAdditionalInfo, ct)
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Grants or withdraws the additional information. An address that has not signed in
+    /// yet gets its row now, with the default budget, so the grant is waiting for it.
+    /// </summary>
+    public async Task<ApiUser> SetAdditionalInfoAsync(string email, bool allowed, int defaultLimit, CancellationToken ct = default)
+    {
+        var key = Normalise(email);
+        var user = await db.ApiUsers.FirstOrDefaultAsync(u => u.Email == key, ct).ConfigureAwait(false);
+
+        if (user is null)
+        {
+            user = new ApiUser { Id = Guid.CreateVersion7(), Email = key, RequestLimit = defaultLimit, CreatedAt = clock.GetUtcNow() };
+            db.ApiUsers.Add(user);
+        }
+
+        user.IsAllowedForAdditionalInfo = allowed;
+        await db.SaveChangesAsync(ct).ConfigureAwait(false);
+        return user;
+    }
+
+    /// <summary>The addresses allowed the additional information, for the operator's listing.</summary>
+    public async Task<IReadOnlyList<string>> AllowedForAdditionalInfoAsync(CancellationToken ct = default) =>
+        await db.ApiUsers.AsNoTracking()
+            .Where(u => u.IsAllowedForAdditionalInfo)
+            .OrderBy(u => u.Email)
+            .Select(u => u.Email)
+            .ToListAsync(ct)
+            .ConfigureAwait(false);
+
     private static string Normalise(string email) => email.Trim().ToLowerInvariant();
 }
 

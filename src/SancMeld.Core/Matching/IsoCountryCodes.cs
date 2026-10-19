@@ -1,11 +1,11 @@
-namespace SancMeld.Connectors.Rpvs;
+namespace SancMeld.Core.Matching;
 
 /// <summary>
-/// ISO 3166-1 numeric to alpha-2. RPVS names a country by its statistical code, which is
+/// ISO 3166-1 numeric to alpha-2. RPVS and RPO name a country by its statistical code, which is
 /// the ISO numeric one (703 Slovakia, 276 Germany); the rest of SancMeld speaks alpha-2.
 /// Generated from the ISO 3166-1 table as published by the pycountry package.
 /// </summary>
-internal static class IsoCountryCodes
+public static class IsoCountryCodes
 {
     private static readonly Dictionary<string, string> NumericToAlpha2 = new(StringComparer.Ordinal)
     {

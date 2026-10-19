@@ -707,6 +707,15 @@ public class ApiUser
     /// <summary>Requests made so far: checks, screenings and register lookups.</summary>
     public int RequestsUsed { get; set; }
 
+    /// <summary>
+    /// May see the additional information: links an open-source search found by name
+    /// alone (a namesake in the Slovak business register) and an analyst's research notes.
+    /// They are leads, not findings, and most of them are about people who are on no list,
+    /// so they are shown only to the few who know how to read them. Granted by hand, with
+    /// the CLI (`users additional-info &lt;email&gt; on`); off for everyone who signs up.
+    /// </summary>
+    public bool IsAllowedForAdditionalInfo { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? LastSeenAt { get; set; }
 }
@@ -918,6 +927,12 @@ public class DesignationRelation
     public DateTimeOffset LastSeenAt { get; set; }
     public Guid? RunId { get; set; }
     public string? DecisionNote { get; set; }
+
+    /// <summary>
+    /// Why the link is drawn, in words, when the register's statement does not say it by
+    /// itself: "same name, no date of birth in the register; address in Russia".
+    /// </summary>
+    public string? Note { get; set; }
 }
 
 /// <summary>

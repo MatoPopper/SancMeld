@@ -91,8 +91,10 @@ internal static class TestServices
         new(embedder ?? new FakeNameEmbedder(), index ?? Index(fixture, options), options,
             NullLogger<SemanticCandidateSource>.Instance);
 
-    public static RelatedPartyQueryService RelatedParties(SancMeldDbContext db, DesignationQueryService queries) =>
-        new(db, queries, Options(Path.GetTempPath()));
+    /// <summary>Sees the additional information unless a test says otherwise: most tests are about what is stored, not who sees it.</summary>
+    public static RelatedPartyQueryService RelatedParties(SancMeldDbContext db, DesignationQueryService queries, bool additionalInfo = true) =>
+        new(db, queries, Options(Path.GetTempPath()),
+            additionalInfo ? new SancMeld.Core.Access.FullAdditionalInfoAccess() : new SancMeld.Core.Access.NoAdditionalInfoAccess());
 
     public static RelatedPartyStore RelatedPartyStore(SancMeldDbContext db, TimeProvider? clock = null) =>
         new(db, clock ?? TimeProvider.System, NullLogger<RelatedPartyStore>.Instance);

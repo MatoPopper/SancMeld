@@ -24,6 +24,12 @@ public sealed record SignedInUser(string Email, string? Name, string? Subject, b
 
     /// <summary>A request for more that is waiting for the operator, if the caller sent one.</summary>
     public DateTimeOffset? PendingQuotaRequestAt { get; init; }
+
+    /// <summary>
+    /// Whether the caller sees the additional information: leads that rest on a name alone
+    /// (the Slovak business register) and open-source research. Granted by the operator.
+    /// </summary>
+    public bool CanSeeAdditionalInfo { get; init; }
 }
 
 /// <summary>What a user sends to ask for more requests.</summary>
@@ -92,6 +98,7 @@ internal static class AdminEndpoints
                 RequestsUsed = account?.RequestsUsed,
                 RequestsRemaining = account is null ? null : Math.Max(0, account.RequestLimit - account.RequestsUsed),
                 PendingQuotaRequestAt = verified ? await users.PendingRequestAtAsync(email, ct) : null,
+                CanSeeAdditionalInfo = account?.IsAllowedForAdditionalInfo ?? false,
             });
         })
         .RequireAuthorization()

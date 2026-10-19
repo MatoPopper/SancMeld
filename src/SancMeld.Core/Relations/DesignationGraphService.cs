@@ -170,12 +170,12 @@ public sealed class DesignationGraphService(
 
         foreach (var r in mine.Relations)
         {
-            var status = RelationStatus(r.Status, r.IdentityStatus, r.Share, r.EndDate, subject.LegalEffect);
+            var status = RelationStatus(r.Status, r.IdentityStatus, r.Share, r.EndDate, subject.LegalEffect, r.Party.System);
             b.Party(r.Party, status);
             partyIds.Add(r.Party.Id);
 
             b.Edge(b.Id(subject), b.PartyId(r.Party), r.Kind.ToString(), status,
-                RelationEvidence(r.Kind, r.Party, r.Share, r.StartDate, r.EndDate, r.EvidenceUrls.Count, r.IdentityStatus),
+                RelationEvidence(r.Kind, r.Party, r.Share, r.StartDate, r.EndDate, r.EvidenceUrls.Count, r.IdentityStatus, r.Note ?? r.MatchNote),
                 r.EvidenceUrls, r.Share, DecisionTarget.ListingRelation, r.Id, r.IdentityId);
         }
 
@@ -189,8 +189,9 @@ public sealed class DesignationGraphService(
 
         // Party to party: the brand a group runs, the company that operates the brand in
         // one country. Breadth first from the parties tied to the subject.
+        var hidden = await relatedParties.HiddenSystemsAsync(ct).ConfigureAwait(false);
         var partyViews = mine.Relations.Select(r => r.Party).DistinctBy(p => p.Id).ToDictionary(p => p.Id);
-        await AddPartyChainsAsync(b, subject, partyViews, ct).ConfigureAwait(false);
+        await AddPartyChainsAsync(b, subject, partyViews, hidden, ct).ConfigureAwait(false);
         partyIds = [.. partyViews.Keys];
 
         var others = await db.DesignationRelations
@@ -199,6 +200,7 @@ public sealed class DesignationGraphService(
             .Where(r => partyIds.Contains(r.RelatedPartyId) && r.IsCurrent && r.Status != LinkStatus.Rejected)
             .Where(r => r.Identity!.ExternalId != null && r.Identity.Status != LinkStatus.Rejected)
             .Where(r => !(r.Identity!.SourceId == record.SourceId && r.Identity.SourceRecordKey == record.SourceRecordKey))
+            .Where(r => !hidden.Contains(r.Identity!.System))
             .OrderBy(r => r.Id)
             .Take(CoOwnerCap + 1)
             .ToListAsync(ct)
@@ -220,13 +222,13 @@ public sealed class DesignationGraphService(
             }
 
             var party = partyViews[r.RelatedPartyId];
-            var status = RelationStatus(r.Status, r.Identity.Status, r.Share, r.EndDate, listing.LegalEffect);
+            var status = RelationStatus(r.Status, r.Identity.Status, r.Share, r.EndDate, listing.LegalEffect, r.Identity.System);
 
             b.Listing(listing, status);
             b.Edge(b.Id(listing), b.PartyId(party), r.Kind.ToString(), status,
                 RelationEvidence(r.Kind, party, r.Share, r.StartDate, r.EndDate,
                     r.EvidenceUrls is null ? 0 : System.Text.Json.JsonSerializer.Deserialize<List<string>>(r.EvidenceUrls)?.Count ?? 0,
-                    r.Identity.Status),
+                    r.Identity.Status, r.Note ?? r.Identity.Note),
                 share: r.Share, target: DecisionTarget.ListingRelation, targetId: r.Id, identityId: r.IdentityId);
         }
     }
@@ -236,7 +238,7 @@ public sealed class DesignationGraphService(
     /// <paramref name="parties"/> with what it reached so the second hop can look for
     /// listed subjects tied to them too.
     /// </summary>
-    private async Task AddPartyChainsAsync(Builder b, DesignationView subject, Dictionary<long, RelatedPartyView> parties, CancellationToken ct)
+    private async Task AddPartyChainsAsync(Builder b, DesignationView subject, Dictionary<long, RelatedPartyView> parties, string[] hidden, CancellationToken ct)
     {
         var frontier = parties.Keys.ToList();
 
@@ -248,6 +250,7 @@ public sealed class DesignationGraphService(
                 .Include(r => r.From!).ThenInclude(p => p.Names)
                 .Include(r => r.To!).ThenInclude(p => p.Names)
                 .Where(r => r.IsCurrent && (ids.Contains(r.FromPartyId) || ids.Contains(r.ToPartyId)))
+                .Where(r => !hidden.Contains(r.System) && !hidden.Contains(r.From!.System) && !hidden.Contains(r.To!.System))
                 .AsSplitQuery()
                 .Take(PartyChainCap)
                 .ToListAsync(ct)
@@ -272,6 +275,7 @@ public sealed class DesignationGraphService(
                 {
                     LinkStatus.Rejected => GraphStatus.Rejected,
                     LinkStatus.Confirmed => GraphStatus.Confirmed,
+                    _ when e.System == RelationSystems.SkRegister => GraphStatus.Candidate,
                     _ => subject.LegalEffect == LegalEffect.Binding ? GraphStatus.Review : GraphStatus.Candidate,
                 };
 
@@ -283,6 +287,8 @@ public sealed class DesignationGraphService(
                 {
                     RelationSystems.Curated => "Internal register",
                     RelationSystems.Ares => "ARES (CZ company register)",
+                    RelationSystems.SkRegister => "ORSR/RPO (SK company register)",
+                    RelationSystems.Osint => "Open-source research",
                     _ => e.System,
                 };
                 b.Edge(b.PartyId(from), b.PartyId(to), e.Kind.ToString(), status,
@@ -296,7 +302,7 @@ public sealed class DesignationGraphService(
 
     private const int PartyChainCap = 60;
 
-    private static GraphStatus RelationStatus(LinkStatus relation, LinkStatus identity, decimal? share, DateOnly? endDate, LegalEffect listing)
+    private static GraphStatus RelationStatus(LinkStatus relation, LinkStatus identity, decimal? share, DateOnly? endDate, LegalEffect listing, string system)
     {
         if (relation == LinkStatus.Rejected || identity == LinkStatus.Rejected
             || (endDate is { } end && end < DateOnly.FromDateTime(DateTime.UtcNow)))
@@ -309,6 +315,14 @@ public sealed class DesignationGraphService(
             return GraphStatus.Confirmed;
         }
 
+        // A name in the Slovak register is a lead, not a finding: the register publishes
+        // no date of birth, and most of the people it finds are namesakes. It stays amber
+        // until a person has read the company's documents, binding listing or not.
+        if (system == RelationSystems.SkRegister)
+        {
+            return GraphStatus.Candidate;
+        }
+
         // A candidate that reaches a binding listing, or claims control, is the one a
         // person has to look at today.
         return listing == LegalEffect.Binding || share >= ControllingShare
@@ -316,8 +330,24 @@ public sealed class DesignationGraphService(
             : GraphStatus.Candidate;
     }
 
-    private static string RelationEvidence(RelationKind kind, RelatedPartyView party, decimal? share, DateOnly? start, DateOnly? end, int references, LinkStatus identity)
+    private static string RelationEvidence(RelationKind kind, RelatedPartyView party, decimal? share, DateOnly? start, DateOnly? end, int references, LinkStatus identity, string? note = null)
     {
+        if (party.System == RelationSystems.SkRegister)
+        {
+            var since = start is { } s3 ? $" since {s3:yyyy-MM-dd}" : string.Empty;
+            var until = end is { } e3 ? $" until {e3:yyyy-MM-dd}" : string.Empty;
+            var matchedBy = identity == LinkStatus.Confirmed ? "identity confirmed by an analyst" : "name match only, the register publishes no date of birth";
+            return $"ORSR/RPO (SK company register): {Verb(kind)} {party.Name}{since}{until}; {matchedBy}"
+                + (note is { Length: > 0 } n3 ? $"; {n3}" : string.Empty) + ".";
+        }
+
+        if (party.System == RelationSystems.Osint)
+        {
+            var refs = references == 0 ? "no source cited" : $"{references} source{(references == 1 ? string.Empty : "s")} cited";
+            return $"Open-source research: {Verb(kind)} {party.Name}; {refs}"
+                + (note is { Length: > 0 } n4 ? $"; {n4}" : string.Empty) + ".";
+        }
+
         if (party.System == RelationSystems.Ares)
         {
             var matched = identity == LinkStatus.Confirmed ? "identity confirmed by an analyst" : "identity matched by name and date of birth, unconfirmed";
@@ -366,6 +396,7 @@ public sealed class DesignationGraphService(
         RelationKind.SubsidiaryOf => "subsidiary of",
         RelationKind.OperatorOf => "operator of",
         RelationKind.SameAs => "the same entity as",
+        RelationKind.SharesNameWith => "shares its name with",
         _ => "related to",
     };
 

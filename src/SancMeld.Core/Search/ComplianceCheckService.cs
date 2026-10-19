@@ -187,6 +187,7 @@ public sealed class ComplianceCheckService(
             RelationKind.SubsidiaryOf => "is a subsidiary of",
             RelationKind.OperatorOf => "operates",
             RelationKind.SameAs => "is the same entity as",
+            RelationKind.SharesNameWith => "shares its name with",
             _ => "is related to",
         };
 

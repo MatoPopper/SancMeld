@@ -16,10 +16,14 @@ namespace SancMeld.Core.Relations;
 /// The file is the case file: every link carries the articles or rulings it rests on and
 /// a status, candidate until someone has checked it. It is kept out of the repository on
 /// purpose; it is a deployment's own research, not part of the product.
+///
+/// A file says which register it fills: the internal one (<see cref="RelationSystems.Curated"/>,
+/// the default, shown to everyone) or open-source research (<see cref="RelationSystems.Osint"/>,
+/// leads shown only to users allowed the additional information).
 /// </summary>
 public sealed class CuratedRelationsImporter(SancMeldDbContext db, TimeProvider clock, ILogger<CuratedRelationsImporter> logger)
 {
-    private const string System = RelationSystems.Curated;
+    private static readonly string[] Systems = [RelationSystems.Curated, RelationSystems.Osint];
 
     private static readonly JsonSerializerOptions Json = new()
     {
@@ -34,6 +38,12 @@ public sealed class CuratedRelationsImporter(SancMeldDbContext db, TimeProvider 
         var file = await JsonSerializer.DeserializeAsync<CuratedFile>(json, Json, ct).ConfigureAwait(false)
             ?? throw new InvalidDataException("The file is empty.");
 
+        var system = (file.System ?? RelationSystems.Curated).Trim().ToUpperInvariant();
+        if (!Systems.Contains(system))
+        {
+            throw new InvalidDataException($"Unknown system '{file.System}'; a case file fills {string.Join(" or ", Systems)}.");
+        }
+
         var now = clock.GetUtcNow();
         var warnings = new List<string>();
         var parties = new Dictionary<string, RelatedParty>(StringComparer.Ordinal);
@@ -41,11 +51,11 @@ public sealed class CuratedRelationsImporter(SancMeldDbContext db, TimeProvider 
         foreach (var p in file.Parties)
         {
             var party = await db.RelatedParties.Include(x => x.Names)
-                .FirstOrDefaultAsync(x => x.System == System && x.ExternalId == p.Id, ct).ConfigureAwait(false);
+                .FirstOrDefaultAsync(x => x.System == system && x.ExternalId == p.Id, ct).ConfigureAwait(false);
 
             if (party is null)
             {
-                party = new RelatedParty { System = System, ExternalId = p.Id, Label = p.Name };
+                party = new RelatedParty { System = system, ExternalId = p.Id, Label = p.Name };
                 db.RelatedParties.Add(party);
             }
 
@@ -93,17 +103,17 @@ public sealed class CuratedRelationsImporter(SancMeldDbContext db, TimeProvider 
             }
 
             var identity = await db.ExternalIdentities
-                .FirstOrDefaultAsync(i => i.System == System && i.SourceId == designation.SourceId && i.SourceRecordKey == designation.SourceRecordKey, ct)
+                .FirstOrDefaultAsync(i => i.System == system && i.SourceId == designation.SourceId && i.SourceRecordKey == designation.SourceRecordKey, ct)
                 .ConfigureAwait(false);
 
             if (identity is null)
             {
                 identity = new ExternalIdentity
                 {
-                    System = System,
+                    System = system,
                     SourceId = designation.SourceId,
                     SourceRecordKey = designation.SourceRecordKey,
-                    ExternalId = "curated",
+                    ExternalId = system == RelationSystems.Osint ? "osint" : "curated",
                     Status = LinkStatus.Confirmed,
                     DecidedBy = importedBy,
                     DecidedAt = now,
@@ -129,7 +139,8 @@ public sealed class CuratedRelationsImporter(SancMeldDbContext db, TimeProvider 
                 db.DesignationRelations.Add(relation);
             }
 
-            relation.Property = "curated";
+            relation.Property = system == RelationSystems.Osint ? "osint" : "curated";
+            relation.Note = l.Note;
 
             // An analyst's decision outranks the file: reloading the case file must not
             // undo a confirmation or a rejection made in the graph.
@@ -163,12 +174,12 @@ public sealed class CuratedRelationsImporter(SancMeldDbContext db, TimeProvider 
             }
 
             var link = await db.PartyRelations
-                .FirstOrDefaultAsync(r => r.FromPartyId == from.Id && r.ToPartyId == to.Id && r.Kind == k.Kind && r.System == System, ct)
+                .FirstOrDefaultAsync(r => r.FromPartyId == from.Id && r.ToPartyId == to.Id && r.Kind == k.Kind && r.System == system, ct)
                 .ConfigureAwait(false);
 
             if (link is null)
             {
-                link = new PartyRelation { FromPartyId = from.Id, ToPartyId = to.Id, Kind = k.Kind, System = System, CreatedAt = now, CreatedBy = importedBy };
+                link = new PartyRelation { FromPartyId = from.Id, ToPartyId = to.Id, Kind = k.Kind, System = system, CreatedAt = now, CreatedBy = importedBy };
                 db.PartyRelations.Add(link);
             }
 
@@ -198,6 +209,9 @@ public sealed class CuratedRelationsImporter(SancMeldDbContext db, TimeProvider 
 
     private sealed record CuratedFile
     {
+        /// <summary>CURATED (default) or OSINT.</summary>
+        public string? System { get; init; }
+
         public List<CuratedParty> Parties { get; init; } = [];
         public List<CuratedListingLink> Listings { get; init; } = [];
         public List<CuratedPartyLink> Links { get; init; } = [];
@@ -226,6 +240,9 @@ public sealed class CuratedRelationsImporter(SancMeldDbContext db, TimeProvider 
         public DateOnly? Start { get; init; }
         public DateOnly? End { get; init; }
         public List<string> Evidence { get; init; } = [];
+
+        /// <summary>Why the link is drawn and how sure it is: "level B: sole shareholder per ORSR".</summary>
+        public string? Note { get; init; }
     }
 
     private sealed record CuratedPartyLink

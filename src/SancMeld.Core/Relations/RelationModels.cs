@@ -27,6 +27,12 @@ public enum RelationKind
 
     /// <summary>The same entity recorded in two registers: a curated party and its ARES record.</summary>
     SameAs,
+
+    /// <summary>
+    /// Carries the same distinctive name and nothing more is known: a Slovak company called
+    /// "Wildberries" next to the listed Wildberries Bank. A lead for a person to follow.
+    /// </summary>
+    SharesNameWith,
 }
 
 /// <summary>What an external register says a related party is. Decides which screening a party can answer.</summary>
@@ -55,6 +61,26 @@ public static class RelationSystems
 
     /// <summary>The Slovak register of public sector partners (RPVS): beneficial owners, with dates of birth.</summary>
     public const string Rpvs = "RPVS";
+
+    /// <summary>
+    /// The Slovak business register (ORSR, searched by name) and the register of legal
+    /// persons (RPO, read for the company): shareholders and statutory bodies. Neither
+    /// publishes a date of birth, so every person link it makes is a name match only.
+    /// </summary>
+    public const string SkRegister = "SK_ORSR";
+
+    /// <summary>An analyst's open-source research: media, foreign registers, leaks. Every link names its sources.</summary>
+    public const string Osint = "OSINT";
+
+    /// <summary>
+    /// The systems whose links are additional information: leads shown only to users
+    /// allowed to see them (<c>api_user.is_allowed_for_additional_info</c>). Everything
+    /// else in the graph rests on a date of birth, a publisher's word or an analyst's
+    /// decision; these rest on a name.
+    /// </summary>
+    public static readonly string[] AdditionalInfo = [SkRegister, Osint];
+
+    public static bool IsAdditionalInfo(string? system) => system is SkRegister or Osint;
 }
 
 /// <summary>One related party as a screening sees it.</summary>
@@ -146,4 +172,10 @@ public sealed record DesignationRelationView
     public DateOnly? EndDate { get; init; }
     public IReadOnlyList<string> EvidenceUrls { get; init; } = [];
     public required DateTimeOffset LastSeenAt { get; init; }
+
+    /// <summary>Why the link is drawn, when the register's statement does not say it by itself.</summary>
+    public string? Note { get; init; }
+
+    /// <summary>How the listed subject was taken to be the register's record: the identity's own note.</summary>
+    public string? MatchNote { get; init; }
 }

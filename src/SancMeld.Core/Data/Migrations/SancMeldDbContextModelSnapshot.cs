@@ -315,6 +315,10 @@ namespace SancMeld.Core.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("google_subject");
 
+                    b.Property<bool>("IsAllowedForAdditionalInfo")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_allowed_for_additional_info");
+
                     b.Property<DateTimeOffset?>("LastSeenAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("last_seen_at");
@@ -1017,6 +1021,10 @@ namespace SancMeld.Core.Data.Migrations
                     b.Property<DateTimeOffset>("LastSeenAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("last_seen_at");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("text")
+                        .HasColumnName("note");
 
                     b.Property<string>("Property")
                         .HasColumnType("text")

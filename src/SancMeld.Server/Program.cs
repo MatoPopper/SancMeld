@@ -239,6 +239,40 @@ if (args is ["apikey", var keyAction, ..])
     }
 }
 
+// Who may see the additional information: leads from the Slovak business register (a name
+// match without a date of birth) and open-source research. Off for every new user; an API
+// key sees it when its owner does. There is no screen for it, so nobody grants it to
+// themselves:
+//
+//   dotnet run --project src/SancMeld.Server -- users additional-info you@example.com on|off
+//   dotnet run --project src/SancMeld.Server -- users additional-info list
+if (args is ["users", "additional-info", var who, ..])
+{
+    using var scope = app.Services.CreateScope();
+    var users = scope.ServiceProvider.GetRequiredService<SancMeld.Core.Access.ApiUserDirectory>();
+
+    if (who == "list")
+    {
+        foreach (var email in await users.AllowedForAdditionalInfoAsync(CancellationToken.None))
+        {
+            Console.WriteLine(email);
+        }
+
+        return 0;
+    }
+
+    if (args.Length < 4 || args[3] is not ("on" or "off"))
+    {
+        Console.Error.WriteLine("Usage: users additional-info <email> on|off | users additional-info list");
+        return 1;
+    }
+
+    var limit = scope.ServiceProvider.GetRequiredService<IOptions<SancMeld.Api.SancMeldAuthOptions>>().Value.DefaultRequestLimit;
+    var user = await users.SetAdditionalInfoAsync(who, args[3] == "on", limit, CancellationToken.None);
+    Console.WriteLine($"{user.Email}: additional information {(user.IsAllowedForAdditionalInfo ? "ON" : "off")}.");
+    return 0;
+}
+
 // Build training pairs from the cross-references publishers declare between their lists:
 //
 //   dotnet run --project src/SancMeld.Server -- training seed-xref [--replace] [--candidates 25]
@@ -464,6 +498,52 @@ if (args is ["rpvs", "sync", ..])
     return 0;
 }
 
+// Leads from the Slovak business register (ORSR finds the people, RPO reads the company):
+//
+//   dotnet run --project src/SancMeld.Server -- sk-register lookup <designation id>
+//   dotnet run --project src/SancMeld.Server -- sk-register run [--max N] [--act 2026/2281]
+//
+// "run" takes the newest listings not yet looked up; --act limits it to the listings whose
+// legal basis names that act — a new package, ahead of the backlog.
+if (args is ["sk-register", var skAction, ..])
+{
+    using var scope = app.Services.CreateScope();
+    var sk = scope.ServiceProvider.GetRequiredService<SancMeld.Connectors.SkRegister.SkRegisterLookupService>();
+
+    if (skAction == "lookup" && args.Length > 2 && Guid.TryParse(args[2], out var designationId))
+    {
+        var one = await sk.LookupAsync(designationId, null, CancellationToken.None, fresh: true);
+        Console.WriteLine($"SK register '{one.Listing}': {one.Links.Count} leads, {one.Queries} requests.");
+        foreach (var line in one.Links) Console.WriteLine($"  LEAD     {line}");
+        foreach (var line in one.Notes) Console.WriteLine($"  note     {line}");
+        return 0;
+    }
+
+    if (skAction == "run")
+    {
+        var max = int.TryParse(Flag(args, "--max"), out var parsedMax) ? parsedMax : 150;
+        IReadOnlyCollection<Guid>? only = null;
+
+        if (Flag(args, "--act") is { Length: > 0 } act)
+        {
+            var db = scope.ServiceProvider.GetRequiredService<SancMeldDbContext>();
+            only = await db.Designations
+                .Where(d => d.ValidTo == null && d.LegalInstruments.Any(l => (l.LegalInstrument!.Title ?? "").Contains(act) || (l.LegalInstrument.InstrumentNumber ?? "").Contains(act)))
+                .Select(d => d.Id)
+                .ToListAsync();
+            Console.WriteLine($"{only.Count} current listings name {act}.");
+        }
+
+        var run = await sk.RunAsync(max, only, CancellationToken.None);
+        Console.WriteLine($"SK register: {run.Listings} listings, {run.Linked} with leads, {run.Links} links, {run.Queries} requests.");
+        foreach (var line in run.Lines) Console.WriteLine($"  LEAD     {line}");
+        return 0;
+    }
+
+    Console.Error.WriteLine("Usage: sk-register lookup <designation id> | sk-register run [--max N] [--act <act number>]");
+    return 1;
+}
+
 // Hand-entered links into the internal register, from a case file kept outside the repo:
 //
 //   dotnet run --project src/SancMeld.Server -- relations import-curated case.json
@@ -478,7 +558,7 @@ if (args is ["relations", "import-curated", var curatedPath, ..])
     await using var input = curatedPath == "-" ? Console.OpenStandardInput() : File.OpenRead(curatedPath);
     var result = await importer.ImportAsync(input, "cli:" + Environment.UserName, CancellationToken.None);
 
-    Console.WriteLine($"CURATED: {result.Parties} parties, {result.ListingLinks} listing links, {result.PartyLinks} party links.");
+    Console.WriteLine($"Case file: {result.Parties} parties, {result.ListingLinks} listing links, {result.PartyLinks} party links.");
     foreach (var warning in result.Warnings)
     {
         Console.WriteLine($"  warning: {warning}");
@@ -596,6 +676,23 @@ static async Task ScheduleImportsAsync(WebApplication app)
         else
         {
             schedule.RemoveIfExists(rpvsJob);
+        }
+
+        // The Slovak business register is asked per listing, at a person's pace: nightly,
+        // the newest listings first, a capped number per night.
+        var skRegister = scope.ServiceProvider.GetRequiredService<IOptions<SancMeld.Connectors.SkRegister.SkRegisterOptions>>().Value;
+        const string skRegisterJob = "related-parties:sk-register";
+
+        if (skRegister.Enabled && skRegister.MaxListingsPerScheduledRun > 0)
+        {
+            schedule.AddOrUpdate<SancMeld.Connectors.SkRegister.SkRegisterLookupService>(
+                recurringJobId: skRegisterJob,
+                methodCall: sk => sk.RunScheduledAsync(CancellationToken.None),
+                cronExpression: skRegister.CronExpression);
+        }
+        else
+        {
+            schedule.RemoveIfExists(skRegisterJob);
         }
     }
     catch (Exception ex)

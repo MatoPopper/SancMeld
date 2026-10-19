@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using SancMeld.Core.Access;
 using SancMeld.Core.Configuration;
 using SancMeld.Core.Data;
 using SancMeld.Core.Domain;
@@ -17,13 +18,25 @@ namespace SancMeld.Core.Relations;
 /// A party is only served through a relation that still stands, to an identity nobody
 /// has rejected, on a listing that is current and not delisted. A company whose owner
 /// was delisted yesterday stops being a finding today, for the same reason the owner did.
+///
+/// And only to a caller allowed to see it, when it comes from a system of
+/// <see cref="RelationSystems.AdditionalInfo"/>: every query here asks
+/// <see cref="IAdditionalInfoAccess"/> first, so no path to a party can leak a lead.
 /// </summary>
 public sealed class RelatedPartyQueryService(
     SancMeldDbContext db,
     DesignationQueryService designations,
-    IOptions<SancMeldOptions> options)
+    IOptions<SancMeldOptions> options,
+    IAdditionalInfoAccess access)
 {
     public const int MaxHits = 50;
+
+    /// <summary>
+    /// The systems the current caller may not see: none, or the additional information.
+    /// An array rather than a flag so that the queries can say it in SQL.
+    /// </summary>
+    public async Task<string[]> HiddenSystemsAsync(CancellationToken ct = default) =>
+        await access.AllowedAsync(ct).ConfigureAwait(false) ? [] : RelationSystems.AdditionalInfo;
 
     /// <summary>
     /// Parties whose name the trigram index considers similar to the query — the same
@@ -40,6 +53,7 @@ public sealed class RelatedPartyQueryService(
 
         var take = Math.Clamp(limit, 1, MaxHits);
         var matching = options.Value.Matching;
+        var hidden = await HiddenSystemsAsync(ct).ConfigureAwait(false);
 
         await using var transaction = await db.Database.BeginTransactionAsync(ct).ConfigureAwait(false);
 
@@ -60,9 +74,11 @@ public sealed class RelatedPartyQueryService(
         // A party is searched when it is tied to a listing, or to another party: the
         // second is how "ChainStores SK" reaches the owners of the group it operates for.
         var names = db.RelatedPartyNames
+            .Where(n => !hidden.Contains(n.Party!.System))
             .Where(n => n.Party!.Relations.Any(r => r.IsCurrent && r.Status != LinkStatus.Rejected
-                    && r.Identity!.ExternalId != null && r.Identity.Status != LinkStatus.Rejected)
-                || db.PartyRelations.Any(pr => pr.IsCurrent && pr.Status != LinkStatus.Rejected
+                    && r.Identity!.ExternalId != null && r.Identity.Status != LinkStatus.Rejected
+                    && !hidden.Contains(r.Identity.System))
+                || db.PartyRelations.Any(pr => pr.IsCurrent && pr.Status != LinkStatus.Rejected && !hidden.Contains(pr.System)
                     && (pr.FromPartyId == n.RelatedPartyId || pr.ToPartyId == n.RelatedPartyId)))
             .Where(n => EF.Functions.TrigramsAreSimilar(n.NameNormalized!, normalized)
                 || (byWord && EF.Functions.TrigramsAreWordSimilar(normalized, n.NameNormalized!)));
@@ -129,7 +145,7 @@ public sealed class RelatedPartyQueryService(
             }
 
             var relations = party.Relations
-                .Where(r => r.Identity!.ExternalId != null && r.Identity.Status != LinkStatus.Rejected)
+                .Where(r => r.Identity!.ExternalId != null && r.Identity.Status != LinkStatus.Rejected && !hidden.Contains(r.Identity.System))
                 .Select(r => (Relation: r, Listing: listings.GetValueOrDefault((r.Identity!.SourceId, r.Identity.SourceRecordKey))))
                 .Where(x => x.Listing is not null)
                 .Select(x => ToView(x.Relation, x.Listing!) with { PartyName = party.Label })
@@ -138,7 +154,7 @@ public sealed class RelatedPartyQueryService(
 
             // And the listed subjects reached through other parties: the operator of a
             // brand, the brand of a group, the group of its owners.
-            relations.AddRange(await ChainedRelationsAsync(party, ct).ConfigureAwait(false));
+            relations.AddRange(await ChainedRelationsAsync(party, hidden, ct).ConfigureAwait(false));
             relations = [.. relations.DistinctBy(r => (r.Id, r.Designation.Id)).Take(MaxChainedRelations)];
 
             if (relations.Count == 0)
@@ -169,7 +185,7 @@ public sealed class RelatedPartyQueryService(
     /// each carrying the chain that reached it. Breadth first, so the shortest chain is
     /// the one shown.
     /// </summary>
-    private async Task<List<RelationView>> ChainedRelationsAsync(RelatedParty start, CancellationToken ct)
+    private async Task<List<RelationView>> ChainedRelationsAsync(RelatedParty start, string[] hidden, CancellationToken ct)
     {
         var reached = await ChainAsync(start.Id, ct).ConfigureAwait(false);
         if (reached.Count == 0)
@@ -184,6 +200,7 @@ public sealed class RelatedPartyQueryService(
             .Include(r => r.Party)
             .Where(r => ids.Contains(r.RelatedPartyId) && r.IsCurrent && r.Status != LinkStatus.Rejected)
             .Where(r => r.Identity!.ExternalId != null && r.Identity.Status != LinkStatus.Rejected)
+            .Where(r => !hidden.Contains(r.Identity!.System) && !hidden.Contains(r.Party!.System))
             .OrderBy(r => r.Id)
             .Take(MaxChainedRelations * 2)
             .ToListAsync(ct)
@@ -217,6 +234,7 @@ public sealed class RelatedPartyQueryService(
     public async Task<Dictionary<long, (IReadOnlyList<string> Path, LinkStatus Status)>> ChainAsync(long startId, CancellationToken ct = default)
     {
         var result = new Dictionary<long, (IReadOnlyList<string> Path, LinkStatus Status)>();
+        var hidden = await HiddenSystemsAsync(ct).ConfigureAwait(false);
         var frontier = new List<(long Id, IReadOnlyList<string> Path, LinkStatus Status)> { (startId, [], LinkStatus.Confirmed) };
         var seen = new HashSet<long> { startId };
 
@@ -226,6 +244,7 @@ public sealed class RelatedPartyQueryService(
             var edges = await db.PartyRelations
                 .AsNoTracking()
                 .Where(r => r.IsCurrent && r.Status != LinkStatus.Rejected)
+                .Where(r => !hidden.Contains(r.System) && !hidden.Contains(r.From!.System) && !hidden.Contains(r.To!.System))
                 .Where(r => ids.Contains(r.FromPartyId) || ids.Contains(r.ToPartyId))
                 .Select(r => new { r.FromPartyId, r.ToPartyId, r.Status, From = r.From!.Label, To = r.To!.Label })
                 .ToListAsync(ct)
@@ -275,6 +294,7 @@ public sealed class RelatedPartyQueryService(
             return new DesignationRelationsView();
         }
 
+        var hidden = await HiddenSystemsAsync(ct).ConfigureAwait(false);
         var relations = await db.DesignationRelations
             .AsNoTracking()
             .Include(r => r.Identity)
@@ -282,6 +302,7 @@ public sealed class RelatedPartyQueryService(
             .Where(r => r.IsCurrent && r.Status != LinkStatus.Rejected)
             .Where(r => r.Identity!.SourceId == record.SourceId && r.Identity.SourceRecordKey == record.SourceRecordKey)
             .Where(r => r.Identity!.ExternalId != null && r.Identity.Status != LinkStatus.Rejected)
+            .Where(r => !hidden.Contains(r.Identity!.System) && !hidden.Contains(r.Party!.System))
             .OrderBy(r => r.Kind).ThenBy(r => r.Party!.Label)
             .ToListAsync(ct)
             .ConfigureAwait(false);
@@ -303,6 +324,8 @@ public sealed class RelatedPartyQueryService(
                     EndDate = r.EndDate,
                     EvidenceUrls = Urls(r.EvidenceUrls),
                     LastSeenAt = r.LastSeenAt,
+                    Note = r.Note,
+                    MatchNote = r.Identity.Note,
                 }),
             ],
         };

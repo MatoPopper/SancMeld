@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using SancMeld.Connectors.Ares;
 using SancMeld.Connectors.Rpvs;
+using SancMeld.Connectors.SkRegister;
 using SancMeld.Connectors.CzMzv;
 using SancMeld.Connectors.EuFsf;
 using SancMeld.Connectors.FrGels;
@@ -17,6 +18,7 @@ using SancMeld.Connectors.UkFcdo;
 using SancMeld.Connectors.UnSc;
 using SancMeld.Connectors.Wikidata;
 using SancMeld.Core.Abstractions;
+using SancMeld.Core.Access;
 using SancMeld.Core.Configuration;
 using SancMeld.Core.Data;
 using SancMeld.Core.Embeddings;
@@ -103,6 +105,12 @@ public static class SancMeldExtensions
         services.AddScoped<IScoringStrategy, RulesScoringStrategy>();
         services.AddSancMeldEmbeddings();
         services.AddScoped<RelatedPartyStore>();
+
+        // Who may see the links that rest on a name alone: decided per request, from the
+        // caller's row in api_user. ApiUserDirectory is registered with the sign-in; the
+        // access check resolves it only once it knows there is a signed-in caller.
+        services.AddHttpContextAccessor();
+        services.TryAddScoped<IAdditionalInfoAccess, HttpAdditionalInfoAccess>();
         services.AddScoped<RelatedPartyQueryService>();
         services.AddScoped<DesignationGraphService>();
         services.AddScoped<CuratedRelationsImporter>();
@@ -133,6 +141,10 @@ public static class SancMeldExtensions
         // The Czech company register, read on request for who owns and runs a company.
         services.AddAresConnector(configuration);
         services.AddRpvsConnector(configuration);
+
+        // The Slovak business register, asked per listing for namesakes among shareholders
+        // and directors: leads, shown only to users allowed the additional information.
+        services.AddSkRegisterConnector(configuration);
 
         // TODO: adjudication capture, and scheduled runs of the import.
         // Defaults are single-tenant and unauthenticated by design; the hosted

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
+using SancMeld.Core.Access;
 using SancMeld.Core.Domain;
 using SancMeld.Core.Learning;
 using SancMeld.Core.Relations;
@@ -184,6 +185,9 @@ internal static class SancMeldEndpoints
     /// <summary>A company to look up in a national register: an identification number or a name.</summary>
     public sealed record RegisterLookupRequest(string Query, int? Depth = null);
 
+    /// <summary>A listing to look up in the Slovak business register.</summary>
+    public sealed record SkRegisterLookupRequest(Guid DesignationId);
+
     /// <summary>
     /// An analyst's verdict on a link the graph shows: a listed subject's tie to a party,
     /// a tie between two parties, or the identity a register match rests on.
@@ -210,6 +214,35 @@ internal static class SancMeldEndpoints
             "whose date of birth and name match a listed person are linked to the company as " +
             "candidates; corporate shareholders are followed up to Depth hops. People who are not " +
             "listed are not stored. The query is sent to ARES (Ministry of Finance of the Czech Republic).");
+
+        endpoints.MapPost("/registers/sk/lookup", async Task<Results<Ok<SancMeld.Connectors.SkRegister.SkRegisterLookupResult>, BadRequest<string>, StatusCodeHttpResult>> (
+            SancMeld.Connectors.SkRegister.SkRegisterLookupService sk, IAdditionalInfoAccess access, SkRegisterLookupRequest request, CancellationToken ct) =>
+        {
+            // What it finds is additional information; asking for it is too. A plain 403
+            // rather than Forbid(): a host without sign-in has no scheme to challenge with.
+            if (!await access.AllowedAsync(ct))
+            {
+                return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
+            }
+
+            if (request is null || request.DesignationId == Guid.Empty)
+            {
+                return TypedResults.BadRequest("Supply the listing's designationId.");
+            }
+
+            return TypedResults.Ok(await sk.LookupAsync(request.DesignationId, null, ct, fresh: true));
+        })
+        .RequireWrite(requireSignIn)
+        .AddEndpointFilter<RequestBudgetFilter>()
+        .WithTags("Designations")
+        .WithName("LookupSkRegister")
+        .WithSummary("Ask the Slovak business register for namesakes of a listed subject — writes; additional information only.")
+        .WithDescription(
+            "A person is searched in ORSR by surname and given name; the companies of every matching " +
+            "shareholder or director are read from RPO with the person's role, dates and the country of " +
+            "their address. A company is searched in RPO by its most distinctive word. Neither register " +
+            "publishes a date of birth: every link is a candidate lead, visible only to users allowed the " +
+            "additional information, and only they may call this. Queries go to orsr.sk and api.statistics.sk.");
 
         endpoints.MapPost("/relations/decisions", async Task<Results<Ok<RelationDecisionResult>, BadRequest<string>, NotFound<string>>> (
             RelationDecisionService decisions, RelationDecisionRequest request, ClaimsPrincipal user, CancellationToken ct) =>

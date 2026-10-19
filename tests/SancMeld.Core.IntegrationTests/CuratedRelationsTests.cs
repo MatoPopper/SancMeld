@@ -134,7 +134,7 @@ public sealed class CuratedRelationsTests(DatabaseFixture fixture) : IAsyncLifet
 
         // An analyst confirms the operator link: the chain is confirmed end to end, and
         // reloading the case file does not take the confirmation back.
-        var decisions = new RelationDecisionService(check, TimeProvider.System);
+        var decisions = new RelationDecisionService(check, TimeProvider.System, new SancMeld.Core.Access.FullAdditionalInfoAccess());
         await decisions.DecideAsync(new RelationDecisionRequest
         {
             Target = DecisionTarget.PartyRelation,
@@ -165,7 +165,7 @@ public sealed class CuratedRelationsTests(DatabaseFixture fixture) : IAsyncLifet
 
             // Rejecting the owner's tie to the group hides the chain from checks.
             var ownerRelation = await after.DesignationRelations.SingleAsync(r => r.Party!.ExternalId == $"{_tag}-group");
-            await new RelationDecisionService(after, TimeProvider.System).DecideAsync(new RelationDecisionRequest
+            await new RelationDecisionService(after, TimeProvider.System, new SancMeld.Core.Access.FullAdditionalInfoAccess()).DecideAsync(new RelationDecisionRequest
             {
                 Target = DecisionTarget.ListingRelation,
                 Id = ownerRelation.Id,
