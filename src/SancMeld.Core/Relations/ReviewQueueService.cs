@@ -93,6 +93,7 @@ public sealed class ReviewQueueService(SancMeldDbContext db, RelatedPartyQuerySe
                 {
                     DesignationId = listing.Id,
                     Name = listing.Names.FirstOrDefault()?.Value ?? listing.SourceRecordKey,
+                    LatinName = listing.Names.Select(n => n.Value).FirstOrDefault(n => !n.Any(c => c is >= 'Ѐ' and <= 'ӿ')),
                     Source = listing.Source,
                     LegalEffect = listing.LegalEffect,
                     SubjectType = listing.SubjectType,
@@ -104,6 +105,9 @@ public sealed class ReviewQueueService(SancMeldDbContext db, RelatedPartyQuerySe
                 Note = r.Note,
                 MatchNote = r.Identity.Note,
                 MatchedName = r.Identity.MatchedName,
+                IdentityLabel = r.Identity.Label,
+                IdentityUrl = RelatedPartyQueryService.RecordUrl(r.Identity.System, r.Identity.ExternalId!) is { Length: > 0 } url ? url : null,
+                Property = r.Property,
                 MatchedLabel = r.Identity.MatchedLabel,
                 BirthDateMatched = r.Identity.BirthDateMatched,
                 EvidenceUrls = r.EvidenceUrls is null ? [] : JsonSerializer.Deserialize<List<string>>(r.EvidenceUrls) ?? [],
@@ -148,6 +152,9 @@ public sealed record ReviewListing
 {
     public required Guid DesignationId { get; init; }
     public required string Name { get; init; }
+
+    /// <summary>A Latin spelling when the first is Cyrillic: the EU writes Russians in Cyrillic first.</summary>
+    public string? LatinName { get; init; }
     public required string Source { get; init; }
     public required LegalEffect LegalEffect { get; init; }
     public required SubjectType SubjectType { get; init; }
@@ -176,6 +183,13 @@ public sealed record ReviewItem
     public string? MatchNote { get; init; }
     public string? MatchedName { get; init; }
     public string? MatchedLabel { get; init; }
+
+    /// <summary>The register's own record of the listed subject (the Wikidata item of the person), when it has an address.</summary>
+    public string? IdentityLabel { get; init; }
+    public string? IdentityUrl { get; init; }
+
+    /// <summary>What the register calls the tie: a Wikidata property (P488), a Slovak role (Konateľ).</summary>
+    public string? Property { get; init; }
     public bool BirthDateMatched { get; init; }
     public IReadOnlyList<string> EvidenceUrls { get; init; } = [];
     public string? DecidedBy { get; init; }
