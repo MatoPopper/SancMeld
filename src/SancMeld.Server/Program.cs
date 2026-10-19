@@ -586,6 +586,49 @@ if (args is ["sk-register", var skAction, ..])
     return 1;
 }
 
+// Leads from the Czech public register (justice.cz finds the person, ARES reads the company):
+//
+//   dotnet run --project src/SancMeld.Server -- cz-register lookup <designation id>
+//   dotnet run --project src/SancMeld.Server -- cz-register run [--max N] [--act 2026/2281] [--refresh]
+if (args is ["cz-register", var czAction, ..])
+{
+    using var scope = app.Services.CreateScope();
+    var cz = scope.ServiceProvider.GetRequiredService<SancMeld.Connectors.CzRegister.CzRegisterLookupService>();
+
+    if (czAction == "lookup" && args.Length > 2 && Guid.TryParse(args[2], out var czDesignationId))
+    {
+        var one = await cz.LookupAsync(czDesignationId, null, CancellationToken.None, fresh: true);
+        Console.WriteLine($"CZ register '{one.Listing}': {one.Links.Count} links ({one.AresLinks} via ARES), {one.Queries} requests.");
+        foreach (var line in one.Links) Console.WriteLine($"  LEAD     {line}");
+        foreach (var line in one.Notes) Console.WriteLine($"  note     {line}");
+        return 0;
+    }
+
+    if (czAction == "run")
+    {
+        var max = int.TryParse(Flag(args, "--max"), out var parsedMax) ? parsedMax : 800;
+        IReadOnlyCollection<Guid>? only = null;
+
+        if (Flag(args, "--act") is { Length: > 0 } act)
+        {
+            var db = scope.ServiceProvider.GetRequiredService<SancMeldDbContext>();
+            only = await db.Designations
+                .Where(d => d.ValidTo == null && d.LegalInstruments.Any(l => (l.LegalInstrument!.Title ?? "").Contains(act) || (l.LegalInstrument.InstrumentNumber ?? "").Contains(act)))
+                .Select(d => d.Id)
+                .ToListAsync();
+            Console.WriteLine($"{only.Count} current listings name {act}.");
+        }
+
+        var run = await cz.RunAsync(max, only, CancellationToken.None, refresh: args.Contains("--refresh"));
+        Console.WriteLine($"CZ register: {run.Listings} listings, {run.Linked} with links, {run.Links} links, {run.Queries} requests, {run.Failed} skipped.");
+        foreach (var line in run.Lines) Console.WriteLine($"  LEAD     {line}");
+        return 0;
+    }
+
+    Console.Error.WriteLine("Usage: cz-register lookup <designation id> | cz-register run [--max N] [--act <act number>] [--refresh]");
+    return 1;
+}
+
 // Hand-entered links into the internal register, from a case file kept outside the repo:
 //
 //   dotnet run --project src/SancMeld.Server -- relations import-curated case.json
@@ -735,6 +778,22 @@ static async Task ScheduleImportsAsync(WebApplication app)
         else
         {
             schedule.RemoveIfExists(skRegisterJob);
+        }
+
+        // The Czech register, half an hour after the Slovak one; both finish before the morning imports.
+        var czRegister = scope.ServiceProvider.GetRequiredService<IOptions<SancMeld.Connectors.CzRegister.CzRegisterOptions>>().Value;
+        const string czRegisterJob = "related-parties:cz-register";
+
+        if (czRegister.Enabled && czRegister.MaxListingsPerScheduledRun > 0)
+        {
+            schedule.AddOrUpdate<SancMeld.Connectors.CzRegister.CzRegisterLookupService>(
+                recurringJobId: czRegisterJob,
+                methodCall: cz => cz.RunScheduledAsync(CancellationToken.None),
+                cronExpression: czRegister.CronExpression);
+        }
+        else
+        {
+            schedule.RemoveIfExists(czRegisterJob);
         }
     }
     catch (Exception ex)

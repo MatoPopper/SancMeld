@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using SancMeld.Connectors.Ares;
 using SancMeld.Connectors.Rpvs;
 using SancMeld.Connectors.SkRegister;
+using SancMeld.Connectors.CzRegister;
 using SancMeld.Connectors.CzMzv;
 using SancMeld.Connectors.EuFsf;
 using SancMeld.Connectors.FrGels;
@@ -146,6 +147,9 @@ public static class SancMeldExtensions
         // The Slovak business register, asked per listing for namesakes among shareholders
         // and directors: leads, shown only to users allowed the additional information.
         services.AddSkRegisterConnector(configuration);
+
+        // The Czech public register, searched by person with a date of birth; companies are read through ARES.
+        services.AddCzRegisterConnector(configuration);
 
         // TODO: adjudication capture, and scheduled runs of the import.
         // Defaults are single-tenant and unauthenticated by design; the hosted

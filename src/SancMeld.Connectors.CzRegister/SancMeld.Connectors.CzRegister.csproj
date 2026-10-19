@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>SancMeld.Connectors.CzRegister</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="SancMeld.Connectors.CzRegister.Tests" />
+    <InternalsVisibleTo Include="SancMeld.Core.IntegrationTests" />
+  </ItemGroup>
+
+  <!-- justice.cz answers UTF-8 HTML; the companies themselves are read through the ARES connector. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.4" />
+    <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="10.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../SancMeld.Core/SancMeld.Core.csproj" />
+    <ProjectReference Include="../SancMeld.Connectors.Ares/SancMeld.Connectors.Ares.csproj" />
+  </ItemGroup>
+
+</Project>

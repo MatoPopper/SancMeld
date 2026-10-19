@@ -69,6 +69,14 @@ public static class RelationSystems
     /// </summary>
     public const string SkRegister = "SK_ORSR";
 
+    /// <summary>
+    /// The Czech public register (or.justice.cz), searched by person. Its rows carry a date of
+    /// birth, so a listed person with one is linked through ARES (a name-and-birthday match);
+    /// only a listing without a date of birth, or a company sharing a listed name, is kept
+    /// here as a name-only lead.
+    /// </summary>
+    public const string CzRegister = "CZ_JUSTICE";
+
     /// <summary>An analyst's open-source research: media, foreign registers, leaks. Every link names its sources.</summary>
     public const string Osint = "OSINT";
 
@@ -78,9 +86,12 @@ public static class RelationSystems
     /// else in the graph rests on a date of birth, a publisher's word or an analyst's
     /// decision; these rest on a name.
     /// </summary>
-    public static readonly string[] AdditionalInfo = [SkRegister, Osint];
+    public static readonly string[] AdditionalInfo = [SkRegister, CzRegister, Osint];
 
-    public static bool IsAdditionalInfo(string? system) => system is SkRegister or Osint;
+    public static bool IsAdditionalInfo(string? system) => system is SkRegister or CzRegister or Osint;
+
+    /// <summary>The registers whose person links rest on a name alone: never red in the graph, never urgent in the queue.</summary>
+    public static bool IsNameOnlyRegister(string? system) => system is SkRegister or CzRegister;
 }
 
 /// <summary>One related party as a screening sees it.</summary>

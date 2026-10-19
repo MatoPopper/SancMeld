@@ -1,9 +1,7 @@
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
-using SancMeld.Core.Matching;
-
-namespace SancMeld.Connectors.SkRegister;
+namespace SancMeld.Core.Matching;
 
 /// <summary>A listed spelling split the way a register files a person: surname, and the given name.</summary>
 public sealed record PersonName(string Surname, string? GivenName);
@@ -11,7 +9,8 @@ public sealed record PersonName(string Surname, string? GivenName);
 /// <summary>
 /// What to ask a register for, from a listing's spellings. The lists write names every
 /// way there is — "Aleksandr Anatolevich SURKOV", "SURKOV Aleksandr", "Сурков Александр";
-/// ORSR files a person by surname and given name, and RPO a company by its whole name.
+/// the Slovak and Czech registers file a person by surname and given name, and a company
+/// by its whole name. Shared by the Slovak and Czech register connectors.
 /// </summary>
 public static partial class ListingNames
 {
@@ -112,18 +111,23 @@ public static partial class ListingNames
     }
 
     /// <summary>
-    /// Slovak legal forms and states, as spaced words of a folded name: "s. r. o." and
-    /// "s.r.o." both become "s r o". A name carrying none is a sole trader, a club or an
-    /// association — RPO holds them all — and not what a sanctioned company's namesake is.
+    /// Slovak and Czech legal forms and states, as spaced words of a folded name: "s. r. o."
+    /// and "s.r.o." both become "s r o". A name carrying none is a sole trader, a club or an
+    /// association — the registers hold them all — and not what a sanctioned company's
+    /// namesake is.
     /// </summary>
     private static readonly string[] LegalForms =
     [
-        " spolocnost s rucenim obmedzenym ", " akciova spolocnost ", " verejna obchodna spolocnost ",
-        " komanditna spolocnost ", " jednoducha spolocnost na akcie ", " spol s r o ", " s r o ", " a s ",
-        " v o s ", " k s ", " j s a ", " druzstvo ",
+        " spolocnost s rucenim obmedzenym ", " spolecnost s rucenim omezenym ", " akciova spolocnost ", " akciova spolecnost ",
+        " verejna obchodna spolocnost ", " verejna obchodni spolecnost ", " komanditna spolocnost ", " komanditni spolecnost ",
+        " jednoducha spolocnost na akcie ", " spol s r o ", " s r o ", " a s ", " v o s ", " k s ", " j s a ", " druzstvo ",
+        " statni podnik ", " s p ", " narodni podnik ", " statny podnik ", " s e ",
     ];
 
-    private static readonly string[] States = [" v likvidacii ", " v konkurze ", " organizacna zlozka ", " odstepny zavod "];
+    private static readonly string[] States =
+    [
+        " v likvidacii ", " v likvidaci ", " v konkurze ", " v konkursu ", " organizacna zlozka ", " odstepny zavod ", " odstepny zavod ", " organizacni slozka ",
+    ];
 
     /// <summary>Whether the Slovak name is a company's: it carries a legal form.</summary>
     public static bool IsCompany(string name)

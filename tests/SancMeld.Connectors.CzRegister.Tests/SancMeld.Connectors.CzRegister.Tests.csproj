@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/SancMeld.Connectors.CzRegister/SancMeld.Connectors.CzRegister.csproj" />
+  </ItemGroup>
+
+  <!-- A page in the shape or.justice.cz serves (checked against the live page of 2026-10-19):
+       invented people and companies only. -->
+  <ItemGroup>
+    <Content Include="../../fixtures/czregister/*" LinkBase="fixtures/czregister" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

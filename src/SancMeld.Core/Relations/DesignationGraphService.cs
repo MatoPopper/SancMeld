@@ -275,7 +275,7 @@ public sealed class DesignationGraphService(
                 {
                     LinkStatus.Rejected => GraphStatus.Rejected,
                     LinkStatus.Confirmed => GraphStatus.Confirmed,
-                    _ when e.System == RelationSystems.SkRegister => GraphStatus.Candidate,
+                    _ when RelationSystems.IsNameOnlyRegister(e.System) => GraphStatus.Candidate,
                     _ => subject.LegalEffect == LegalEffect.Binding ? GraphStatus.Review : GraphStatus.Candidate,
                 };
 
@@ -288,6 +288,7 @@ public sealed class DesignationGraphService(
                     RelationSystems.Curated => "Internal register",
                     RelationSystems.Ares => "ARES (CZ company register)",
                     RelationSystems.SkRegister => "ORSR/RPO (SK company register)",
+                    RelationSystems.CzRegister => "justice.cz (CZ public register)",
                     RelationSystems.Osint => "Open-source research",
                     _ => e.System,
                 };
@@ -318,7 +319,7 @@ public sealed class DesignationGraphService(
         // A name in the Slovak register is a lead, not a finding: the register publishes
         // no date of birth, and most of the people it finds are namesakes. It stays amber
         // until a person has read the company's documents, binding listing or not.
-        if (system == RelationSystems.SkRegister)
+        if (RelationSystems.IsNameOnlyRegister(system))
         {
             return GraphStatus.Candidate;
         }
@@ -332,12 +333,15 @@ public sealed class DesignationGraphService(
 
     private static string RelationEvidence(RelationKind kind, RelatedPartyView party, decimal? share, DateOnly? start, DateOnly? end, int references, LinkStatus identity, string? note = null)
     {
-        if (party.System == RelationSystems.SkRegister)
+        if (RelationSystems.IsNameOnlyRegister(party.System))
         {
             var since = start is { } s3 ? $" since {s3:yyyy-MM-dd}" : string.Empty;
             var until = end is { } e3 ? $" until {e3:yyyy-MM-dd}" : string.Empty;
-            var matchedBy = identity == LinkStatus.Confirmed ? "identity confirmed by an analyst" : "name match only, the register publishes no date of birth";
-            return $"ORSR/RPO (SK company register): {Verb(kind)} {party.Name}{since}{until}; {matchedBy}"
+            var register = party.System == RelationSystems.CzRegister ? "justice.cz (CZ public register)" : "ORSR/RPO (SK company register)";
+            var matchedBy = identity == LinkStatus.Confirmed ? "identity confirmed by an analyst"
+                : party.System == RelationSystems.CzRegister ? "name match only, the listing has no date of birth to compare"
+                : "name match only, the register publishes no date of birth";
+            return $"{register}: {Verb(kind)} {party.Name}{since}{until}; {matchedBy}"
                 + (note is { Length: > 0 } n3 ? $"; {n3}" : string.Empty) + ".";
         }
 

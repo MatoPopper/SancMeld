@@ -261,10 +261,37 @@ internal static class SancMeldEndpoints
         .WithSummary("Every tie between a listing and a party a person still has to decide, the most urgent first.")
         .WithDescription(
             "Status Candidate (default), Confirmed or Rejected; system narrows to one register (WIKIDATA, ARES, " +
-            "RPVS, CURATED, SK_ORSR, OSINT). Review first — a candidate that reaches a binding listing or claims " +
+            "RPVS, CURATED, SK_ORSR, CZ_JUSTICE, OSINT). Review first — a candidate that reaches a binding listing or claims " +
             "control — then candidates, a Slovak-register name match whose address is in the listing's country " +
             "before one whose is not. Only for callers allowed the additional information; 403 otherwise. " +
             "Decide an item with POST /relations/decisions, target ListingRelation and its id.");
+
+        endpoints.MapPost("/registers/cz/lookup", async Task<Results<Ok<SancMeld.Connectors.CzRegister.CzRegisterLookupResult>, BadRequest<string>, StatusCodeHttpResult>> (
+            SancMeld.Connectors.CzRegister.CzRegisterLookupService cz, IAdditionalInfoAccess access, SkRegisterLookupRequest request, CancellationToken ct) =>
+        {
+            if (!await access.AllowedAsync(ct))
+            {
+                return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
+            }
+
+            if (request is null || request.DesignationId == Guid.Empty)
+            {
+                return TypedResults.BadRequest("Supply the listing's designationId.");
+            }
+
+            return TypedResults.Ok(await cz.LookupAsync(request.DesignationId, null, ct, fresh: true));
+        })
+        .RequireWrite(requireSignIn)
+        .AddEndpointFilter<RequestBudgetFilter>()
+        .WithTags("Designations")
+        .WithName("LookupCzRegister")
+        .WithSummary("Ask the Czech public register for a listed subject — writes; additional information only.")
+        .WithDescription(
+            "A person with a date of birth is searched on justice.cz by surname and birthday and their companies " +
+            "are read through ARES, which links them by name and date of birth (an ordinary ARES link). A person " +
+            "without one is searched by name and every namesake is a candidate lead with the register's date of " +
+            "birth and address. A company is matched to Czech companies carrying its distinctive name. Only users " +
+            "allowed the additional information may call this. Queries go to or.justice.cz and ares.gov.cz.");
 
         endpoints.MapPost("/relations/decisions", async Task<Results<Ok<RelationDecisionResult>, BadRequest<string>, NotFound<string>>> (
             RelationDecisionService decisions, RelationDecisionRequest request, ClaimsPrincipal user, CancellationToken ct) =>

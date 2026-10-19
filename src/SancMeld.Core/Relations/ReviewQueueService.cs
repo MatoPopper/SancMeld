@@ -72,7 +72,7 @@ public sealed class ReviewQueueService(SancMeldDbContext db, RelatedPartyQuerySe
                 continue;
             }
 
-            var urgent = r.Identity.System != RelationSystems.SkRegister
+            var urgent = !RelationSystems.IsNameOnlyRegister(r.Identity.System)
                 && (listing.LegalEffect == LegalEffect.Binding || r.Share >= ControllingShare);
 
             items.Add(new ReviewItem

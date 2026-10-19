@@ -1,6 +1,7 @@
 using System.Text.Json;
 using SancMeld.Core.Relations;
 using Xunit;
+using SancMeld.Core.Matching;
 
 namespace SancMeld.Connectors.SkRegister.Tests;
 
