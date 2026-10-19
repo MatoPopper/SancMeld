@@ -88,7 +88,6 @@ public sealed class SkRegisterLookupService(
         await db.SaveChangesAsync(ct).ConfigureAwait(false);
 
         var failedInARow = 0;
-        run.Status = "SUCCESS";
 
         foreach (var id in await PendingAsync(max, only, refresh, ct).ConfigureAwait(false))
         {
@@ -137,6 +136,13 @@ public sealed class SkRegisterLookupService(
                 run.Queries = result.Queries;
                 await db.SaveChangesAsync(ct).ConfigureAwait(false);
             }
+        }
+
+        // Set here, not before the loop: every lookup saves the context, and a status set
+        // early would read SUCCESS while the run is still going.
+        if (run.Status == "RUNNING")
+        {
+            run.Status = "SUCCESS";
         }
 
         run.FinishedAt = clock.GetUtcNow();
