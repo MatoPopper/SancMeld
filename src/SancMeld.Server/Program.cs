@@ -577,7 +577,7 @@ if (args is ["sk-register", var skAction, ..])
         }
 
         var run = await sk.RunAsync(max, only, CancellationToken.None, refresh: args.Contains("--refresh"));
-        Console.WriteLine($"SK register: {run.Listings} listings, {run.Linked} with leads, {run.Links} links, {run.Queries} requests.");
+        Console.WriteLine($"SK register: {run.Listings} listings, {run.Linked} with leads, {run.Links} links, {run.Queries} requests, {run.Failed} skipped.");
         foreach (var line in run.Lines) Console.WriteLine($"  LEAD     {line}");
         return 0;
     }

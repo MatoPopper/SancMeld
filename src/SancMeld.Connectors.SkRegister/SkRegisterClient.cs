@@ -96,24 +96,48 @@ public sealed class SkRegisterClient(IHttpClientFactory httpClients, IOptions<Sk
         return await JsonDocument.ParseAsync(stream, cancellationToken: ct).ConfigureAwait(false);
     }
 
+    /// <summary>Tries per request: a register that times out once usually answers the next time.</summary>
+    private const int Attempts = 3;
+
     /// <summary>
     /// One request at a time, each after the configured pause: the client is a singleton,
-    /// so a lookup from the check page and the nightly run share one pace.
+    /// so a lookup from the check page and the nightly run share one pace. A timeout, a
+    /// dropped connection or a 5xx is tried again after a longer pause; the third failure
+    /// is the caller's to handle.
     /// </summary>
     private async Task<HttpResponseMessage> SendAsync(string url, string accept, CancellationToken ct)
     {
         await _pace.WaitAsync(ct).ConfigureAwait(false);
         try
         {
-            if (options.Value.DelayMilliseconds > 0)
+            for (var attempt = 1; ; attempt++)
             {
-                await Task.Delay(TimeSpan.FromMilliseconds(options.Value.DelayMilliseconds), clock, ct).ConfigureAwait(false);
-            }
+                var pause = options.Value.DelayMilliseconds * (attempt == 1 ? 1 : 4);
+                if (pause > 0)
+                {
+                    await Task.Delay(TimeSpan.FromMilliseconds(pause), clock, ct).ConfigureAwait(false);
+                }
 
-            using var request = new HttpRequestMessage(HttpMethod.Get, url);
-            request.Headers.TryAddWithoutValidation("User-Agent", sancMeld.Value.Ingest.UserAgent);
-            request.Headers.TryAddWithoutValidation("Accept", accept);
-            return await httpClients.CreateClient(HttpClientName).SendAsync(request, ct).ConfigureAwait(false);
+                using var request = new HttpRequestMessage(HttpMethod.Get, url);
+                request.Headers.TryAddWithoutValidation("User-Agent", sancMeld.Value.Ingest.UserAgent);
+                request.Headers.TryAddWithoutValidation("Accept", accept);
+
+                try
+                {
+                    var response = await httpClients.CreateClient(HttpClientName).SendAsync(request, ct).ConfigureAwait(false);
+                    if ((int)response.StatusCode < 500 || attempt == Attempts)
+                    {
+                        return response;
+                    }
+
+                    response.Dispose();
+                }
+                catch (Exception ex) when (attempt < Attempts && !ct.IsCancellationRequested
+                    && ex is HttpRequestException or TaskCanceledException or IOException)
+                {
+                    // Tried again below.
+                }
+            }
         }
         finally
         {

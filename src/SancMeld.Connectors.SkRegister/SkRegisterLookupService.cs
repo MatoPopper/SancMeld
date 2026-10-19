@@ -42,6 +42,9 @@ public sealed class SkRegisterLookupService(
     /// <summary>More Slovak companies of one listed name than this, and the name is a common word.</summary>
     private const int MaxNamesakeCompanies = 3;
 
+    /// <summary>Listings failing one after another before a run concludes the registers are down.</summary>
+    private const int MaxFailuresInARow = 5;
+
     /// <summary>After an import: the day's few new listings now, a package's hundreds tonight.</summary>
     public async Task EnrichAsync(IReadOnlyCollection<Guid> designationIds, CancellationToken ct = default)
     {
@@ -84,9 +87,12 @@ public sealed class SkRegisterLookupService(
         db.RelationRuns.Add(run);
         await db.SaveChangesAsync(ct).ConfigureAwait(false);
 
-        try
+        var failedInARow = 0;
+        run.Status = "SUCCESS";
+
+        foreach (var id in await PendingAsync(max, only, refresh, ct).ConfigureAwait(false))
         {
-            foreach (var id in await PendingAsync(max, only, refresh, ct).ConfigureAwait(false))
+            try
             {
                 var one = await LookupAsync(id, run.Id, ct, fresh: refresh).ConfigureAwait(false);
                 result.Listings++;
@@ -94,17 +100,43 @@ public sealed class SkRegisterLookupService(
                 result.Links += one.Links.Count;
                 result.Queries += one.Queries;
                 result.Lines.AddRange(one.Links.Select(l => $"{one.Listing}: {l}"));
+                failedInARow = 0;
+            }
+            catch (Exception ex) when (ex is HttpRequestException or IOException
+                || (ex is TaskCanceledException && !ct.IsCancellationRequested))
+            {
+                // One listing the registers did not answer for is skipped, not stored: its
+                // half-made identity would read as "nothing found" for months. It stays
+                // pending for the next run. Five in a row is a register that is down.
+                db.ChangeTracker.Clear();
+                db.RelationRuns.Attach(run);
+                result.Failed++;
+                failedInARow++;
+                logger.LogWarning("SK register: listing {Id} skipped: {Error}", id, ex.Message);
+
+                if (failedInARow >= MaxFailuresInARow)
+                {
+                    run.Status = "FAILED";
+                    run.ErrorSummary = $"{failedInARow} listings in a row failed; last: {ex.Message}";
+                    if (run.ErrorSummary.Length > 500)
+                    {
+                        run.ErrorSummary = run.ErrorSummary[..500];
+                    }
+
+                    logger.LogWarning("SK register: the run stopped after {Count} listings; the registers stopped answering.", result.Listings);
+                    break;
+                }
             }
 
-            run.Status = "SUCCESS";
-        }
-        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or IOException)
-        {
-            // A register that stops answering ends the run, not the import or the job's
-            // schedule; what was looked up so far is stored, the rest waits for tomorrow.
-            run.Status = "FAILED";
-            run.ErrorSummary = ex.Message.Length > 500 ? ex.Message[..500] : ex.Message;
-            logger.LogWarning(ex, "SK register: the run stopped after {Count} listings.", result.Listings);
+            // Progress where the status command and the database can see it, not only at the end.
+            if ((result.Listings + result.Failed) % 10 == 0)
+            {
+                run.PersonsAttempted = result.Listings;
+                run.PersonsResolved = result.Linked;
+                run.RelationsSeen = result.Links;
+                run.Queries = result.Queries;
+                await db.SaveChangesAsync(ct).ConfigureAwait(false);
+            }
         }
 
         run.FinishedAt = clock.GetUtcNow();
@@ -114,8 +146,8 @@ public sealed class SkRegisterLookupService(
         run.Queries = result.Queries;
         await db.SaveChangesAsync(CancellationToken.None).ConfigureAwait(false);
 
-        logger.LogInformation("SK register: {Listings} listings looked up, {Linked} with leads, {Links} links, {Queries} requests.",
-            result.Listings, result.Linked, result.Links, result.Queries);
+        logger.LogInformation("SK register: {Listings} listings looked up, {Linked} with leads, {Links} links, {Queries} requests, {Failed} skipped.",
+            result.Listings, result.Linked, result.Links, result.Queries, result.Failed);
         return result;
     }
 
@@ -629,5 +661,8 @@ public sealed class SkRegisterRunResult
     public int Linked { get; set; }
     public int Links { get; set; }
     public int Queries { get; set; }
+
+    /// <summary>Listings skipped because a register did not answer; they stay pending.</summary>
+    public int Failed { get; set; }
     public List<string> Lines { get; } = [];
 }

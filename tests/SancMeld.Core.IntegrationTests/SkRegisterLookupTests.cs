@@ -150,6 +150,25 @@ public sealed class SkRegisterLookupTests(DatabaseFixture fixture) : IAsyncLifet
     }
 
     [Fact]
+    public async Task AListingTheRegisterFailsForIsSkippedAndStaysPending()
+    {
+        var failing = await ImportAsync(SubjectType.Person, $"Oleg Borisovich KRAVETS {_tag}");
+        var fake = PersonRegister();
+        fake.FailSurname = "Kravets";
+
+        await using var db = fixture.CreateContext();
+        var service = new SkRegisterLookupService(
+            fake, db, Options.Create(new SkRegisterOptions { DelayMilliseconds = 0 }), TimeProvider.System, NullLogger<SkRegisterLookupService>.Instance);
+
+        var run = await service.RunAsync(10, [failing], CancellationToken.None);
+
+        Assert.Equal(1, run.Failed);
+        Assert.Equal(0, run.Listings);
+        Assert.False(await db.ExternalIdentities.AnyAsync(i => i.System == RelationSystems.SkRegister && i.DesignationId == failing));
+        Assert.Equal("SUCCESS", (await db.RelationRuns.OrderByDescending(r => r.StartedAt).FirstAsync(r => r.System == RelationSystems.SkRegister)).Status);
+    }
+
+    [Fact]
     public async Task ACompanyCarryingTheListedNameIsLinkedAsSharingIt()
     {
         var name = $"Wild{_tag}";
@@ -281,10 +300,16 @@ public sealed class SkRegisterLookupTests(DatabaseFixture fixture) : IAsyncLifet
         public Dictionary<long, RpoCompany> Entities { get; } = [];
         public List<string> Extracts { get; } = [];
         public int Calls { get; private set; }
+        public string? FailSurname { get; set; }
 
         public Task<(IReadOnlyList<OrsrPersonRow> Rows, int Total)> SearchPersonAsync(string surname, string? givenName, int page, CancellationToken ct = default)
         {
             Calls++;
+            if (string.Equals(surname, FailSurname, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new HttpRequestException("The register did not answer.");
+            }
+
             var rows = Persons.GetValueOrDefault(surname) ?? [];
             return Task.FromResult<(IReadOnlyList<OrsrPersonRow>, int)>((page == 1 ? rows : [], rows.Count));
         }
