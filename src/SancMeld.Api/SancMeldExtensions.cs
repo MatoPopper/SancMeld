@@ -113,6 +113,7 @@ public static class SancMeldExtensions
         services.TryAddScoped<IAdditionalInfoAccess, HttpAdditionalInfoAccess>();
         services.AddScoped<RelatedPartyQueryService>();
         services.AddScoped<DesignationGraphService>();
+        services.AddScoped<ReviewQueueService>();
         services.AddScoped<CuratedRelationsImporter>();
         services.AddScoped<RelationDecisionService>();
         services.AddScoped<ScreeningService>();

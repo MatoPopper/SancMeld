@@ -244,6 +244,19 @@ internal static class SancMeldEndpoints
             "publishes a date of birth: every link is a candidate lead, visible only to users allowed the " +
             "additional information, and only they may call this. Queries go to orsr.sk and api.statistics.sk.");
 
+        endpoints.MapGet("/relations/review", async (
+            ReviewQueueService queue, LinkStatus? status, string? system, int? limit, CancellationToken ct) =>
+            TypedResults.Ok(await queue.ListAsync(status ?? LinkStatus.Candidate, system, limit ?? 200, ct)))
+        .WithTags("Designations")
+        .WithName("GetReviewQueue")
+        .WithSummary("Every tie between a listing and a party a person still has to decide, the most urgent first.")
+        .WithDescription(
+            "Status Candidate (default), Confirmed or Rejected; system narrows to one register (WIKIDATA, ARES, " +
+            "RPVS, CURATED, SK_ORSR, OSINT). Review first — a candidate that reaches a binding listing or claims " +
+            "control — then candidates, a Slovak-register name match whose address is in the listing's country " +
+            "before one whose is not. The additional information appears only for callers allowed to see it. " +
+            "Decide an item with POST /relations/decisions, target ListingRelation and its id.");
+
         endpoints.MapPost("/relations/decisions", async Task<Results<Ok<RelationDecisionResult>, BadRequest<string>, NotFound<string>>> (
             RelationDecisionService decisions, RelationDecisionRequest request, ClaimsPrincipal user, CancellationToken ct) =>
         {

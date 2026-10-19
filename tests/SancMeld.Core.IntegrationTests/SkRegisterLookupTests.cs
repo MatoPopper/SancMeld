@@ -128,6 +128,28 @@ public sealed class SkRegisterLookupTests(DatabaseFixture fixture) : IAsyncLifet
     }
 
     [Fact]
+    public async Task TheReviewQueueListsTheLeadOnlyForThoseAllowed()
+    {
+        var listing = await ImportAsync(SubjectType.Person, $"Oleg Borisovich KRAVETS {_tag}");
+        await LookupAsync(PersonRegister(), listing);
+
+        await using var db = fixture.CreateContext();
+        var queries = new DesignationQueryService(db, Options.Create(new Configuration.SancMeldOptions()));
+
+        var allowed = await new ReviewQueueService(db, TestServices.RelatedParties(db, queries, additionalInfo: true))
+            .ListAsync(LinkStatus.Candidate, RelationSystems.SkRegister, ReviewQueueService.MaxItems);
+        var item = Assert.Single(allowed.Items, i => i.Listing.DesignationId == listing);
+        Assert.Equal(ReviewPriority.Candidate, item.Priority);
+        Assert.True(item.CountryAgrees);
+        Assert.Equal(_ico, item.Party.ExternalId);
+
+        var everyone = await new ReviewQueueService(db, TestServices.RelatedParties(db, queries, additionalInfo: false))
+            .ListAsync(LinkStatus.Candidate, null, ReviewQueueService.MaxItems);
+        Assert.DoesNotContain(everyone.Items, i => i.Listing.DesignationId == listing);
+        Assert.False(everyone.Systems.ContainsKey(RelationSystems.SkRegister));
+    }
+
+    [Fact]
     public async Task ACompanyCarryingTheListedNameIsLinkedAsSharingIt()
     {
         var name = $"Wild{_tag}";
