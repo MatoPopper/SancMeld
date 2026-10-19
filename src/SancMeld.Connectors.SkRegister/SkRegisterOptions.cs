@@ -43,10 +43,11 @@ public sealed class SkRegisterOptions
 
     /// <summary>
     /// Listings looked up per scheduled run, newest first. A listing costs three to ten
-    /// requests; 150 is about an hour, and the backlog of every list shrinks by that a night.
+    /// requests, about 13 a minute; 800 is a whole sanctions package (the 22nd had 769) in
+    /// about three hours, done between 03:15 and the EU import at 06:00.
     /// </summary>
     [Range(0, 10_000)]
-    public int MaxListingsPerScheduledRun { get; set; } = 150;
+    public int MaxListingsPerScheduledRun { get; set; } = 800;
 
     /// <summary>
     /// Listings an import may look up on the spot. A day's additions are a handful; a new
