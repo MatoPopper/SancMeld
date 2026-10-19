@@ -44,6 +44,9 @@ public sealed class CzRegisterLookupService(
     /// <summary>More Czech companies of one listed name than this, and the name is a common word.</summary>
     private const int MaxNamesakeCompanies = 3;
 
+    /// <summary>More people of one listed name in the register than this, and the name is a common one.</summary>
+    private const int MaxNamesakePersons = 3;
+
     /// <summary>Listings failing one after another before a run concludes the register is down.</summary>
     private const int MaxFailuresInARow = 5;
 
@@ -311,6 +314,19 @@ public sealed class CzRegisterLookupService(
         }
 
         var matched = rows.Where(r => r.Ico is not null && Matches(pending, r.Name)).DistinctBy(r => (r.Ico, r.Role, ListingNames.Fold(r.Name))).ToList();
+
+        // The register tells namesakes apart by birthday. A common name without a listed
+        // date of birth is many people; when it is more than a few, only those living in the
+        // listing's country are a lead (Sergey Kuznetsov, 2026-10-19: 5 people, 21 roles).
+        var persons = matched.Select(r => r.BirthDate).Distinct().Count();
+        if (persons > MaxNamesakePersons)
+        {
+            result.Notes.Add(countries.Count == 0
+                ? $"{persons} different people of this name are in the register and the listing names no country; none kept."
+                : $"{persons} different people of this name are in the register; only those with an address in {string.Join(", ", countries)} were kept.");
+            matched = matched.Where(r => r.CountryIso2 is { } c && countries.Contains(c)).ToList();
+        }
+
         if (matched.Count > options.Value.MaxCompaniesPerListing)
         {
             result.Notes.Add($"{matched.Count} companies have a person of this name; the first {options.Value.MaxCompaniesPerListing} were kept.");
