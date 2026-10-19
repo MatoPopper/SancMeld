@@ -180,6 +180,7 @@ public static class SancMeldExtensions
             endpoints.MapSancMeldAuth();
             endpoints.MapQuotaRequests();
             endpoints.MapAdmins();
+            endpoints.MapUsers();
         }
 
         // TODO: /sources

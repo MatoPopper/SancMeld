@@ -82,6 +82,13 @@ public static class SancMeldPolicies
     /// decisions attributed to them.
     /// </summary>
     public const string Write = "SancMeld.Write";
+
+    /// <summary>
+    /// May manage users: a signed-in person (never an API key) whose api_user row says
+    /// IsUserAdmin and who is not blocked. Separate from <see cref="Admin"/>, the allow
+    /// list, which manages who administers the allow list.
+    /// </summary>
+    public const string UserAdmin = "SancMeld.UserAdmin";
 }
 
 /// <summary>
@@ -118,6 +125,7 @@ public static class SancMeldAuthExtensions
         services.AddScoped<ApiUserDirectory>();
         services.AddScoped<ApiKeyDirectory>();
         services.AddScoped<IAuthorizationHandler, VerifiedAddressHandler>();
+        services.AddScoped<IAuthorizationHandler, UserAdminHandler>();
 
         // Scoped, not singleton: it queries the database on every authorisation check and
         // needs the request's DbContext. ASP.NET resolves handlers from request services.
@@ -135,6 +143,12 @@ public static class SancMeldAuthExtensions
             {
                 policy.RequireAuthenticatedUser();
                 policy.AddRequirements(new VerifiedAddressRequirement());
+            });
+
+            options.AddPolicy(SancMeldPolicies.UserAdmin, policy =>
+            {
+                policy.RequireAuthenticatedUser();
+                policy.AddRequirements(new UserAdminRequirement());
             });
         });
 
@@ -273,6 +287,35 @@ internal sealed class AllowListedRequirement : IAuthorizationRequirement;
 /// <summary>A signed-in caller whose provider states the address is verified. The write policy.</summary>
 internal sealed class VerifiedAddressRequirement : IAuthorizationRequirement;
 
+/// <summary>A user administrator. The users policy.</summary>
+internal sealed class UserAdminRequirement : IAuthorizationRequirement;
+
+/// <summary>
+/// Against the table on every request, like the allow list: taking the flag away has to
+/// take effect now, not when the token expires.
+/// </summary>
+internal sealed class UserAdminHandler(ApiUserDirectory users, ILogger<UserAdminHandler> logger) : AuthorizationHandler<UserAdminRequirement>
+{
+    protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, UserAdminRequirement requirement)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        var email = SancMeldClaims.EmailOf(context.User);
+        if (string.IsNullOrEmpty(email) || !SancMeldClaims.EmailIsVerified(context.User) || SancMeldClaims.IsApiKey(context.User))
+        {
+            return;
+        }
+
+        if (!await users.IsUserAdminAsync(email).ConfigureAwait(false))
+        {
+            logger.LogWarning("Rejected {Email} on the users endpoints: not a user administrator.", email);
+            return;
+        }
+
+        context.Succeed(requirement);
+    }
+}
+
 /// <summary>
 /// Lets any verified address write, and makes sure it has a row — and with it a budget —
 /// in api_user. An unverified address could be somebody else's, and a budget kept under
@@ -299,8 +342,16 @@ internal sealed class VerifiedAddressHandler(
             return;
         }
 
-        await users.EnsureAsync(email, SancMeldClaims.NameOf(context.User), SancMeldClaims.SubjectOf(context.User),
+        var user = await users.EnsureAsync(email, SancMeldClaims.NameOf(context.User), SancMeldClaims.SubjectOf(context.User),
             options.Value.DefaultRequestLimit).ConfigureAwait(false);
+
+        // A blocked user, and every key they own, writes nothing.
+        if (user.IsBlocked)
+        {
+            logger.LogWarning("Rejected {Email}: blocked by {BlockedBy} on {BlockedAt}.", email, user.BlockedBy, user.BlockedAt);
+            return;
+        }
+
         context.Succeed(requirement);
     }
 }

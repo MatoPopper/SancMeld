@@ -63,7 +63,7 @@ public sealed class ApiUserDirectory(SancMeldDbContext db, TimeProvider clock)
     {
         var key = Normalise(email);
         var spent = await db.ApiUsers
-            .Where(u => u.Email == key && u.RequestsUsed < u.RequestLimit)
+            .Where(u => u.Email == key && u.RequestsUsed < u.RequestLimit && !u.IsBlocked)
             .ExecuteUpdateAsync(s => s.SetProperty(u => u.RequestsUsed, u => u.RequestsUsed + 1), ct)
             .ConfigureAwait(false);
 
@@ -122,7 +122,7 @@ public sealed class ApiUserDirectory(SancMeldDbContext db, TimeProvider clock)
     {
         var key = Normalise(email);
         return await db.ApiUsers.AsNoTracking()
-            .AnyAsync(u => u.Email == key && u.IsAllowedForAdditionalInfo, ct)
+            .AnyAsync(u => u.Email == key && u.IsAllowedForAdditionalInfo && !u.IsBlocked, ct)
             .ConfigureAwait(false);
     }
 
@@ -130,7 +130,7 @@ public sealed class ApiUserDirectory(SancMeldDbContext db, TimeProvider clock)
     /// Grants or withdraws the additional information. An address that has not signed in
     /// yet gets its row now, with the default budget, so the grant is waiting for it.
     /// </summary>
-    public async Task<ApiUser> SetAdditionalInfoAsync(string email, bool allowed, int defaultLimit, CancellationToken ct = default)
+    public async Task<ApiUser> SetAdditionalInfoAsync(string email, bool allowed, int defaultLimit, CancellationToken ct = default, string changedBy = "cli")
     {
         var key = Normalise(email);
         var user = await db.ApiUsers.FirstOrDefaultAsync(u => u.Email == key, ct).ConfigureAwait(false);
@@ -142,9 +142,142 @@ public sealed class ApiUserDirectory(SancMeldDbContext db, TimeProvider clock)
         }
 
         user.IsAllowedForAdditionalInfo = allowed;
+        user.AdditionalInfoChangedBy = changedBy;
+        user.AdditionalInfoChangedAt = clock.GetUtcNow();
         await db.SaveChangesAsync(ct).ConfigureAwait(false);
         return user;
     }
+
+    /// <summary>Sets one of the administrator flags. CLI only: nobody grants these from a screen.</summary>
+    public async Task<ApiUser> SetRoleAsync(string email, UserRole role, bool on, int defaultLimit, CancellationToken ct = default)
+    {
+        var key = Normalise(email);
+        var user = await db.ApiUsers.FirstOrDefaultAsync(u => u.Email == key, ct).ConfigureAwait(false);
+
+        if (user is null)
+        {
+            user = new ApiUser { Id = Guid.CreateVersion7(), Email = key, RequestLimit = defaultLimit, CreatedAt = clock.GetUtcNow() };
+            db.ApiUsers.Add(user);
+        }
+
+        switch (role)
+        {
+            case UserRole.UserAdmin: user.IsUserAdmin = on; break;
+            case UserRole.SystemAdmin: user.IsSystemAdmin = on; break;
+        }
+
+        await db.SaveChangesAsync(ct).ConfigureAwait(false);
+        return user;
+    }
+
+    /// <summary>Whether the address may manage users: a user administrator who is not blocked.</summary>
+    public async Task<bool> IsUserAdminAsync(string email, CancellationToken ct = default)
+    {
+        var key = Normalise(email);
+        return await db.ApiUsers.AsNoTracking()
+            .AnyAsync(u => u.Email == key && u.IsUserAdmin && !u.IsBlocked, ct)
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>Whether the address is blocked. False for an address never seen.</summary>
+    public async Task<bool> IsBlockedAsync(string email, CancellationToken ct = default)
+    {
+        var key = Normalise(email);
+        return await db.ApiUsers.AsNoTracking().AnyAsync(u => u.Email == key && u.IsBlocked, ct).ConfigureAwait(false);
+    }
+
+    /// <summary>Everyone who has signed in or been granted something, most recently seen first.</summary>
+    public async Task<IReadOnlyList<UserView>> ListAsync(CancellationToken ct = default)
+    {
+        var allowList = await db.Admins.AsNoTracking().Where(a => a.IsActive).Select(a => a.Email).ToListAsync(ct).ConfigureAwait(false);
+
+        var users = await db.ApiUsers.AsNoTracking()
+            .OrderByDescending(u => u.LastSeenAt ?? u.CreatedAt)
+            .Select(u => new
+            {
+                User = u,
+                Keys = db.ApiKeys.Count(k => k.OwnerEmail == u.Email && k.RevokedAt == null),
+                PendingQuota = db.QuotaRequests.Any(r => r.Email == u.Email && r.Status == "pending"),
+            })
+            .ToListAsync(ct)
+            .ConfigureAwait(false);
+
+        return [.. users.Select(x => ToView(x.User, x.Keys, x.PendingQuota, allowList.Contains(x.User.Email)))];
+    }
+
+    /// <summary>
+    /// Blocks or unblocks a user. An administrator — of users, of the system, or on the
+    /// admin allow list — is never blocked from here: one administrator locking out the
+    /// others is not something a screen should allow, and the database is one step away
+    /// for whoever runs the instance.
+    /// </summary>
+    public async Task<(UserChangeOutcome Outcome, UserView? User)> SetBlockedAsync(Guid id, bool blocked, string by, CancellationToken ct = default)
+    {
+        var user = await db.ApiUsers.FirstOrDefaultAsync(u => u.Id == id, ct).ConfigureAwait(false);
+        if (user is null)
+        {
+            return (UserChangeOutcome.NotFound, null);
+        }
+
+        var onAllowList = await db.Admins.AnyAsync(a => a.Email == user.Email && a.IsActive, ct).ConfigureAwait(false);
+        if (blocked && (user.IsUserAdmin || user.IsSystemAdmin || onAllowList))
+        {
+            return (UserChangeOutcome.AdminCannotBeBlocked, ToView(user, 0, false, onAllowList));
+        }
+
+        if (user.IsBlocked != blocked)
+        {
+            user.IsBlocked = blocked;
+            user.BlockedBy = blocked ? by : null;
+            user.BlockedAt = blocked ? clock.GetUtcNow() : null;
+            await db.SaveChangesAsync(ct).ConfigureAwait(false);
+        }
+
+        return (UserChangeOutcome.Changed, ToView(user, 0, false, onAllowList));
+    }
+
+    /// <summary>Grants or withdraws the additional information, from the users screen.</summary>
+    public async Task<(UserChangeOutcome Outcome, UserView? User)> SetAdditionalInfoAsync(Guid id, bool allowed, string by, CancellationToken ct = default)
+    {
+        var user = await db.ApiUsers.FirstOrDefaultAsync(u => u.Id == id, ct).ConfigureAwait(false);
+        if (user is null)
+        {
+            return (UserChangeOutcome.NotFound, null);
+        }
+
+        if (user.IsAllowedForAdditionalInfo != allowed)
+        {
+            user.IsAllowedForAdditionalInfo = allowed;
+            user.AdditionalInfoChangedBy = by;
+            user.AdditionalInfoChangedAt = clock.GetUtcNow();
+            await db.SaveChangesAsync(ct).ConfigureAwait(false);
+        }
+
+        var onAllowList = await db.Admins.AnyAsync(a => a.Email == user.Email && a.IsActive, ct).ConfigureAwait(false);
+        return (UserChangeOutcome.Changed, ToView(user, 0, false, onAllowList));
+    }
+
+    private static UserView ToView(ApiUser u, int keys, bool pendingQuota, bool onAllowList) => new()
+    {
+        Id = u.Id,
+        Email = u.Email,
+        DisplayName = u.DisplayName,
+        CreatedAt = u.CreatedAt,
+        LastSeenAt = u.LastSeenAt,
+        RequestLimit = u.RequestLimit,
+        RequestsUsed = u.RequestsUsed,
+        ActiveApiKeys = keys,
+        PendingQuotaRequest = pendingQuota,
+        IsAllowedForAdditionalInfo = u.IsAllowedForAdditionalInfo,
+        AdditionalInfoChangedBy = u.AdditionalInfoChangedBy,
+        AdditionalInfoChangedAt = u.AdditionalInfoChangedAt,
+        IsUserAdmin = u.IsUserAdmin,
+        IsSystemAdmin = u.IsSystemAdmin,
+        IsOnAdminAllowList = onAllowList,
+        IsBlocked = u.IsBlocked,
+        BlockedBy = u.BlockedBy,
+        BlockedAt = u.BlockedAt,
+    };
 
     /// <summary>The addresses allowed the additional information, for the operator's listing.</summary>
     public async Task<IReadOnlyList<string>> AllowedForAdditionalInfoAsync(CancellationToken ct = default) =>
@@ -156,6 +289,39 @@ public sealed class ApiUserDirectory(SancMeldDbContext db, TimeProvider clock)
             .ConfigureAwait(false);
 
     private static string Normalise(string email) => email.Trim().ToLowerInvariant();
+}
+
+/// <summary>The administrator flags on a user.</summary>
+public enum UserRole { UserAdmin, SystemAdmin }
+
+public enum UserChangeOutcome { Changed, NotFound, AdminCannotBeBlocked }
+
+/// <summary>A user as the users screen shows them.</summary>
+public sealed record UserView
+{
+    public required Guid Id { get; init; }
+    public required string Email { get; init; }
+    public string? DisplayName { get; init; }
+    public DateTimeOffset CreatedAt { get; init; }
+    public DateTimeOffset? LastSeenAt { get; init; }
+    public int RequestLimit { get; init; }
+
+    /// <summary>Requests made so far, in total: checks, screenings and register lookups.</summary>
+    public int RequestsUsed { get; init; }
+    public int ActiveApiKeys { get; init; }
+    public bool PendingQuotaRequest { get; init; }
+    public bool IsAllowedForAdditionalInfo { get; init; }
+    public string? AdditionalInfoChangedBy { get; init; }
+    public DateTimeOffset? AdditionalInfoChangedAt { get; init; }
+    public bool IsUserAdmin { get; init; }
+    public bool IsSystemAdmin { get; init; }
+    public bool IsOnAdminAllowList { get; init; }
+
+    /// <summary>An administrator of any kind; the screen offers no block button for them.</summary>
+    public bool IsAdministrator => IsUserAdmin || IsSystemAdmin || IsOnAdminAllowList;
+    public bool IsBlocked { get; init; }
+    public string? BlockedBy { get; init; }
+    public DateTimeOffset? BlockedAt { get; init; }
 }
 
 /// <summary>Whether the request was allowed, and the budget after it.</summary>

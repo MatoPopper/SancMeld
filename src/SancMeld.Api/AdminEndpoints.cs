@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SancMeld.Core.Access;
 
@@ -30,7 +31,19 @@ public sealed record SignedInUser(string Email, string? Name, string? Subject, b
     /// (the Slovak business register) and open-source research. Granted by the operator.
     /// </summary>
     public bool CanSeeAdditionalInfo { get; init; }
+
+    /// <summary>May open the users screen.</summary>
+    public bool IsUserAdmin { get; init; }
+
+    /// <summary>Reserved; nothing reads it yet.</summary>
+    public bool IsSystemAdmin { get; init; }
+
+    /// <summary>Signed in and refused everything; the front end says so instead of failing on every request.</summary>
+    public bool IsBlocked { get; init; }
 }
+
+/// <summary>A change on the users screen: the one flag it sets.</summary>
+public sealed record UserFlagRequest(bool Value);
 
 /// <summary>What a user sends to ask for more requests.</summary>
 public sealed record QuotaRequestInput(string? Reason, string? Industry);
@@ -93,12 +106,15 @@ internal static class AdminEndpoints
             return TypedResults.Ok(new SignedInUser(
                 email, SancMeldClaims.NameOf(user), SancMeldClaims.SubjectOf(user), admin is not null)
             {
-                CanWrite = verified,
+                CanWrite = verified && account?.IsBlocked != true,
                 RequestLimit = account?.RequestLimit,
                 RequestsUsed = account?.RequestsUsed,
                 RequestsRemaining = account is null ? null : Math.Max(0, account.RequestLimit - account.RequestsUsed),
                 PendingQuotaRequestAt = verified ? await users.PendingRequestAtAsync(email, ct) : null,
-                CanSeeAdditionalInfo = account?.IsAllowedForAdditionalInfo ?? false,
+                CanSeeAdditionalInfo = account is { IsAllowedForAdditionalInfo: true, IsBlocked: false },
+                IsUserAdmin = account is { IsUserAdmin: true, IsBlocked: false } && !SancMeldClaims.IsApiKey(user),
+                IsSystemAdmin = account?.IsSystemAdmin ?? false,
+                IsBlocked = account?.IsBlocked ?? false,
             });
         })
         .RequireAuthorization()
@@ -157,6 +173,60 @@ internal static class AdminEndpoints
             "Stored under the caller's verified address; one open request per address, so sending " +
             "again updates it. The operator reads the requests in the quota_request table and raises " +
             "api_user.request_limit by hand. Not metered.");
+
+        return endpoints;
+    }
+
+    /// <summary>
+    /// The users screen: who signed in, how many requests each made, block and unblock,
+    /// grant the additional information. Nothing here makes anyone an administrator.
+    /// </summary>
+    public static IEndpointRouteBuilder MapUsers(this IEndpointRouteBuilder endpoints)
+    {
+        var group = endpoints.MapGroup("/users")
+            .WithTags("Auth")
+            .RequireAuthorization(SancMeldPolicies.UserAdmin);
+
+        group.MapGet("/", async (ApiUserDirectory users, CancellationToken ct) =>
+            TypedResults.Ok(await users.ListAsync(ct)))
+        .WithName("GetUsers")
+        .WithSummary("Everyone who signed in, with their request counts, blocks and grants.")
+        .WithDescription("User administrators only. requestsUsed counts checks, screenings and register lookups in total.");
+
+        group.MapPost("/{id:guid}/blocked", async Task<Results<Ok<UserView>, NotFound, Conflict<string>>> (
+            ApiUserDirectory users, Guid id, UserFlagRequest request, ClaimsPrincipal user, ILoggerFactory logs, CancellationToken ct) =>
+        {
+            var by = SancMeldClaims.EmailOf(user) ?? "unknown";
+            var (outcome, view) = await users.SetBlockedAsync(id, request.Value, by, ct);
+            logs.CreateLogger("SancMeld.Users").LogInformation("{By} set blocked={Value} on {Email}: {Outcome}.", by, request.Value, view?.Email, outcome);
+
+            return outcome switch
+            {
+                UserChangeOutcome.NotFound => TypedResults.NotFound(),
+                UserChangeOutcome.AdminCannotBeBlocked => TypedResults.Conflict("An administrator cannot be blocked here; that is done in the database."),
+                _ => TypedResults.Ok(view!),
+            };
+        })
+        .WithName("SetUserBlocked")
+        .WithSummary("Block or unblock a user — writes. Never an administrator.")
+        .WithDescription(
+            "A blocked user is refused every write, sees no additional information, and their API keys " +
+            "stop working; reading the public lists stays open, as for anyone. Who blocked and when is kept.");
+
+        group.MapPost("/{id:guid}/additional-info", async Task<Results<Ok<UserView>, NotFound>> (
+            ApiUserDirectory users, Guid id, UserFlagRequest request, ClaimsPrincipal user, ILoggerFactory logs, CancellationToken ct) =>
+        {
+            var by = SancMeldClaims.EmailOf(user) ?? "unknown";
+            var (outcome, view) = await users.SetAdditionalInfoAsync(id, request.Value, by, ct);
+            logs.CreateLogger("SancMeld.Users").LogInformation("{By} set additional-info={Value} on {Email}.", by, request.Value, view?.Email);
+
+            return outcome == UserChangeOutcome.NotFound ? TypedResults.NotFound() : TypedResults.Ok(view!);
+        })
+        .WithName("SetUserAdditionalInfo")
+        .WithSummary("Grant or withdraw the additional information — writes.")
+        .WithDescription(
+            "Leads from the Slovak business register (name matches without a date of birth) and open-source " +
+            "research. Who changed it last and when is kept on the user.");
 
         return endpoints;
     }

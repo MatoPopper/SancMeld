@@ -716,6 +716,29 @@ public class ApiUser
     /// </summary>
     public bool IsAllowedForAdditionalInfo { get; set; }
 
+    /// <summary>Who last granted or withdrew the additional information, and when.</summary>
+    public string? AdditionalInfoChangedBy { get; set; }
+    public DateTimeOffset? AdditionalInfoChangedAt { get; set; }
+
+    /// <summary>
+    /// May manage users: see them and their request counts, block and unblock them, grant
+    /// the additional information. Set in the database or with the CLI, never from the UI,
+    /// so that nobody makes themselves one.
+    /// </summary>
+    public bool IsUserAdmin { get; set; }
+
+    /// <summary>Reserved for running the instance itself; no endpoint reads it yet. Set like <see cref="IsUserAdmin"/>.</summary>
+    public bool IsSystemAdmin { get; set; }
+
+    /// <summary>
+    /// A blocked user signs in and is refused: no screening, no lookups, no additional
+    /// information, and their API keys stop working. An administrator cannot be blocked
+    /// from the UI — that is done in the database, by whoever runs the instance.
+    /// </summary>
+    public bool IsBlocked { get; set; }
+    public string? BlockedBy { get; set; }
+    public DateTimeOffset? BlockedAt { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? LastSeenAt { get; set; }
 }

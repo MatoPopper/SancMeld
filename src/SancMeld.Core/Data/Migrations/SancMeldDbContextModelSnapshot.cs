@@ -295,6 +295,22 @@ namespace SancMeld.Core.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<DateTimeOffset?>("AdditionalInfoChangedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("additional_info_changed_at");
+
+                    b.Property<string>("AdditionalInfoChangedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("additional_info_changed_by");
+
+                    b.Property<DateTimeOffset?>("BlockedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("blocked_at");
+
+                    b.Property<string>("BlockedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("blocked_by");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
@@ -318,6 +334,18 @@ namespace SancMeld.Core.Data.Migrations
                     b.Property<bool>("IsAllowedForAdditionalInfo")
                         .HasColumnType("boolean")
                         .HasColumnName("is_allowed_for_additional_info");
+
+                    b.Property<bool>("IsBlocked")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_blocked");
+
+                    b.Property<bool>("IsSystemAdmin")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_system_admin");
+
+                    b.Property<bool>("IsUserAdmin")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_user_admin");
 
                     b.Property<DateTimeOffset?>("LastSeenAt")
                         .HasColumnType("timestamp with time zone")

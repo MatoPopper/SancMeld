@@ -246,6 +246,47 @@ if (args is ["apikey", var keyAction, ..])
 //
 //   dotnet run --project src/SancMeld.Server -- users additional-info you@example.com on|off
 //   dotnet run --project src/SancMeld.Server -- users additional-info list
+// The administrator flags, which no screen sets — a user administrator manages users,
+// the system flag is reserved:
+//
+//   dotnet run --project src/SancMeld.Server -- users user-admin you@example.com on|off
+//   dotnet run --project src/SancMeld.Server -- users system-admin you@example.com on|off
+//   dotnet run --project src/SancMeld.Server -- users list
+if (args is ["users", "user-admin" or "system-admin" or "list", ..])
+{
+    using var scope = app.Services.CreateScope();
+    var users = scope.ServiceProvider.GetRequiredService<SancMeld.Core.Access.ApiUserDirectory>();
+
+    if (args[1] == "list")
+    {
+        foreach (var u in await users.ListAsync(CancellationToken.None))
+        {
+            Console.WriteLine($"{u.Email,-36} {u.RequestsUsed,7:N0}/{u.RequestLimit,-9:N0} "
+                + string.Join(' ', new[]
+                {
+                    u.IsUserAdmin ? "user-admin" : null,
+                    u.IsSystemAdmin ? "system-admin" : null,
+                    u.IsAllowedForAdditionalInfo ? "additional-info" : null,
+                    u.IsBlocked ? $"BLOCKED by {u.BlockedBy}" : null,
+                }.Where(x => x is not null)));
+        }
+
+        return 0;
+    }
+
+    if (args.Length < 4 || args[3] is not ("on" or "off"))
+    {
+        Console.Error.WriteLine("Usage: users user-admin|system-admin <email> on|off | users list");
+        return 1;
+    }
+
+    var role = args[1] == "user-admin" ? SancMeld.Core.Access.UserRole.UserAdmin : SancMeld.Core.Access.UserRole.SystemAdmin;
+    var limit = scope.ServiceProvider.GetRequiredService<IOptions<SancMeld.Api.SancMeldAuthOptions>>().Value.DefaultRequestLimit;
+    var changed = await users.SetRoleAsync(args[2], role, args[3] == "on", limit, CancellationToken.None);
+    Console.WriteLine($"{changed.Email}: user-admin {(changed.IsUserAdmin ? "ON" : "off")}, system-admin {(changed.IsSystemAdmin ? "ON" : "off")}.");
+    return 0;
+}
+
 if (args is ["users", "additional-info", var who, ..])
 {
     using var scope = app.Services.CreateScope();

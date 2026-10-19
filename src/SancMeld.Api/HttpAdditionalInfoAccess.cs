@@ -7,7 +7,7 @@ namespace SancMeld.Api;
 /// <summary>
 /// The additional information is for signed-in users whose row in api_user says so, and
 /// for an API key whose owner's row says so — a key acts as its owner, here as for the
-/// budget. Asked once per request.
+/// budget. A blocked user sees none of it. Asked once per request.
 ///
 /// Outside a request — the CLI, a scheduled job — there is no caller to hide anything
 /// from: whoever runs the console is the operator, and a job writes, it does not show.
