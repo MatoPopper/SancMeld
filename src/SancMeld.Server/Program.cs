@@ -542,10 +542,11 @@ if (args is ["rpvs", "sync", ..])
 // Leads from the Slovak business register (ORSR finds the people, RPO reads the company):
 //
 //   dotnet run --project src/SancMeld.Server -- sk-register lookup <designation id>
-//   dotnet run --project src/SancMeld.Server -- sk-register run [--max N] [--act 2026/2281]
+//   dotnet run --project src/SancMeld.Server -- sk-register run [--max N] [--act 2026/2281] [--refresh]
 //
 // "run" takes the newest listings not yet looked up; --act limits it to the listings whose
-// legal basis names that act — a new package, ahead of the backlog.
+// legal basis names that act — a new package, ahead of the backlog. --refresh reads again
+// the listings that found something, after the matching rules changed.
 if (args is ["sk-register", var skAction, ..])
 {
     using var scope = app.Services.CreateScope();
@@ -575,7 +576,7 @@ if (args is ["sk-register", var skAction, ..])
             Console.WriteLine($"{only.Count} current listings name {act}.");
         }
 
-        var run = await sk.RunAsync(max, only, CancellationToken.None);
+        var run = await sk.RunAsync(max, only, CancellationToken.None, refresh: args.Contains("--refresh"));
         Console.WriteLine($"SK register: {run.Listings} listings, {run.Linked} with leads, {run.Links} links, {run.Queries} requests.");
         foreach (var line in run.Lines) Console.WriteLine($"  LEAD     {line}");
         return 0;

@@ -111,6 +111,67 @@ public static partial class ListingNames
         return words.Count > 0 && words.All(w => folded.Contains(" " + w + " ", StringComparison.Ordinal));
     }
 
+    /// <summary>
+    /// Slovak legal forms and states, as spaced words of a folded name: "s. r. o." and
+    /// "s.r.o." both become "s r o". A name carrying none is a sole trader, a club or an
+    /// association — RPO holds them all — and not what a sanctioned company's namesake is.
+    /// </summary>
+    private static readonly string[] LegalForms =
+    [
+        " spolocnost s rucenim obmedzenym ", " akciova spolocnost ", " verejna obchodna spolocnost ",
+        " komanditna spolocnost ", " jednoducha spolocnost na akcie ", " spol s r o ", " s r o ", " a s ",
+        " v o s ", " k s ", " j s a ", " druzstvo ",
+    ];
+
+    private static readonly string[] States = [" v likvidacii ", " v konkurze ", " organizacna zlozka ", " odstepny zavod "];
+
+    /// <summary>Whether the Slovak name is a company's: it carries a legal form.</summary>
+    public static bool IsCompany(string name)
+    {
+        var spaced = Spaced(name);
+        return LegalForms.Any(f => spaced.Contains(f, StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    /// The name without its legal form, state and punctuation: "TENZOR, s.r.o." → "tenzor".
+    /// A one-word listed name must be the whole of this, or every "Vektor EU group" and
+    /// "Profit Clean SK" in Slovakia is a lead.
+    /// </summary>
+    public static string CompanyCore(string name)
+    {
+        var spaced = Spaced(name);
+        foreach (var part in LegalForms.Concat(States))
+        {
+            spaced = spaced.Replace(part, " ", StringComparison.Ordinal);
+        }
+
+        return string.Join(' ', spaced.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+    }
+
+    /// <summary>
+    /// Whether a Slovak company's name carries the listed one: the whole core for a
+    /// one-word name, every distinctive word for a longer one.
+    /// </summary>
+    public static bool CarriesName(string companyName, IReadOnlyCollection<string> distinctive) =>
+        IsCompany(companyName)
+        && (distinctive.Count == 1
+            ? CoreIsTheName(CompanyCore(companyName), distinctive.First())
+            : ContainsAllWords(companyName, distinctive));
+
+    /// <summary>
+    /// How a foreign group names its Slovak company: the name alone, or the name and the
+    /// country or region — "Finist Slovakia", "Wildberries SK", "Vektor Europe".
+    /// </summary>
+    private static readonly HashSet<string> CountrySuffixes = new(StringComparer.Ordinal)
+    {
+        "slovakia", "slovensko", "sk", "sr", "eu", "europe", "cee", "central europe",
+    };
+
+    private static bool CoreIsTheName(string core, string word) =>
+        core == word || (core.StartsWith(word + " ", StringComparison.Ordinal) && CountrySuffixes.Contains(core[(word.Length + 1)..]));
+
+    private static string Spaced(string name) => " " + string.Join(' ', NonAlphanumeric().Split(Fold(name)).Where(w => w.Length > 0)) + " ";
+
     /// <summary>Lower case without diacritics: "Mário" and "Mario" are one word to a search.</summary>
     public static string Fold(string text)
     {
@@ -141,4 +202,7 @@ public static partial class ListingNames
 
     [GeneratedRegex("""[\s,()/;:+&]+""")]
     private static partial Regex Words();
+
+    [GeneratedRegex("[^a-z0-9]+")]
+    private static partial Regex NonAlphanumeric();
 }

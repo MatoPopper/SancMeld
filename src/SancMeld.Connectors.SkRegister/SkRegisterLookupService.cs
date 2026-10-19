@@ -39,6 +39,9 @@ public sealed class SkRegisterLookupService(
 {
     private const string System = RelationSystems.SkRegister;
 
+    /// <summary>More Slovak companies of one listed name than this, and the name is a common word.</summary>
+    private const int MaxNamesakeCompanies = 3;
+
     /// <summary>After an import: the day's few new listings now, a package's hundreds tonight.</summary>
     public async Task EnrichAsync(IReadOnlyCollection<Guid> designationIds, CancellationToken ct = default)
     {
@@ -63,8 +66,13 @@ public sealed class SkRegisterLookupService(
     public Task<SkRegisterRunResult> RunScheduledAsync(CancellationToken ct = default) =>
         RunAsync(options.Value.MaxListingsPerScheduledRun, null, ct);
 
-    /// <summary>Looks up to <paramref name="max"/> pending listings, optionally only some, newest first.</summary>
-    public async Task<SkRegisterRunResult> RunAsync(int max, IReadOnlyCollection<Guid>? only = null, CancellationToken ct = default)
+    /// <summary>
+    /// Looks up to <paramref name="max"/> pending listings, optionally only some, newest
+    /// first. With <paramref name="refresh"/>, also the listings looked up before that found
+    /// something: after the matching rules changed, a package is read again and the leads
+    /// the new rules drop are closed.
+    /// </summary>
+    public async Task<SkRegisterRunResult> RunAsync(int max, IReadOnlyCollection<Guid>? only = null, CancellationToken ct = default, bool refresh = false)
     {
         var result = new SkRegisterRunResult();
         if (!options.Value.Enabled || max <= 0)
@@ -78,9 +86,9 @@ public sealed class SkRegisterLookupService(
 
         try
         {
-            foreach (var id in await PendingAsync(max, only, ct).ConfigureAwait(false))
+            foreach (var id in await PendingAsync(max, only, refresh, ct).ConfigureAwait(false))
             {
-                var one = await LookupAsync(id, run.Id, ct).ConfigureAwait(false);
+                var one = await LookupAsync(id, run.Id, ct, fresh: refresh).ConfigureAwait(false);
                 result.Listings++;
                 result.Linked += one.Links.Count > 0 ? 1 : 0;
                 result.Links += one.Links.Count;
@@ -334,7 +342,9 @@ public sealed class SkRegisterLookupService(
             var hits = await registers.SearchCompaniesAsync(head, ct).ConfigureAwait(false);
             result.Queries++;
 
-            foreach (var hit in hits.Where(h => h.Names.Any(n => ListingNames.ContainsAllWords(n, need))).Take(settings.MaxCompaniesPerListing))
+            var fromThisName = new List<(Found Lead, bool Agrees)>();
+
+            foreach (var hit in hits.Where(h => h.Names.Any(n => ListingNames.CarriesName(n, need))).Take(settings.MaxCompaniesPerListing))
             {
                 if (!seen.Add(hit.Id))
                 {
@@ -358,15 +368,28 @@ public sealed class SkRegisterLookupService(
                     .ToList();
 
                 var owners = abroad.Count == 0 ? "shareholders in Slovakia or not recorded" : $"shareholders with addresses in {string.Join(", ", abroad)}";
-                var agrees = abroad.Any(c => countries.Contains(c!)) ? " — the listing's country" : string.Empty;
-                var former = company.Name != hits.First(h => h.Id == company.Id).Names.FirstOrDefault(n => ListingNames.ContainsAllWords(n, need))
-                    ? $"; the name matched is a former one ({hits.First(h => h.Id == company.Id).Names.First(n => ListingNames.ContainsAllWords(n, need))})"
-                    : string.Empty;
+                var agreesWithListing = abroad.Any(c => countries.Contains(c!));
+                var agrees = agreesWithListing ? " — the listing's country" : string.Empty;
+                var matchedName = hit.Names.First(n => ListingNames.CarriesName(n, need));
+                var former = !ListingNames.CarriesName(company.Name, need) ? $"; the name matched is a former one ({matchedName})" : string.Empty;
 
-                found.Add(new Found(company, Extract(company), RelationKind.SharesNameWith, "same name", null, company.Terminated,
+                fromThisName.Add((new Found(company, Extract(company), RelationKind.SharesNameWith, "same name", null, company.Terminated,
                     $"the Slovak name carries every distinctive word of the listed name ({string.Join(", ", need)}); {owners}{agrees}{former}; ownership not established",
-                    name));
+                    name), agreesWithListing));
             }
+
+            // A common word ("Vektor", "Atlantik") is the name of many Slovak companies with
+            // nothing Russian about them. When more than a few carry it, only those owned from
+            // the listing's country are a lead (pilot of the 22nd package, 2026-10-19).
+            if (fromThisName.Count > MaxNamesakeCompanies)
+            {
+                result.Notes.Add(countries.Count == 0
+                    ? $"{fromThisName.Count} Slovak companies are called '{string.Join(" ", need)}' and the listing names no country; none kept."
+                    : $"{fromThisName.Count} Slovak companies are called '{string.Join(" ", need)}'; only those with shareholders in {string.Join(", ", countries)} were kept.");
+                fromThisName = fromThisName.Where(f => f.Agrees).ToList();
+            }
+
+            found.AddRange(fromThisName.Select(f => f.Lead));
         }
 
         return found;
@@ -542,7 +565,7 @@ public sealed class SkRegisterLookupService(
 
     // --- pending -----------------------------------------------------------------------
 
-    private async Task<IReadOnlyList<Guid>> PendingAsync(int max, IReadOnlyCollection<Guid>? only, CancellationToken ct)
+    private async Task<IReadOnlyList<Guid>> PendingAsync(int max, IReadOnlyCollection<Guid>? only, bool refresh, CancellationToken ct)
     {
         var retryBefore = clock.GetUtcNow() - TimeSpan.FromDays(options.Value.RetryAfterDays);
 
@@ -560,6 +583,7 @@ public sealed class SkRegisterLookupService(
                 .FirstOrDefault()
             where identity == null
                   || (identity.Status != LinkStatus.Rejected && identity.ExternalId == null && identity.ResolvedAt < retryBefore)
+                  || (refresh && identity.Status != LinkStatus.Rejected && identity.ExternalId != null)
             orderby d.Id descending
             select d.Id;
 

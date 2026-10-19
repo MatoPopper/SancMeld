@@ -95,6 +95,24 @@ public sealed class SkRegisterParserTests
         Assert.Equal(words, ListingNames.Distinctive(name));
     }
 
+    [Theory]
+    [InlineData("TENZOR, s.r.o.", new[] { "tenzor" }, true)]
+    [InlineData("Wildberries s. r. o.", new[] { "wildberries" }, true)]
+    [InlineData("PLUTON , s.r.o.", new[] { "pluton" }, true)]
+    [InlineData("Atlantik, spol. s r.o.", new[] { "atlantik" }, true)]
+    [InlineData("VEKTOR - družstvo", new[] { "vektor" }, true)]
+    [InlineData("SL profit, s.r.o., v likvidácii", new[] { "profit" }, false)]
+    [InlineData("VEKTOR EU group s.r.o.", new[] { "vektor" }, false)]
+    [InlineData("FINIST Slovakia s. r. o.", new[] { "finist" }, true)]
+    [InlineData("Vektor EU s.r.o.", new[] { "vektor" }, true)]
+    [InlineData("Miroslav Kristofic - ATLANTIK", new[] { "atlantik" }, false)]
+    [InlineData("Šachový klub ŠK Plutón Piešťany", new[] { "pluton" }, false)]
+    [InlineData("SINARA TRANSPORTATION EAST s. r. o.", new[] { "sinara", "transportation" }, true)]
+    public void AOneWordNameMustBeTheWholeCompanyName(string slovak, string[] distinctive, bool carries)
+    {
+        Assert.Equal(carries, ListingNames.CarriesName(slovak, distinctive));
+    }
+
     [Fact]
     public void AWordMustBeWholeInTheSlovakName()
     {
