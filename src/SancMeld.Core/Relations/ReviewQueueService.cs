@@ -22,7 +22,11 @@ public sealed class ReviewQueueService(SancMeldDbContext db, RelatedPartyQuerySe
     public const int MaxItems = 500;
     private const decimal ControllingShare = 0.5m;
 
-    public async Task<ReviewQueueView> ListAsync(LinkStatus status = LinkStatus.Candidate, string? system = null, int limit = 200, CancellationToken ct = default)
+    /// <summary>
+    /// The ties of one status, optionally of one register and of parties in one country
+    /// (ISO 3166-1 alpha-2: SK, CZ; null is everywhere), the most urgent first.
+    /// </summary>
+    public async Task<ReviewQueueView> ListAsync(LinkStatus status = LinkStatus.Candidate, string? system = null, string? country = null, int limit = 200, CancellationToken ct = default)
     {
         var hidden = await relatedParties.HiddenSystemsAsync(ct).ConfigureAwait(false);
         var take = Math.Clamp(limit, 1, MaxItems);
@@ -39,6 +43,18 @@ public sealed class ReviewQueueService(SancMeldDbContext db, RelatedPartyQuerySe
             LinkStatus.Rejected => visible.Where(r => r.Status == LinkStatus.Rejected || r.Identity!.Status == LinkStatus.Rejected),
             _ => visible.Where(r => r.Status == status && r.Identity!.Status != LinkStatus.Rejected),
         };
+
+        if (country is { Length: 2 })
+        {
+            var iso = country.ToUpperInvariant();
+            visible = visible.Where(r => r.Party!.CountryIso2 == iso);
+        }
+
+        var countries = await visible
+            .GroupBy(r => r.Party!.CountryIso2 ?? "")
+            .Select(g => new { Country = g.Key, Count = g.Count() })
+            .ToListAsync(ct)
+            .ConfigureAwait(false);
 
         var counts = await visible
             .GroupBy(r => r.Identity!.System)
@@ -131,6 +147,7 @@ public sealed class ReviewQueueService(SancMeldDbContext db, RelatedPartyQuerySe
             Total = ranked.Count,
             Items = ranked.Take(take).ToList(),
             Systems = counts.OrderByDescending(c => c.Count).ToDictionary(c => c.System, c => c.Count),
+            Countries = countries.Where(c => c.Country.Length == 2).OrderByDescending(c => c.Count).ToDictionary(c => c.Country, c => c.Count),
         };
     }
 }
@@ -146,6 +163,9 @@ public sealed record ReviewQueueView
 
     /// <summary>How many ties of this status each register holds, before the system filter.</summary>
     public required IReadOnlyDictionary<string, int> Systems { get; init; }
+
+    /// <summary>How many ties of this status lead to parties in each country, after the country filter.</summary>
+    public required IReadOnlyDictionary<string, int> Countries { get; init; }
 }
 
 public sealed record ReviewListing

@@ -137,14 +137,20 @@ public sealed class SkRegisterLookupTests(DatabaseFixture fixture) : IAsyncLifet
         var queries = new DesignationQueryService(db, Options.Create(new Configuration.SancMeldOptions()));
 
         var allowed = await new ReviewQueueService(db, TestServices.RelatedParties(db, queries, additionalInfo: true))
-            .ListAsync(LinkStatus.Candidate, RelationSystems.SkRegister, ReviewQueueService.MaxItems);
+            .ListAsync(LinkStatus.Candidate, RelationSystems.SkRegister, null, ReviewQueueService.MaxItems);
         var item = Assert.Single(allowed.Items, i => i.Listing.DesignationId == listing);
         Assert.Equal(ReviewPriority.Candidate, item.Priority);
         Assert.True(item.CountryAgrees);
         Assert.Equal(_ico, item.Party.ExternalId);
 
+        // The country switch: a Slovak lead is under SK and not under CZ.
+        var czOnly = await new ReviewQueueService(db, TestServices.RelatedParties(db, queries, additionalInfo: true))
+            .ListAsync(LinkStatus.Candidate, null, "CZ", ReviewQueueService.MaxItems);
+        Assert.DoesNotContain(czOnly.Items, i => i.Listing.DesignationId == listing);
+        Assert.Equal(1, allowed.Countries.GetValueOrDefault("SK") >= 1 ? 1 : 0);
+
         var everyone = await new ReviewQueueService(db, TestServices.RelatedParties(db, queries, additionalInfo: false))
-            .ListAsync(LinkStatus.Candidate, null, ReviewQueueService.MaxItems);
+            .ListAsync(LinkStatus.Candidate, null, null, ReviewQueueService.MaxItems);
         Assert.DoesNotContain(everyone.Items, i => i.Listing.DesignationId == listing);
         Assert.False(everyone.Systems.ContainsKey(RelationSystems.SkRegister));
     }
