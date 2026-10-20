@@ -223,6 +223,6 @@ public sealed class FamilyTests(DatabaseFixture fixture) : IAsyncLifetime
         Assert.Contains(mine, f => f.Person.Name == Sibling && f.LegallyRelevant == true);
         Assert.Contains(mine, f => f.Person.Name == Minor && f.Explanation.Contains("maloletý", StringComparison.Ordinal));
         Assert.DoesNotContain(mine, f => f.Person.Name == Former);
-        Assert.Contains("dohľadané pre", family.Note, StringComparison.Ordinal);
+        Assert.Contains("známe pre", family.Note, StringComparison.Ordinal);
     }
 }

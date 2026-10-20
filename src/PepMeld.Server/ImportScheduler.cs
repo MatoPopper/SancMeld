@@ -67,5 +67,15 @@ internal sealed class ImportScheduler(IServiceScopeFactory scopes, TimeProvider 
             logger.LogInformation("Importing {Source}: last successful run {Last}.", source.Code, last?.ToString("u") ?? "never");
             await importer.RunAsync(source.Code, force: false, ct);
         }
+
+        // Family ties from Wikidata, once a day, after the lists.
+        var lastFamily = await db.FamilySyncs.AsNoTracking()
+            .Where(s => s.Source == PepMeld.Connectors.Wikidata.WikidataFamilySync.SourceCode && s.Status == ImportStatus.Success)
+            .MaxAsync(s => (DateTimeOffset?)s.StartedAt, ct);
+
+        if (lastFamily is null || now - lastFamily >= TimeSpan.FromHours(24))
+        {
+            await scope.ServiceProvider.GetRequiredService<PepMeld.Connectors.Wikidata.WikidataFamilySync>().SyncAsync(ct);
+        }
     }
 }

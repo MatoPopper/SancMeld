@@ -294,7 +294,9 @@ public class FamilyResearchRun
 public class FamilyLink
 {
     public Guid Id { get; set; }
-    public Guid RunId { get; set; }
+
+    /// <summary>The last research run that named the tie; null for a tie only Wikidata has.</summary>
+    public Guid? RunId { get; set; }
 
     public required string PepName { get; set; }
     public required string PepNameNormalized { get; set; }
@@ -327,4 +329,19 @@ public class FamilyLink
 
     /// <summary>When a research run last named this tie: the date the answer cites, and what monitoring watches.</summary>
     public DateTimeOffset LastFoundAt { get; set; }
+}
+
+/// <summary>One pass over a structured source of family ties (Wikidata): when, and what it found.</summary>
+public class FamilySync
+{
+    public Guid Id { get; set; }
+    public required string Source { get; set; }
+    public DateTimeOffset StartedAt { get; set; }
+    public DateTimeOffset? FinishedAt { get; set; }
+    public ImportStatus Status { get; set; }
+    public int Peps { get; set; }
+    public int TiesSeen { get; set; }
+    public int Inserted { get; set; }
+    public int Updated { get; set; }
+    public string? Error { get; set; }
 }

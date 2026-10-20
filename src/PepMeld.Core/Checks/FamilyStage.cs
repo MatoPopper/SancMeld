@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using PepMeld.Core.Configuration;
 using PepMeld.Core.Data;
 using PepMeld.Core.Domain;
+using PepMeld.Core.Family;
 using PepMeld.Core.Matching;
 
 namespace PepMeld.Core.Checks;
@@ -65,9 +66,15 @@ public sealed class FamilyStage(PepMeldDbContext db, IOptions<PepMeldOptions> op
             .CountAsync(ct)
             .ConfigureAwait(false);
 
-        var note = researched == 0
+        var withTies = await db.FamilyLinks.AsNoTracking()
+            .Select(l => new { l.PepNameNormalized, l.PepBirthDate })
+            .Distinct()
+            .CountAsync(ct)
+            .ConfigureAwait(false);
+
+        var note = withTies == 0
             ? "Rodinné väzby zatiaľ nie sú dohľadané pre žiadnu PEP; etapa nič nevylučuje."
-            : $"Rodinné väzby sú dohľadané pre {researched} PEP (výskum agenta vo verejných zdrojoch, úroveň D, kým ich nepotvrdí register alebo človek). Pre ostatné PEP etapa nič nevylučuje.";
+            : $"Rodinné väzby sú známe pre {withTies} PEP: z Wikidaty (úroveň B) a z výskumu agenta vo verejných zdrojoch pre {researched} PEP (úroveň D, kým ich nepotvrdí register alebo človek). Pre ostatné PEP etapa nič nevylučuje.";
 
         return new StageResult(
             findings
@@ -116,9 +123,10 @@ public sealed class FamilyStage(PepMeldDbContext db, IOptions<PepMeldOptions> op
     {
         var (relevant, law) = Relevance(link);
         var who = $"{RelationLabel(link.Relation)} osoby {link.PepName} (nar. {link.PepBirthDate:d. M. yyyy})";
+        var origin = link.Level == EvidenceLevel.B ? "Väzbu uvádza Wikidata (neúradný zdroj)" : "Väzbu dohľadal agent vo verejných zdrojoch";
         var toVerify = dateMatched
-            ? "Väzbu dohľadal agent vo verejných zdrojoch; overiť v registri alebo u klienta."
-            : "Väzbu dohľadal agent vo verejných zdrojoch a dátum narodenia príbuzného neuvádza; overiť, či ide o tú istú osobu.";
+            ? $"{origin}; overiť v registri alebo u klienta."
+            : $"{origin} a dátum narodenia príbuzného neuvádza; overiť, či ide o tú istú osobu.";
 
         return new FindingView(
             FindingKind.FamilyMember,
@@ -131,7 +139,7 @@ public sealed class FamilyStage(PepMeldDbContext db, IOptions<PepMeldOptions> op
             Evidence(link),
             $"Preverovaná osoba je podľa verejných zdrojov {who}. {law} Väzba naposledy dohľadaná {link.LastFoundAt:d. M. yyyy}.",
             toVerify,
-            [SourceCode(link)],
+            Sources(link),
             relevant);
     }
 
@@ -151,8 +159,8 @@ public sealed class FamilyStage(PepMeldDbContext db, IOptions<PepMeldOptions> op
             null,
             Evidence(link),
             $"{RelationLabel(link.Relation)}: {link.RelativeName}{born}{minor}. {law} Naposledy dohľadané {link.LastFoundAt:d. M. yyyy}.",
-            "Dohľadané agentom vo verejných zdrojoch; preveriť aj túto osobu.",
-            [SourceCode(link)],
+            link.Level == EvidenceLevel.B ? "Podľa Wikidaty; preveriť aj túto osobu." : "Dohľadané agentom vo verejných zdrojoch; preveriť aj túto osobu.",
+            Sources(link),
             relevant);
     }
 
@@ -181,13 +189,29 @@ public sealed class FamilyStage(PepMeldDbContext db, IOptions<PepMeldOptions> op
         _ => relation.ToString(),
     };
 
-    private static string SourceCode(FamilyLink link) => link.FoundBy switch
+    /// <summary>Every source the tie's evidence comes from: Wikidata by its URLs, the agent by the rest.</summary>
+    private static IReadOnlyList<string> Sources(FamilyLink link)
     {
-        FamilyFoundBy.Agent => "FAMILY_AGENT",
-        FamilyFoundBy.Wikidata => "FAMILY_WIKIDATA",
-        FamilyFoundBy.Register => "FAMILY_REGISTER",
-        _ => "FAMILY_ANALYST",
-    };
+        var evidence = Evidence(link);
+        var sources = new List<string>();
+
+        if (evidence.Any(e => FamilyLinkMerge.IsWikidata(e.Url)))
+        {
+            sources.Add("FAMILY_WIKIDATA");
+        }
+
+        if (evidence.Any(e => !FamilyLinkMerge.IsWikidata(e.Url)))
+        {
+            sources.Add(link.FoundBy switch
+            {
+                FamilyFoundBy.Register => "FAMILY_REGISTER",
+                FamilyFoundBy.Analyst => "FAMILY_ANALYST",
+                _ => "FAMILY_AGENT",
+            });
+        }
+
+        return sources;
+    }
 
     private static IReadOnlyList<Evidence> Evidence(FamilyLink link) =>
         JsonSerializer.Deserialize<List<Evidence>>(link.EvidenceJson, PepMeldJson.Options) ?? [];

@@ -243,7 +243,7 @@ namespace PepMeld.Core.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("review_status");
 
-                    b.Property<Guid>("RunId")
+                    b.Property<Guid?>("RunId")
                         .HasColumnType("uuid")
                         .HasColumnName("run_id");
 
@@ -356,6 +356,60 @@ namespace PepMeld.Core.Data.Migrations
                         .HasDatabaseName("ix_family_research_run_pep_name_pep_birth_date");
 
                     b.ToTable("family_research_run", (string)null);
+                });
+
+            modelBuilder.Entity("PepMeld.Core.Data.FamilySync", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Error")
+                        .HasColumnType("text")
+                        .HasColumnName("error");
+
+                    b.Property<DateTimeOffset?>("FinishedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("finished_at");
+
+                    b.Property<int>("Inserted")
+                        .HasColumnType("integer")
+                        .HasColumnName("inserted");
+
+                    b.Property<int>("Peps")
+                        .HasColumnType("integer")
+                        .HasColumnName("peps");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("source");
+
+                    b.Property<DateTimeOffset>("StartedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("started_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<int>("TiesSeen")
+                        .HasColumnType("integer")
+                        .HasColumnName("ties_seen");
+
+                    b.Property<int>("Updated")
+                        .HasColumnType("integer")
+                        .HasColumnName("updated");
+
+                    b.HasKey("Id")
+                        .HasName("pk_family_sync");
+
+                    b.HasIndex("Source", "StartedAt")
+                        .HasDatabaseName("ix_family_sync_source_started_at");
+
+                    b.ToTable("family_sync", (string)null);
                 });
 
             modelBuilder.Entity("PepMeld.Core.Data.Finding", b =>
@@ -954,8 +1008,6 @@ namespace PepMeld.Core.Data.Migrations
                     b.HasOne("PepMeld.Core.Data.FamilyResearchRun", null)
                         .WithMany()
                         .HasForeignKey("RunId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
                         .HasConstraintName("fk_family_link_family_research_run_run_id");
                 });
 

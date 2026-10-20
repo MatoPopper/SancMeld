@@ -132,9 +132,14 @@ public sealed class FamilyImportService(PepMeldDbContext db, IQuoteVerifier quot
             var nameNormalized = PersonNames.Normalize(name);
             var minor = relative.IsMinor == true;
 
-            var link = await db.FamilyLinks.FirstOrDefaultAsync(l =>
-                l.PepNameNormalized == pepNormalized && l.PepBirthDate == file.Pep.DateOfBirth
-                && l.Relation == relation && l.RelativeNameNormalized == nameNormalized, ct).ConfigureAwait(false);
+            // The same tie may already be there, from an earlier run or from Wikidata, under
+            // a name written a little differently.
+            var sameRelation = await db.FamilyLinks
+                .Where(l => l.PepNameNormalized == pepNormalized && l.PepBirthDate == file.Pep.DateOfBirth && l.Relation == relation)
+                .ToListAsync(ct)
+                .ConfigureAwait(false);
+            var link = FamilyLinkMerge.FindExisting(sameRelation.Concat(db.FamilyLinks.Local.Where(l =>
+                l.PepNameNormalized == pepNormalized && l.PepBirthDate == file.Pep.DateOfBirth && l.Relation == relation)).Distinct(), nameNormalized);
 
             if (link is null)
             {
@@ -165,15 +170,21 @@ public sealed class FamilyImportService(PepMeldDbContext db, IQuoteVerifier quot
             }
 
             link.RunId = run.Id;
-            link.RelativeName = name;
             link.IsMinor = minor;
 
-            // Nothing of a minor's birth is kept, whatever the file says.
-            link.RelativeBirthDate = minor ? null : ParseDate(relative.DateOfBirth);
-            link.RelativeBirthYear = minor ? null : relative.BirthYear ?? link.RelativeBirthDate?.Year;
+            // A name Wikidata gave is kept: it is the form the register of record uses.
+            if (!link.EvidenceJson.Contains("wikidata.org/", StringComparison.OrdinalIgnoreCase))
+            {
+                link.RelativeName = name;
+            }
+
+            // Nothing of a minor's birth is kept, whatever the file says; otherwise a date the
+            // file lacks does not erase one another source gave.
+            link.RelativeBirthDate = minor ? null : ParseDate(relative.DateOfBirth) ?? link.RelativeBirthDate;
+            link.RelativeBirthYear = minor ? null : relative.BirthYear ?? link.RelativeBirthDate?.Year ?? link.RelativeBirthYear;
             link.Status = Clean(relative.Status, ["current", "former", "deceased", "unknown"], "unknown");
             link.Confidence = Clean(relative.Confidence, ["high", "medium", "low"], "low");
-            link.EvidenceJson = JsonSerializer.Serialize(evidence, PepMeldJson.Options);
+            link.EvidenceJson = FamilyLinkMerge.MergeEvidence(link.EvidenceJson, evidence, incomingIsWikidata: false);
             link.Note = relative.Note;
             link.UpdatedAt = now;
             link.LastFoundAt = run.FinishedAt;
@@ -181,8 +192,9 @@ public sealed class FamilyImportService(PepMeldDbContext db, IQuoteVerifier quot
         }
 
         // What an earlier run found and this one did not name: counted and said, never deleted.
+        // A tie only Wikidata has was never a run's to name.
         var notNamed = await db.FamilyLinks
-            .Where(l => l.PepNameNormalized == pepNormalized && l.PepBirthDate == file.Pep.DateOfBirth && !named.Contains(l.Id))
+            .Where(l => l.PepNameNormalized == pepNormalized && l.PepBirthDate == file.Pep.DateOfBirth && !named.Contains(l.Id) && l.RunId != null)
             .Select(l => new { l.Relation, l.RelativeName, l.LastFoundAt })
             .ToListAsync(ct)
             .ConfigureAwait(false);

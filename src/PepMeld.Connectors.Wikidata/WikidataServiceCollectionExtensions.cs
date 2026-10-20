@@ -32,6 +32,9 @@ public static class WikidataServiceCollectionExtensions
         // One source per country, each with its own positions; the same code reads both.
         services.AddSingleton<IPepListConnector>(sp => Connector(sp, WikidataPositionsConnector.CzechCode, Country.CZ));
         services.AddSingleton<IPepListConnector>(sp => Connector(sp, WikidataPositionsConnector.SlovakCode, Country.SK));
+
+        // Family ties of the same holders and of both parliaments' members, daily.
+        services.AddScoped<WikidataFamilySync>();
         return services;
     }
 

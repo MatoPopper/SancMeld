@@ -28,6 +28,7 @@ public class PepMeldDbContext(DbContextOptions<PepMeldDbContext> options) : DbCo
 
     public DbSet<FamilyResearchRun> FamilyResearchRuns => Set<FamilyResearchRun>();
     public DbSet<FamilyLink> FamilyLinks => Set<FamilyLink>();
+    public DbSet<FamilySync> FamilySyncs => Set<FamilySync>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder b)
     {
@@ -263,11 +264,17 @@ public class PepMeldDbContext(DbContextOptions<PepMeldDbContext> options) : DbCo
             e.Ignore(x => x.DurationSeconds);
         });
 
+        b.Entity<FamilySync>(e =>
+        {
+            e.ToTable("family_sync");
+            e.HasIndex(x => new { x.Source, x.StartedAt });
+        });
+
         b.Entity<FamilyLink>(e =>
         {
             e.ToTable("family_link");
             e.Property(x => x.EvidenceJson).HasColumnType("jsonb");
-            e.HasOne<FamilyResearchRun>().WithMany().HasForeignKey(x => x.RunId);
+            e.HasOne<FamilyResearchRun>().WithMany().HasForeignKey(x => x.RunId).IsRequired(false);
 
             // One tie per PEP, relation and relative: a second run updates it, keeping the
             // decision a person made on it.

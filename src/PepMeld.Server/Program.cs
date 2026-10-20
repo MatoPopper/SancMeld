@@ -191,6 +191,7 @@ if (args is ["users", var userAction, ..])
 //   dotnet PepMeld.Server.dll family queue 100 [--days 365]     who is next, as JSON for the agent
 //   dotnet PepMeld.Server.dll family import <file|directory> [--agent name] [--no-verify]
 //   dotnet PepMeld.Server.dll family runs                       what the runs took
+//   dotnet PepMeld.Server.dll family wikidata                   family ties from Wikidata now (the scheduler does it daily)
 if (args is ["family", var familyAction, ..])
 {
     using var scope = app.Services.CreateScope();
@@ -267,6 +268,13 @@ if (args is ["family", var familyAction, ..])
                 return 0;
             }
 
+        case "wikidata":
+            {
+                var outcome = await scope.ServiceProvider.GetRequiredService<PepMeld.Connectors.Wikidata.WikidataFamilySync>().SyncAsync(CancellationToken.None);
+                Console.WriteLine($"Wikidata family: {outcome.Status} in {outcome.Duration.TotalSeconds:N0} s; {outcome.Peps} PEPs, {outcome.TiesSeen} ties, {outcome.Inserted} new, {outcome.Updated} updated. {outcome.Error}");
+                return outcome.Status == PepMeld.Core.Domain.ImportStatus.Success ? 0 : 1;
+            }
+
         case "runs":
             {
                 var db = scope.ServiceProvider.GetRequiredService<PepMeldDbContext>();
@@ -287,7 +295,7 @@ if (args is ["family", var familyAction, ..])
             }
 
         default:
-            Console.Error.WriteLine("Usage: family queue [n] [--days 365] | family import <file> [--agent name] [--no-verify] | family runs");
+            Console.Error.WriteLine("Usage: family queue [n] [--days 365] | family import <file|dir> [--agent name] [--no-verify] | family runs | family wikidata");
             return 1;
     }
 }

@@ -35,7 +35,10 @@ sees the lists within seconds while a later stage still runs:
    skipped until it exists.
 3. **Family**: family members, from the ties research has stored. The person checked as a
    relative of a PEP (outcome `FamilyMember`), and for a PEP their known relatives
-   (`KnownRelative`, to screen as well). Until a model of our own does the research, an agent
+   (`KnownRelative`, to screen as well). Two sources: Wikidata, read daily by the scheduler
+   (`family wikidata` by hand) for the holders of every position PepMeld reads and for both
+   parliaments' members, level B and usually with the relative's date of birth; and, until a
+   model of our own does the research, an agent
    does it one PEP at a time from the brief in `tools/family-research/AGENT.md`; every tie is
    level D, with the quotes checked against the pages they cite. A relative without a recorded
    date of birth needs the given name and the surname word for word.
