@@ -257,6 +257,58 @@ public sealed class ApiUserDirectory(SancMeldDbContext db, TimeProvider clock)
         return (UserChangeOutcome.Changed, ToView(user, 0, false, onAllowList));
     }
 
+    /// <summary>Grants or withdraws PEP screening, from the users screen.</summary>
+    public async Task<(UserChangeOutcome Outcome, UserView? User)> SetPepAsync(Guid id, bool allowed, string by, CancellationToken ct = default)
+    {
+        var user = await db.ApiUsers.FirstOrDefaultAsync(u => u.Id == id, ct).ConfigureAwait(false);
+        if (user is null)
+        {
+            return (UserChangeOutcome.NotFound, null);
+        }
+
+        if (user.IsAllowedForPep != allowed)
+        {
+            user.IsAllowedForPep = allowed;
+            user.PepChangedBy = by;
+            user.PepChangedAt = clock.GetUtcNow();
+            await db.SaveChangesAsync(ct).ConfigureAwait(false);
+        }
+
+        var onAllowList = await db.Admins.AnyAsync(a => a.Email == user.Email && a.IsActive, ct).ConfigureAwait(false);
+        return (UserChangeOutcome.Changed, ToView(user, 0, false, onAllowList));
+    }
+
+    /// <summary>
+    /// Grants or withdraws PEP screening by address, from the CLI. An address that has not
+    /// signed in yet gets its row now, so the grant is waiting for it.
+    /// </summary>
+    public async Task<ApiUser> SetPepAsync(string email, bool allowed, int defaultLimit, CancellationToken ct = default, string changedBy = "cli")
+    {
+        var key = Normalise(email);
+        var user = await db.ApiUsers.FirstOrDefaultAsync(u => u.Email == key, ct).ConfigureAwait(false);
+
+        if (user is null)
+        {
+            user = new ApiUser { Id = Guid.CreateVersion7(), Email = key, RequestLimit = defaultLimit, CreatedAt = clock.GetUtcNow() };
+            db.ApiUsers.Add(user);
+        }
+
+        user.IsAllowedForPep = allowed;
+        user.PepChangedBy = changedBy;
+        user.PepChangedAt = clock.GetUtcNow();
+        await db.SaveChangesAsync(ct).ConfigureAwait(false);
+        return user;
+    }
+
+    /// <summary>Whether the address may screen for PEPs. False for an address never seen or blocked.</summary>
+    public async Task<bool> IsAllowedForPepAsync(string email, CancellationToken ct = default)
+    {
+        var key = Normalise(email);
+        return await db.ApiUsers.AsNoTracking()
+            .AnyAsync(u => u.Email == key && u.IsAllowedForPep && !u.IsBlocked, ct)
+            .ConfigureAwait(false);
+    }
+
     private static UserView ToView(ApiUser u, int keys, bool pendingQuota, bool onAllowList) => new()
     {
         Id = u.Id,
@@ -271,6 +323,9 @@ public sealed class ApiUserDirectory(SancMeldDbContext db, TimeProvider clock)
         IsAllowedForAdditionalInfo = u.IsAllowedForAdditionalInfo,
         AdditionalInfoChangedBy = u.AdditionalInfoChangedBy,
         AdditionalInfoChangedAt = u.AdditionalInfoChangedAt,
+        IsAllowedForPep = u.IsAllowedForPep,
+        PepChangedBy = u.PepChangedBy,
+        PepChangedAt = u.PepChangedAt,
         IsUserAdmin = u.IsUserAdmin,
         IsSystemAdmin = u.IsSystemAdmin,
         IsOnAdminAllowList = onAllowList,
@@ -313,6 +368,11 @@ public sealed record UserView
     public bool IsAllowedForAdditionalInfo { get; init; }
     public string? AdditionalInfoChangedBy { get; init; }
     public DateTimeOffset? AdditionalInfoChangedAt { get; init; }
+
+    /// <summary>May screen for politically exposed persons in PepMeld.</summary>
+    public bool IsAllowedForPep { get; init; }
+    public string? PepChangedBy { get; init; }
+    public DateTimeOffset? PepChangedAt { get; init; }
     public bool IsUserAdmin { get; init; }
     public bool IsSystemAdmin { get; init; }
     public bool IsOnAdminAllowList { get; init; }

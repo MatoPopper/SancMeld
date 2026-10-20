@@ -64,8 +64,15 @@ dotnet run --project src/PepMeld.Server                     # http://localhost:6
 
 Every check needs a caller: an API key in `X-Api-Key`, or a Google ID token once
 `PepMeld:Auth:GoogleClientId` is set (the same client id SancMeld uses, so one sign-in
-will serve both when the front end is connected). A new address gets 50 checks in
-total; raise it with `users limit <email> <n>`.
+serves both). A new address gets 50 checks in total; raise it with `users limit <email> <n>`.
+
+Who may screen at all is the SancMeld account's flag `is_allowed_for_pep`, set on SancMeld's
+users screen (`POST /users/{id}/pep`) or with `SancMeld.Server users pep <email> on|off`, and
+returned to the front end as `canUsePep` by `/auth/me`. PepMeld reads it from SancMeld's
+database on every request (cached a minute) when `ConnectionStrings__SancMeldAccounts` is
+set, API keys included, and refuses with 403 an address without it; when that database
+cannot be read it refuses too. Without the setting there is no such check, which is for a
+development host with no SancMeld beside it.
 
 ```http
 POST /checks

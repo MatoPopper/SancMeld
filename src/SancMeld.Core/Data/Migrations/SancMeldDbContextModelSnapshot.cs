@@ -335,6 +335,10 @@ namespace SancMeld.Core.Data.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_allowed_for_additional_info");
 
+                    b.Property<bool>("IsAllowedForPep")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_allowed_for_pep");
+
                     b.Property<bool>("IsBlocked")
                         .HasColumnType("boolean")
                         .HasColumnName("is_blocked");
@@ -350,6 +354,14 @@ namespace SancMeld.Core.Data.Migrations
                     b.Property<DateTimeOffset?>("LastSeenAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("last_seen_at");
+
+                    b.Property<DateTimeOffset?>("PepChangedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("pep_changed_at");
+
+                    b.Property<string>("PepChangedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("pep_changed_by");
 
                     b.Property<int>("RequestLimit")
                         .HasColumnType("integer")

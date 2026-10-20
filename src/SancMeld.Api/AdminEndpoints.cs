@@ -32,6 +32,9 @@ public sealed record SignedInUser(string Email, string? Name, string? Subject, b
     /// </summary>
     public bool CanSeeAdditionalInfo { get; init; }
 
+    /// <summary>May screen for politically exposed persons in PepMeld; the front end shows the PEP mode only then.</summary>
+    public bool CanUsePep { get; init; }
+
     /// <summary>May open the users screen.</summary>
     public bool IsUserAdmin { get; init; }
 
@@ -112,6 +115,7 @@ internal static class AdminEndpoints
                 RequestsRemaining = account is null ? null : Math.Max(0, account.RequestLimit - account.RequestsUsed),
                 PendingQuotaRequestAt = verified ? await users.PendingRequestAtAsync(email, ct) : null,
                 CanSeeAdditionalInfo = account is { IsAllowedForAdditionalInfo: true, IsBlocked: false },
+                CanUsePep = account is { IsAllowedForPep: true, IsBlocked: false },
                 IsUserAdmin = account is { IsUserAdmin: true, IsBlocked: false } && !SancMeldClaims.IsApiKey(user),
                 IsSystemAdmin = account?.IsSystemAdmin ?? false,
                 IsBlocked = account?.IsBlocked ?? false,
@@ -227,6 +231,21 @@ internal static class AdminEndpoints
         .WithDescription(
             "Leads from the Slovak business register (name matches without a date of birth) and open-source " +
             "research. Who changed it last and when is kept on the user.");
+
+        group.MapPost("/{id:guid}/pep", async Task<Results<Ok<UserView>, NotFound>> (
+            ApiUserDirectory users, Guid id, UserFlagRequest request, ClaimsPrincipal user, ILoggerFactory logs, CancellationToken ct) =>
+        {
+            var by = SancMeldClaims.EmailOf(user) ?? "unknown";
+            var (outcome, view) = await users.SetPepAsync(id, request.Value, by, ct);
+            logs.CreateLogger("SancMeld.Users").LogInformation("{By} set pep={Value} on {Email}.", by, request.Value, view?.Email);
+
+            return outcome == UserChangeOutcome.NotFound ? TypedResults.NotFound() : TypedResults.Ok(view!);
+        })
+        .WithName("SetUserPep")
+        .WithSummary("Grant or withdraw PEP screening — writes.")
+        .WithDescription(
+            "PepMeld, the PEP-screening service beside this one, reads this flag on every request and refuses " +
+            "an address without it, its API keys included. Who changed it last and when is kept on the user.");
 
         return endpoints;
     }

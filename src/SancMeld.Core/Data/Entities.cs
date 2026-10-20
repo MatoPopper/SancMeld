@@ -721,6 +721,19 @@ public class ApiUser
     public DateTimeOffset? AdditionalInfoChangedAt { get; set; }
 
     /// <summary>
+    /// May screen for politically exposed persons in PepMeld, the service beside this one.
+    /// This account is the one a front end signs in with for both, so the grant lives
+    /// here, on the users screen; PepMeld reads it from this table on every request and
+    /// refuses an address without it. Off for everyone who signs up: a PEP check names
+    /// private people's offices and is a compliance tool, not a public search.
+    /// </summary>
+    public bool IsAllowedForPep { get; set; }
+
+    /// <summary>Who last granted or withdrew PEP screening, and when.</summary>
+    public string? PepChangedBy { get; set; }
+    public DateTimeOffset? PepChangedAt { get; set; }
+
+    /// <summary>
     /// May manage users: see them and their request counts, block and unblock them, grant
     /// the additional information. Set in the database or with the CLI, never from the UI,
     /// so that nobody makes themselves one.

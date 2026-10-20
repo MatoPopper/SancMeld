@@ -155,6 +155,7 @@ public static class PepMeldAuthExtensions
 
         services.AddScoped<ApiUserDirectory>();
         services.AddScoped<ApiKeyDirectory>();
+        services.AddSingleton<PepAccess>();
         services.AddScoped<IAuthorizationHandler, VerifiedUserHandler>();
 
         services.AddAuthorization(authorization =>
@@ -210,6 +211,7 @@ internal sealed class VerifiedUserRequirement : IAuthorizationRequirement;
 /// </summary>
 internal sealed class VerifiedUserHandler(
     ApiUserDirectory users,
+    PepAccess access,
     IOptions<PepMeldAuthOptions> options,
     ILogger<VerifiedUserHandler> logger) : AuthorizationHandler<VerifiedUserRequirement>
 {
@@ -235,6 +237,13 @@ internal sealed class VerifiedUserHandler(
         if (user.IsBlocked)
         {
             logger.LogWarning("Rejected {Email}: blocked by {BlockedBy} on {BlockedAt}.", email, user.BlockedBy, user.BlockedAt);
+            return;
+        }
+
+        // The grant on the SancMeld account, API keys included: a key acts as its owner.
+        if (!await access.IsAllowedAsync(email, CancellationToken.None).ConfigureAwait(false))
+        {
+            logger.LogWarning("Rejected {Email}: PEP screening is not granted to this account in SancMeld.", email);
             return;
         }
 

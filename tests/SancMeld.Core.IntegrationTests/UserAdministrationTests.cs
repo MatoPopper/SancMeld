@@ -39,6 +39,46 @@ public sealed class UserAdministrationTests(DatabaseFixture fixture)
         Assert.True((await users.TryConsumeAsync(_email)).Allowed);
     }
 
+    [Fact]
+    public async Task PepScreeningIsGrantedPerUserWithWhoAndWhenAndAnyBlockWithdrawsIt()
+    {
+        await using var db = fixture.CreateContext();
+        var users = new ApiUserDirectory(db, TimeProvider.System);
+        var user = await users.EnsureAsync(_email, null, null, defaultLimit: 10);
+
+        Assert.False(user.IsAllowedForPep);
+        Assert.False(await users.IsAllowedForPepAsync(_email));
+
+        var (outcome, view) = await users.SetPepAsync(user.Id, true, "admin@example.org");
+        Assert.Equal(UserChangeOutcome.Changed, outcome);
+        Assert.True(view!.IsAllowedForPep);
+        Assert.Equal("admin@example.org", view.PepChangedBy);
+        Assert.NotNull(view.PepChangedAt);
+        Assert.True(await users.IsAllowedForPepAsync(_email.ToUpperInvariant()));
+
+        await users.SetBlockedAsync(user.Id, true, "admin@example.org");
+        Assert.False(await users.IsAllowedForPepAsync(_email));
+
+        await users.SetBlockedAsync(user.Id, false, "admin@example.org");
+        await users.SetPepAsync(user.Id, false, "admin@example.org");
+        Assert.False(await users.IsAllowedForPepAsync(_email));
+
+        Assert.Equal((UserChangeOutcome.NotFound, null), await users.SetPepAsync(Guid.NewGuid(), true, "admin@example.org"));
+    }
+
+    [Fact]
+    public async Task PepCanBeGrantedFromTheCommandLineBeforeTheFirstSignIn()
+    {
+        await using var db = fixture.CreateContext();
+        var users = new ApiUserDirectory(db, TimeProvider.System);
+
+        var user = await users.SetPepAsync(_email, true, 10);
+
+        Assert.True(user.IsAllowedForPep);
+        Assert.Equal("cli", user.PepChangedBy);
+        Assert.True(await users.IsAllowedForPepAsync(_email));
+    }
+
     [Theory]
     [InlineData(UserRole.UserAdmin)]
     [InlineData(UserRole.SystemAdmin)]

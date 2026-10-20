@@ -13,6 +13,7 @@
   <ItemGroup>
     <ProjectReference Include="../../src/PepMeld.Core/PepMeld.Core.csproj" />
     <ProjectReference Include="../../src/PepMeld.Connectors.CzPsp/PepMeld.Connectors.CzPsp.csproj" />
+    <ProjectReference Include="../../src/PepMeld.Api/PepMeld.Api.csproj" />
   </ItemGroup>
 
   <ItemGroup>
