@@ -713,7 +713,23 @@ namespace PepMeld.Core.Data.Migrations
                             IsOfficial = false,
                             Licence = "CC0 1.0",
                             MinExpectedPersons = 200,
-                            Name = "Wikidata – držitelé funkcí v ČR (senátoři)",
+                            Name = "Wikidata – držitelé funkcí v ČR (prezident, vláda, senátoři, soudci, ČNB, hejtmani, primátoři, velvyslanci, europoslanci)",
+                            Publisher = "Wikidata (Wikimedia Foundation), CC0",
+                            RefreshHours = 24,
+                            Url = "https://query.wikidata.org/"
+                        },
+                        new
+                        {
+                            Id = new Guid("7b1c2e3a-0001-4c5d-9e8f-000000000006"),
+                            Code = "SK_WIKIDATA",
+                            Country = "s_k",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 21, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            HasBirthDate = true,
+                            IsEnabled = true,
+                            IsOfficial = false,
+                            Licence = "CC0 1.0",
+                            MinExpectedPersons = 100,
+                            Name = "Wikidata – držitelia funkcií v SR (prezident, vláda, guvernér NBS, veľvyslanci, primátor Bratislavy, europoslanci)",
                             Publisher = "Wikidata (Wikimedia Foundation), CC0",
                             RefreshHours = 24,
                             Url = "https://query.wikidata.org/"

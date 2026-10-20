@@ -1,7 +1,9 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using PepMeld.Core.Configuration;
+using PepMeld.Core.Domain;
 using PepMeld.Core.Lists;
 
 namespace PepMeld.Connectors.Wikidata;
@@ -27,7 +29,16 @@ public static class WikidataServiceCollectionExtensions
             client.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", ingest.UserAgent);
         });
 
-        services.AddSingleton<IPepListConnector, WikidataPositionsConnector>();
+        // One source per country, each with its own positions; the same code reads both.
+        services.AddSingleton<IPepListConnector>(sp => Connector(sp, WikidataPositionsConnector.CzechCode, Country.CZ));
+        services.AddSingleton<IPepListConnector>(sp => Connector(sp, WikidataPositionsConnector.SlovakCode, Country.SK));
         return services;
     }
+
+    private static WikidataPositionsConnector Connector(IServiceProvider sp, string code, Country country) =>
+        new(code, country,
+            sp.GetRequiredService<IHttpClientFactory>(),
+            sp.GetRequiredService<IOptions<WikidataPositionsOptions>>(),
+            sp.GetRequiredService<TimeProvider>(),
+            sp.GetRequiredService<ILogger<WikidataPositionsConnector>>());
 }

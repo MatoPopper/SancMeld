@@ -9,10 +9,10 @@ normalisation and trigram scoring, and nothing else: no table, no endpoint and n
 process is shared.
 
 ```
-Status: first increment. Five lists (CZ Chamber of Deputies open data, SK National Council
-deputies, SK register of public officials, CZ state-company boards from ARES, CZ senators
-from Wikidata), the asynchronous check API with stage 1 of three, API-key access with
-budgets. No front end yet.
+Status: first increment. Six lists (CZ Chamber of Deputies open data, SK National Council
+deputies, SK register of public officials, CZ state-company boards from ARES, Czech and
+Slovak office holders from Wikidata), the asynchronous check API with stage 1 of three,
+API-key access with budgets. No front end yet.
 ```
 
 ## What it answers
@@ -43,7 +43,8 @@ sees the lists within seconds while a later stage still runs:
 | `SK_NRSR` | SK | nrsr.sk: the alphabetical list of deputies per term (3rd term, 2002, onwards) and each deputy's profile, with the date of birth and the town of residence. No mandate dates per person: a membership carries the term's bounds and says so | **yes** | **implemented** |
 | `SK_NRSR_VNF` | SK | nrsr.sk register of public officials (ústavný zákon 357/2004): the alphabetical list (one form post) and each official's latest declaration, which names every function with the organisation. Government and state secretaries, constitutional and supreme court judges, the prosecutor general, the central bank's board, mayors and regional chairs, regulators, and the boards of state enterprises and state-owned companies (letter g), ~900 persons). No dates of office: a function carries the declaration year and ends when the person leaves the list | no | **implemented** |
 | `CZ_ARES_STATE` | CZ | ARES public register: the statutory bodies and supervisory boards of every state enterprise (legal forms 301, 302, found by the register's search) and of the state-owned companies listed by hand in `StateEntities.json` (ČEZ, ČEPS, ČEPRO, MERO, České dráhy, Letiště Praha, EGAP, ČEB, NRB, PRISKO, Explosia, Thermal-F). Every member with the date of birth and the dates of the seat; seats ended more than ten years ago are left out. Letter g) with level A evidence | **yes** | **implemented** |
-| `CZ_WIKIDATA` | CZ | Wikidata, one SPARQL query per configured position; today the Senate (Q18941264): 348 senators since 1996, each with the date of birth and the dates of every term. senat.cz publishes no birthday and forbids robots, so this is the only source of the date. Not official, so a match is level **B** | **yes** | **implemented** |
+| `CZ_WIKIDATA` | CZ | Wikidata, one SPARQL query per configured position: president, every minister (positions in the jurisdiction of Czechia), senators, judges of the constitutional, supreme and supreme administrative courts, the ČNB bank board and governor, the prosecutor general, regional governors, mayors of statutory cities, ambassadors, MEPs with Czech citizenship. Each holder with the date of birth and the dates of every term. senat.cz publishes no birthday and forbids robots, so for senators this is the only source of the date. Not official, so a match is level **B** | **yes** | **implemented** |
+| `SK_WIKIDATA` | SK | The same for Slovakia: president, every minister, the NBS governor, ambassadors, the mayor of Bratislava, MEPs with Slovak citizenship. Slovak constitutional judges, the prosecutor general, the NBS board and regional chairs have no position item on Wikidata yet | **yes** | **implemented** |
 | Courts, central bank, ambassadors, parties | CZ | institution web pages | no | planned |
 
 A full list of candidates, what each publishes and why it is or is not usable is in the

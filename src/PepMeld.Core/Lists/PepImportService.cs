@@ -103,6 +103,19 @@ public sealed class PepImportService(
         catch (Exception ex)
         {
             logger.LogError(ex, "Import of {Source} failed.", source.Code);
+
+            if (ex is DbUpdateConcurrencyException concurrency)
+            {
+                // Which row the database said was not there: the one fact that explains
+                // this exception, and the one it does not put in its message.
+                foreach (var entry in concurrency.Entries)
+                {
+                    logger.LogError("Not in the database as expected: {Entity} {State} {Key}",
+                        entry.Metadata.ClrType.Name, entry.State,
+                        string.Join(", ", entry.Properties.Where(p => p.Metadata.IsPrimaryKey()).Select(p => p.CurrentValue)));
+                }
+            }
+
             db.ChangeTracker.Clear();
             db.ImportRuns.Attach(run);
             return await FinishAsync(run, source, ImportStatus.Failed, ex.Message, watch, ct).ConfigureAwait(false);
@@ -201,7 +214,12 @@ public sealed class PepImportService(
                         FirstSeenRunId = run.Id,
                         LastSeenRunId = run.Id,
                     };
-                    person.Functions.Add(function);
+
+                    // Added to the set, not only to the person's collection: a new entity
+                    // with a key of its own that is merely discovered hanging off an
+                    // unchanged person is tracked as modified, and its UPDATE then finds
+                    // no row. Fix-up puts it in the collection as well.
+                    db.Functions.Add(function);
                     run.FunctionsInserted++;
                 }
                 else

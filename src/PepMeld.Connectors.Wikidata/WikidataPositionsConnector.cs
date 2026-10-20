@@ -14,22 +14,32 @@ namespace PepMeld.Connectors.Wikidata;
 /// nothing to license; edited by anyone, so the source is marked unofficial and a match
 /// on it is level B, cited with the item so a reader can see who wrote what.
 ///
-/// Only persons whose date of birth is known to the day are read: a year alone cannot
-/// confirm or exclude a namesake, and a function without a usable date would be a level
-/// C finding from a source that is not even official.
+/// One instance per source, Czech and Slovak, each with its own positions. Only persons
+/// whose date of birth is known to the day are read: a year alone cannot confirm or
+/// exclude a namesake, and a function without a usable date would be a level C finding
+/// from a source that is not even official.
 /// </summary>
 public sealed class WikidataPositionsConnector(
+    string sourceCode,
+    Country country,
     IHttpClientFactory httpClients,
     IOptions<WikidataPositionsOptions> options,
     TimeProvider clock,
     ILogger<WikidataPositionsConnector> logger) : IPepListConnector
 {
-    public const string Code = "CZ_WIKIDATA";
+    public const string CzechCode = "CZ_WIKIDATA";
+    public const string SlovakCode = "SK_WIKIDATA";
     public const string HttpClientName = "PepMeld.Wikidata";
 
     private static readonly DateTimeOffset EntryTime = new(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
 
-    public string SourceCode => Code;
+    public string SourceCode => sourceCode;
+
+    private IReadOnlyList<WikidataPosition> Positions =>
+        options.Value.Sources.TryGetValue(sourceCode, out var positions) ? positions : [];
+
+    /// <summary>Labels in the country's language first; Czech and Slovak read each other's.</summary>
+    private string Languages => country == Country.SK ? "sk,cs,en" : "cs,sk,en";
 
     public async Task<ListDownload> DownloadAsync(CancellationToken ct)
     {
@@ -42,9 +52,9 @@ public sealed class WikidataPositionsConnector(
             await using (var file = new FileStream(temp, FileMode.Create, FileAccess.ReadWrite, FileShare.None))
             using (var archive = new ZipArchive(file, ZipArchiveMode.Create, leaveOpen: false))
             {
-                foreach (var position in settings.Positions)
+                foreach (var position in Positions)
                 {
-                    var url = $"{settings.SparqlEndpoint}?query={Uri.EscapeDataString(Query(position.Item))}";
+                    var url = $"{settings.SparqlEndpoint}?query={Uri.EscapeDataString(Query(position, Languages))}";
                     using var request = new HttpRequestMessage(HttpMethod.Get, url);
                     request.Headers.TryAddWithoutValidation("Accept", "application/sparql-results+json");
 
@@ -52,7 +62,7 @@ public sealed class WikidataPositionsConnector(
                     response.EnsureSuccessStatusCode();
 
                     var json = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
-                    await WriteAsync(archive, $"positions-{position.Item}.json", json, ct).ConfigureAwait(false);
+                    await WriteAsync(archive, $"positions-{position.Key}.json", json, ct).ConfigureAwait(false);
                     await Task.Delay(TimeSpan.FromMilliseconds(settings.DelayMilliseconds), clock, ct).ConfigureAwait(false);
                 }
             }
@@ -74,12 +84,12 @@ public sealed class WikidataPositionsConnector(
         using var archive = new ZipArchive(content, ZipArchiveMode.Read, leaveOpen: true);
         var byPerson = new Dictionary<string, (string Label, DateOnly Born, List<ParsedFunction> Functions)>(StringComparer.Ordinal);
 
-        foreach (var position in options.Value.Positions)
+        foreach (var position in Positions)
         {
-            var entry = archive.GetEntry($"positions-{position.Item}.json");
+            var entry = archive.GetEntry($"positions-{position.Key}.json");
             if (entry is null)
             {
-                logger.LogWarning("Wikidata: the snapshot has no result for {Item}; its holders are not in this import.", position.Item);
+                logger.LogWarning("Wikidata {Source}: the snapshot has no result for {Position}; its holders are not in this import.", sourceCode, position.Key);
                 continue;
             }
 
@@ -91,6 +101,7 @@ public sealed class WikidataPositionsConnector(
                 var item = SparqlResults.EntityId(row, "p");
                 var label = SparqlResults.Value(row, "pLabel");
                 var born = SparqlResults.Date(row, "dob");
+                var positionItem = SparqlResults.EntityId(row, "pos") ?? position.Item;
 
                 if (item is null || label is null || born is null)
                 {
@@ -111,13 +122,14 @@ public sealed class WikidataPositionsConnector(
 
                 var start = SparqlResults.Date(row, "start");
                 var end = SparqlResults.Date(row, "end");
+                var role = position.Role is { Length: > 0 } fixedRole ? fixedRole : SparqlResults.Value(row, "posLabel") ?? positionItem;
 
                 person.Functions.Add(new ParsedFunction(
-                    $"{position.Item}:{start?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? "?"}",
-                    position.Country,
+                    $"{positionItem}:{start?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? "?"}",
+                    country,
                     position.Category,
                     position.Institution,
-                    position.Role,
+                    role,
                     start,
                     end,
                     $"https://www.wikidata.org/wiki/{item}")
@@ -128,7 +140,7 @@ public sealed class WikidataPositionsConnector(
 
             if (skippedPrecision > 0)
             {
-                logger.LogInformation("Wikidata {Item}: {Count} holder(s) left out, date of birth not known to the day.", position.Item, skippedPrecision);
+                logger.LogInformation("Wikidata {Position}: {Count} holder(s) left out, date of birth not known to the day.", position.Key, skippedPrecision);
             }
         }
 
@@ -157,21 +169,36 @@ public sealed class WikidataPositionsConnector(
 
     /// <summary>
     /// Every holder of the position with a date of birth, one row per term. The date is
-    /// read through its value node to get the precision; the label in Czech, Slovak or
-    /// English, whichever exists first.
+    /// read through its value node to get the precision; labels in the languages given,
+    /// whichever exists first. The position comes back too, so a family of positions
+    /// (every minister of a country) yields each one's own label as the role.
     /// </summary>
-    internal static string Query(string item) =>
-        $$"""
-          SELECT ?p ?pLabel ?dob ?dobPrecision ?start ?end WHERE {
-            ?p p:P39 ?st . ?st ps:P39 wd:{{item}} .
-            ?p p:P569/psv:P569 ?dobNode .
-            ?dobNode wikibase:timeValue ?dob ; wikibase:timePrecision ?dobPrecision .
-            OPTIONAL { ?st pq:P580 ?start }
-            OPTIONAL { ?st pq:P582 ?end }
-            SERVICE wikibase:label { bd:serviceParam wikibase:language "cs,sk,en". }
-          }
-          ORDER BY ?p ?start
-          """;
+    internal static string Query(WikidataPosition position, string languages)
+    {
+        ArgumentNullException.ThrowIfNull(position);
+
+        var positions = position.Jurisdiction is { Length: > 0 } jurisdiction
+            ? $"?pos wdt:P279* wd:{position.Item} . ?pos wdt:P1001 wd:{jurisdiction} ."
+            : position.IncludeSubclasses
+                ? $"?pos wdt:P279* wd:{position.Item} ."
+                : $"BIND(wd:{position.Item} AS ?pos)";
+
+        var citizenship = position.Citizenship is { Length: > 0 } c ? $"?p wdt:P27 wd:{c} ." : string.Empty;
+
+        return $$"""
+            SELECT ?p ?pLabel ?pos ?posLabel ?dob ?dobPrecision ?start ?end WHERE {
+              {{positions}}
+              ?p p:P39 ?st . ?st ps:P39 ?pos .
+              {{citizenship}}
+              ?p p:P569/psv:P569 ?dobNode .
+              ?dobNode wikibase:timeValue ?dob ; wikibase:timePrecision ?dobPrecision .
+              OPTIONAL { ?st pq:P580 ?start }
+              OPTIONAL { ?st pq:P582 ?end }
+              SERVICE wikibase:label { bd:serviceParam wikibase:language "{{languages}}". }
+            }
+            ORDER BY ?p ?pos ?start
+            """;
+    }
 
     /// <summary>"Miloš Vystrčil": the last word is the family name, the rest the given names. Good enough for a label; the item is the key.</summary>
     internal static (string Given, string Family) SplitLabel(string label)

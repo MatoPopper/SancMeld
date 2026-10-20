@@ -133,7 +133,7 @@ public class PepMeldDbContext(DbContextOptions<PepMeldDbContext> options) : DbCo
                 Id = WellKnownIds.CzWikidataSource,
                 Code = "CZ_WIKIDATA",
                 Country = Country.CZ,
-                Name = "Wikidata – držitelé funkcí v ČR (senátoři)",
+                Name = "Wikidata – držitelé funkcí v ČR (prezident, vláda, senátoři, soudci, ČNB, hejtmani, primátoři, velvyslanci, europoslanci)",
                 Publisher = "Wikidata (Wikimedia Foundation), CC0",
                 Url = "https://query.wikidata.org/",
                 HasBirthDate = true,
@@ -143,8 +143,27 @@ public class PepMeldDbContext(DbContextOptions<PepMeldDbContext> options) : DbCo
                 IsOfficial = false,
                 Licence = "CC0 1.0",
 
-                // 348 senators since 1996 with a date of birth on 2026-10-20.
+                // 348 senators since 1996 with a date of birth on 2026-10-20, before the
+                // other positions were added.
                 MinExpectedPersons = 200,
+                RefreshHours = 24,
+                IsEnabled = true,
+                CreatedAt = new DateTimeOffset(2026, 10, 21, 0, 0, 0, TimeSpan.Zero),
+            },
+            new PepSource
+            {
+                Id = WellKnownIds.SkWikidataSource,
+                Code = "SK_WIKIDATA",
+                Country = Country.SK,
+                Name = "Wikidata – držitelia funkcií v SR (prezident, vláda, guvernér NBS, veľvyslanci, primátor Bratislavy, europoslanci)",
+                Publisher = "Wikidata (Wikimedia Foundation), CC0",
+                Url = "https://query.wikidata.org/",
+                HasBirthDate = true,
+                IsOfficial = false,
+                Licence = "CC0 1.0",
+
+                // 143 government members, 36 ambassadors, 54 MEPs and the presidents on 2026-10-20.
+                MinExpectedPersons = 100,
                 RefreshHours = 24,
                 IsEnabled = true,
                 CreatedAt = new DateTimeOffset(2026, 10, 21, 0, 0, 0, TimeSpan.Zero),

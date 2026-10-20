@@ -11,6 +11,14 @@ public class WikidataPositionsConnectorTests
 {
     private const string Fixtures = "fixtures/cz-wikidata";
 
+    private static readonly WikidataPosition Senate = new()
+    {
+        Item = "Q18941264",
+        Category = PepCategory.MemberOfParliament,
+        Institution = "Senát Parlamentu ČR",
+        Role = "senátor",
+    };
+
     private sealed class FixtureHandler : HttpMessageHandler
     {
         public List<string> Requests { get; } = [];
@@ -38,9 +46,14 @@ public class WikidataPositionsConnectorTests
     private static (WikidataPositionsConnector Connector, FixtureHandler Handler) Connector()
     {
         var handler = new FixtureHandler();
+        var options = new WikidataPositionsOptions { DelayMilliseconds = 0 };
+        options.Sources[WikidataPositionsConnector.CzechCode] = [Senate];
+
         var connector = new WikidataPositionsConnector(
+            WikidataPositionsConnector.CzechCode,
+            Country.CZ,
             new Factory(handler),
-            Options.Create(new WikidataPositionsOptions { DelayMilliseconds = 0 }),
+            Options.Create(options),
             TimeProvider.System,
             NullLogger<WikidataPositionsConnector>.Instance);
         return (connector, handler);
@@ -80,6 +93,7 @@ public class WikidataPositionsConnectorTests
         Assert.All(vystrcil.Functions, f => Assert.Equal(PepCategory.MemberOfParliament, f.Category));
         Assert.All(vystrcil.Functions, f => Assert.Equal("senátor", f.Role));
         Assert.All(vystrcil.Functions, f => Assert.Equal("Senát Parlamentu ČR", f.Institution));
+        Assert.All(vystrcil.Functions, f => Assert.Equal(Country.CZ, f.Country));
         Assert.All(vystrcil.Functions, f => Assert.Contains("Wikidata", f.DateNote));
 
         Assert.Contains(vystrcil.Functions, f => f.From == new DateOnly(2016, 10, 15) && f.To is null);
@@ -106,13 +120,47 @@ public class WikidataPositionsConnectorTests
         => Assert.Equal((given, family), WikidataPositionsConnector.SplitLabel(label));
 
     [Fact]
-    public void TheQueryAsksForThePrecisionOfTheBirthday()
+    public void ASinglePositionIsBoundAndAsksForThePrecisionOfTheBirthday()
     {
-        var query = WikidataPositionsConnector.Query("Q18941264");
+        var query = WikidataPositionsConnector.Query(Senate, "cs,sk,en");
 
-        Assert.Contains("wd:Q18941264", query);
+        Assert.Contains("BIND(wd:Q18941264 AS ?pos)", query);
         Assert.Contains("wikibase:timePrecision", query);
         Assert.Contains("pq:P580", query);
         Assert.Contains("pq:P582", query);
+        Assert.DoesNotContain("P27", query);
+    }
+
+    [Fact]
+    public void AFamilyOfPositionsIsReachedThroughSubclassesAndJurisdiction()
+    {
+        var ministers = WikidataPositionsConnector.Query(new WikidataPosition { Item = "Q83307", Jurisdiction = "Q214" }, "sk,cs,en");
+        Assert.Contains("?pos wdt:P279* wd:Q83307", ministers);
+        Assert.Contains("wdt:P1001 wd:Q214", ministers);
+
+        var ambassadors = WikidataPositionsConnector.Query(new WikidataPosition { Item = "Q30249299", IncludeSubclasses = true }, "sk,cs,en");
+        Assert.Contains("?pos wdt:P279* wd:Q30249299", ambassadors);
+        Assert.DoesNotContain("P1001", ambassadors);
+
+        var meps = WikidataPositionsConnector.Query(new WikidataPosition { Item = "Q27169", Citizenship = "Q213" }, "cs,sk,en");
+        Assert.Contains("?p wdt:P27 wd:Q213", meps);
+        Assert.Contains("BIND(wd:Q27169 AS ?pos)", meps);
+    }
+
+    [Fact]
+    public void TheDefaultsNameEveryPositionOnceAndCarryAnInstitution()
+    {
+        var options = new WikidataPositionsOptions();
+
+        foreach (var (code, positions) in options.Sources)
+        {
+            Assert.NotEmpty(positions);
+            Assert.Equal(positions.Count, positions.Select(p => p.Key).Distinct().Count());
+            Assert.All(positions, p => Assert.Matches(@"^Q\d+$", p.Item));
+            Assert.All(positions, p => Assert.False(string.IsNullOrWhiteSpace(p.Institution), $"{code}: {p.Item} has no institution"));
+        }
+
+        Assert.Contains(options.Sources[WikidataPositionsConnector.CzechCode], p => p.Item == "Q18941264");
+        Assert.Contains(options.Sources[WikidataPositionsConnector.SlovakCode], p => p.Jurisdiction == "Q214");
     }
 }
