@@ -58,6 +58,15 @@ public enum PepCategory
 
     /// <summary>SK i), CZ: a similar function in an EU institution or an international organisation.</summary>
     EuOrInternational,
+
+    /// <summary>
+    /// SK i), CZ "obdobná funkce", AMLR i): another prominent public function of national
+    /// significance that no letter names: an ombudsman, the head of a regulator, the
+    /// board of a public broadcaster or a social-insurance institution. The Slovak
+    /// register of public officials lists many such offices; they are reported under the
+    /// role they carry rather than squeezed into the nearest letter.
+    /// </summary>
+    OtherProminentFunction,
 }
 
 public enum CheckStatus

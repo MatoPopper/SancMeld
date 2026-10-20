@@ -9,9 +9,9 @@ normalisation and trigram scoring, and nothing else: no table, no endpoint and n
 process is shared.
 
 ```
-Status: first increment. Two lists (CZ Chamber of Deputies open data, SK National Council
-deputies), the asynchronous check API with stage 1 of three, API-key access with budgets.
-No front end yet.
+Status: first increment. Three lists (CZ Chamber of Deputies open data, SK National Council
+deputies, SK register of public officials), the asynchronous check API with stage 1 of
+three, API-key access with budgets. No front end yet.
 ```
 
 ## What it answers
@@ -38,8 +38,9 @@ sees the lists within seconds while a later stage still runs:
 |---|---|---|---|---|
 | `CZ_PSP` | CZ | Chamber of Deputies open data (`poslanci.zip`): every deputy since 1993, senators, members of government, presidents, with the dates of each mandate | **yes**, except senators: the Chamber records them without a birthday (the 1900 sentinel), so a senator is a level C finding until senat.cz is read | **implemented** |
 | `SK_NRSR` | SK | nrsr.sk: the alphabetical list of deputies per term (3rd term, 2002, onwards) and each deputy's profile, with the date of birth and the town of residence. No mandate dates per person: a membership carries the term's bounds and says so | **yes** | **implemented** |
-| NR SR public officials | SK | the register of public officials under ústavný zákon 357/2004, covering almost all of § 6 ods. 2 including boards of state companies | no | planned |
-| Governments, courts, central banks, ambassadors, parties | SK, CZ | institution web pages | no | planned |
+| `SK_NRSR_VNF` | SK | nrsr.sk register of public officials (ústavný zákon 357/2004): the alphabetical list (one form post) and each official's latest declaration, which names every function with the organisation. Government and state secretaries, constitutional and supreme court judges, the prosecutor general, the central bank's board, mayors and regional chairs, regulators, and the boards of state enterprises and state-owned companies (letter g), ~900 persons). No dates of office: a function carries the declaration year and ends when the person leaves the list | no | **implemented** |
+| Senators | CZ | senat.cz profiles, for the birthdays the Chamber's data lacks | yes | planned |
+| Courts, central bank, ambassadors, parties | CZ | institution web pages | no | planned |
 
 A full list of candidates, what each publishes and why it is or is not usable is in the
 analysis in `C:\projects\PepMeld\docs\2026-10-19-analyza.md` (outside the repository).
@@ -51,6 +52,7 @@ docker compose up -d db                      # the same server SancMeld uses; Pe
 dotnet ef database update --project src/PepMeld.Core       # creates "pepmeld" and the schema
 dotnet run --project src/PepMeld.Server -- import CZ_PSP    # first fill, ~1 650 persons, seconds
 dotnet run --project src/PepMeld.Server -- import SK_NRSR   # ~700 profiles; the site answers in 1-4 s, so the first fill takes about 45 min, later runs ~10 min (profiles cached 30 days)
+dotnet run --project src/PepMeld.Server -- import SK_NRSR_VNF   # ~1 650 declarations at 1-15 s each: the first fill runs for hours, later runs read the cache
 dotnet run --project src/PepMeld.Server -- apikey create you@example.com --name dev
 dotnet run --project src/PepMeld.Server                     # http://localhost:63463/swagger
 ```
@@ -83,6 +85,7 @@ runs one by hand.
 dotnet test tests/PepMeld.Core.Tests                 # no database
 dotnet test tests/PepMeld.Connectors.CzPsp.Tests     # the mapper against fixtures/cz-psp
 dotnet test tests/PepMeld.Connectors.SkNrsr.Tests    # the crawl and the parser against fixtures/sk-nrsr
+dotnet test tests/PepMeld.Connectors.SkNrsrVnf.Tests # the form post, the declarations and the classification against fixtures/sk-nrsr-vnf
 dotnet test tests/PepMeld.Core.IntegrationTests      # needs the compose database; creates pepmeld_tests
 ```
 

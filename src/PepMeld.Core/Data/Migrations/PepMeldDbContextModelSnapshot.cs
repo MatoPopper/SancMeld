@@ -663,6 +663,21 @@ namespace PepMeld.Core.Data.Migrations
                             Publisher = "Kancelária Národnej rady Slovenskej republiky",
                             RefreshHours = 24,
                             Url = "https://www.nrsr.sk/web/Default.aspx?sid=poslanci/zoznam_abc"
+                        },
+                        new
+                        {
+                            Id = new Guid("7b1c2e3a-0001-4c5d-9e8f-000000000003"),
+                            Code = "SK_NRSR_VNF",
+                            Country = "s_k",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 21, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            HasBirthDate = false,
+                            IsEnabled = true,
+                            Licence = "Verejná webová stránka NR SR; sťahované raz denne s identifikovateľným User-Agentom, oznámenia v cache 30 dní",
+                            MinExpectedPersons = 1000,
+                            Name = "Národná rada SR – zoznam verejných funkcionárov (oznámenia podľa ú. z. č. 357/2004 Z. z.)",
+                            Publisher = "Výbor NR SR pre nezlučiteľnosť funkcií",
+                            RefreshHours = 24,
+                            Url = "https://www.nrsr.sk/web/Default.aspx?sid=vnf/zoznam"
                         });
                 });
 

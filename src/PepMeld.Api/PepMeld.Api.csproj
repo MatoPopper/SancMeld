@@ -19,6 +19,7 @@
     <ProjectReference Include="../PepMeld.Core/PepMeld.Core.csproj" />
     <ProjectReference Include="../PepMeld.Connectors.CzPsp/PepMeld.Connectors.CzPsp.csproj" />
     <ProjectReference Include="../PepMeld.Connectors.SkNrsr/PepMeld.Connectors.SkNrsr.csproj" />
+    <ProjectReference Include="../PepMeld.Connectors.SkNrsrVnf/PepMeld.Connectors.SkNrsrVnf.csproj" />
   </ItemGroup>
 
 </Project>

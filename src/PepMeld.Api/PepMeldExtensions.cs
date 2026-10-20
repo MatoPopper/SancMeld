@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using PepMeld.Connectors.CzPsp;
 using PepMeld.Connectors.SkNrsr;
+using PepMeld.Connectors.SkNrsrVnf;
 using PepMeld.Core.Checks;
 using PepMeld.Core.Configuration;
 using PepMeld.Core.Data;
@@ -77,6 +78,7 @@ public static class PepMeldExtensions
 
         services.AddCzPspConnector(configuration);
         services.AddSkNrsrConnector(configuration);
+        services.AddSkNrsrVnfConnector(configuration);
         return services;
     }
 

@@ -16,6 +16,7 @@ public class LegalBasisTests
     [InlineData(PepCategory.StateEnterpriseBoard, "g")]
     [InlineData(PepCategory.Prosecutor, "h")]
     [InlineData(PepCategory.EuOrInternational, "i")]
+    [InlineData(PepCategory.OtherProminentFunction, "i")]
     [InlineData(PepCategory.PartyLeadership, "j")]
     public void SlovakLettersFollowParagraphSix(PepCategory category, string letter)
         => Assert.Equal($"§ 6 ods. 2 písm. {letter}) zákona č. 297/2008 Z. z.", LegalBasis.National(Country.SK, category));

@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/PepMeld.Connectors.SkNrsrVnf/PepMeld.Connectors.SkNrsrVnf.csproj" />
+  </ItemGroup>
+
+  <!-- Pages downloaded from nrsr.sk on 2026-10-20: the register page as a GET (for its
+       hidden form fields), the alphabetical view cut to three officials, and their three
+       declarations: the president with two functions, a mayor with one, and a lawyer on
+       ten boards of state-owned companies. -->
+  <ItemGroup>
+    <Content Include="../../fixtures/sk-nrsr-vnf/*.html" Link="fixtures/sk-nrsr-vnf/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

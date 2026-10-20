@@ -37,7 +37,7 @@ public static class LegalBasis
         PepCategory.SeniorOfficer => "f",
         PepCategory.StateEnterpriseBoard => "g",
         PepCategory.Prosecutor => "h",
-        PepCategory.RegionalLeader or PepCategory.EuOrInternational => "i",
+        PepCategory.RegionalLeader or PepCategory.EuOrInternational or PepCategory.OtherProminentFunction => "i",
         PepCategory.PartyLeadership => "j",
         _ => throw new ArgumentOutOfRangeException(nameof(category), category, null),
     };
@@ -55,7 +55,7 @@ public static class LegalBasis
 
         // Prosecutors are a Slovak addition under "other prominent public functions
         // provided for by a Member State", which the regulation keeps as letter i).
-        PepCategory.Prosecutor => "i",
+        PepCategory.Prosecutor or PepCategory.OtherProminentFunction => "i",
         _ => throw new ArgumentOutOfRangeException(nameof(category), category, null),
     };
 }

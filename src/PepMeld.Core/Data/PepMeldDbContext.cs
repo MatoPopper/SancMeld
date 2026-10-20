@@ -89,6 +89,26 @@ public class PepMeldDbContext(DbContextOptions<PepMeldDbContext> options) : DbCo
                 RefreshHours = 24,
                 IsEnabled = true,
                 CreatedAt = new DateTimeOffset(2026, 10, 20, 0, 0, 0, TimeSpan.Zero),
+            },
+            new PepSource
+            {
+                Id = WellKnownIds.SkNrsrVnfSource,
+                Code = "SK_NRSR_VNF",
+                Country = Country.SK,
+                Name = "Národná rada SR – zoznam verejných funkcionárov (oznámenia podľa ú. z. č. 357/2004 Z. z.)",
+                Publisher = "Výbor NR SR pre nezlučiteľnosť funkcií",
+                Url = "https://www.nrsr.sk/web/Default.aspx?sid=vnf/zoznam",
+
+                // The register names the function and the organisation, never a birthday:
+                // every finding from it is level C until another source adds the date.
+                HasBirthDate = false,
+                Licence = "Verejná webová stránka NR SR; sťahované raz denne s identifikovateľným User-Agentom, oznámenia v cache 30 dní",
+
+                // 1 636 officials listed on 2026-10-20.
+                MinExpectedPersons = 1000,
+                RefreshHours = 24,
+                IsEnabled = true,
+                CreatedAt = new DateTimeOffset(2026, 10, 21, 0, 0, 0, TimeSpan.Zero),
             });
         });
 
