@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>PepMeld.Connectors.CzPsp</RootNamespace>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="PepMeld.Connectors.CzPsp.Tests" />
+    <InternalsVisibleTo Include="PepMeld.Core.IntegrationTests" />
+  </ItemGroup>
+
+  <!-- A zip of pipe-delimited windows-1250 text over HTTPS; the framework covers all of it. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.4" />
+    <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="10.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../PepMeld.Core/PepMeld.Core.csproj" />
+  </ItemGroup>
+
+</Project>

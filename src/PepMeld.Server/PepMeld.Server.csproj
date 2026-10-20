@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <RootNamespace>PepMeld.Server</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <!-- Enables: dotnet user-secrets set "ConnectionStrings:PepMeld" "..." -->
+    <UserSecretsId>pepmeld-server-9c4e1b27</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../PepMeld.Api/PepMeld.Api.csproj" />
+  </ItemGroup>
+
+  <!-- Swashbuckle for the same reason SancMeld.Server gives: Microsoft.AspNetCore.OpenApi
+       pins a Microsoft.OpenApi with an open advisory. No Hangfire: the only scheduled
+       work is a daily import, and a hosted service with a timer does that without a
+       second schema in the database. -->
+  <ItemGroup>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
+  </ItemGroup>
+
+</Project>

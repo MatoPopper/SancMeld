@@ -1,5 +1,10 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/PepMeld.Api/PepMeld.Api.csproj" />
+    <Project Path="src/PepMeld.Connectors.CzPsp/PepMeld.Connectors.CzPsp.csproj" />
+    <Project Path="src/PepMeld.Connectors.SkNrsr/PepMeld.Connectors.SkNrsr.csproj" />
+    <Project Path="src/PepMeld.Core/PepMeld.Core.csproj" />
+    <Project Path="src/PepMeld.Server/PepMeld.Server.csproj" />
     <Project Path="src/SancMeld.Api/SancMeld.Api.csproj" />
     <Project Path="src/SancMeld.Connectors.Ares/SancMeld.Connectors.Ares.csproj" />
     <Project Path="src/SancMeld.Connectors.Rpvs/SancMeld.Connectors.Rpvs.csproj" />
@@ -20,6 +25,10 @@
     <Project Path="tools/SancMeld.Experiments.NameEmbeddings/SancMeld.Experiments.NameEmbeddings.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/PepMeld.Connectors.CzPsp.Tests/PepMeld.Connectors.CzPsp.Tests.csproj" />
+    <Project Path="tests/PepMeld.Connectors.SkNrsr.Tests/PepMeld.Connectors.SkNrsr.Tests.csproj" />
+    <Project Path="tests/PepMeld.Core.IntegrationTests/PepMeld.Core.IntegrationTests.csproj" />
+    <Project Path="tests/PepMeld.Core.Tests/PepMeld.Core.Tests.csproj" />
     <Project Path="tests/SancMeld.Connectors.Ares.Tests/SancMeld.Connectors.Ares.Tests.csproj" />
     <Project Path="tests/SancMeld.Connectors.Rpvs.Tests/SancMeld.Connectors.Rpvs.Tests.csproj" />
     <Project Path="tests/SancMeld.Connectors.SkRegister.Tests/SancMeld.Connectors.SkRegister.Tests.csproj" />

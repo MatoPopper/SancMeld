@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/PepMeld.Connectors.SkNrsr/PepMeld.Connectors.SkNrsr.csproj" />
+  </ItemGroup>
+
+  <!-- Pages downloaded from nrsr.sk on 2026-10-20: the alphabetical lists of the 8th
+       and 9th terms cut to three deputies each (one in both terms, one in each alone)
+       and four profiles, among them a title written as "MUDr., CSc." and a two-word
+       surname. -->
+  <ItemGroup>
+    <Content Include="../../fixtures/sk-nrsr/*.html" Link="fixtures/sk-nrsr/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

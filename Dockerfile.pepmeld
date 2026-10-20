@@ -1,0 +1,40 @@
+# The PEP-screening service as its own container, next to the sanctions one.
+#
+#   docker build -f Dockerfile.pepmeld -t pepmeld-api .
+#
+# Build context is the repository root; the layout and the reasons are those of the
+# sanctions Dockerfile (no per-project restore layer, a non-root user, libgssapi-krb5-2
+# for Npgsql's probe, no HEALTHCHECK). The two services share nothing at runtime but a
+# PostgreSQL server, each with its own database.
+
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+
+COPY Directory.Build.props ./
+COPY src/ src/
+RUN dotnet publish src/PepMeld.Server/PepMeld.Server.csproj -c Release -o /app
+
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+WORKDIR /app
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libgssapi-krb5-2 \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN useradd --create-home --shell /usr/sbin/nologin pepmeld \
+    && mkdir -p /var/lib/pepmeld/snapshots \
+    && chown -R pepmeld:pepmeld /var/lib/pepmeld
+USER pepmeld
+
+COPY --from=build --chown=pepmeld:pepmeld /app ./
+
+# Downloaded lists are kept so a past check can be replayed against what was known on
+# the day; mount a volume here or they vanish with the container.
+ENV PepMeld__Ingest__SnapshotStoragePath=/var/lib/pepmeld/snapshots \
+    PepMeld__Database__AutoMigrate=true \
+    ASPNETCORE_URLS=http://+:8080 \
+    DOTNET_gcServer=1
+
+EXPOSE 8080
+
+ENTRYPOINT ["dotnet", "PepMeld.Server.dll"]

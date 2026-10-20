@@ -1,0 +1,237 @@
+using PepMeld.Core.Domain;
+
+namespace PepMeld.Core.Data;
+
+/// <summary>A list this instance imports: who publishes it, what it covers, whether it carries a date of birth.</summary>
+public class PepSource
+{
+    public Guid Id { get; set; }
+    public required string Code { get; set; }
+    public Country Country { get; set; }
+    public required string Name { get; set; }
+    public required string Publisher { get; set; }
+    public required string Url { get; set; }
+
+    /// <summary>
+    /// Whether the source publishes a date of birth. The single most important property
+    /// of a source: with it a name match is confirmed or excluded, without it the match
+    /// stays a candidate and the answer has to say so.
+    /// </summary>
+    public bool HasBirthDate { get; set; }
+
+    public string? Licence { get; set; }
+
+    /// <summary>A parse that yields fewer persons than this is refused rather than applied: a truncated file must not end everyone's functions.</summary>
+    public int MinExpectedPersons { get; set; }
+
+    /// <summary>How old the last successful import may be before the scheduler runs another.</summary>
+    public int RefreshHours { get; set; } = 24;
+
+    public bool IsEnabled { get; set; } = true;
+    public DateTimeOffset CreatedAt { get; set; }
+}
+
+public class ImportRun
+{
+    public Guid Id { get; set; }
+    public Guid SourceId { get; set; }
+    public PepSource? Source { get; set; }
+    public DateTimeOffset StartedAt { get; set; }
+    public DateTimeOffset? FinishedAt { get; set; }
+    public ImportStatus Status { get; set; }
+
+    /// <summary>Where the downloaded bytes are kept, so a past check can be replayed against what was known then.</summary>
+    public string? SnapshotPath { get; set; }
+    public string? ContentSha256 { get; set; }
+    public string? SourceUrl { get; set; }
+
+    public int PersonsSeen { get; set; }
+    public int PersonsInserted { get; set; }
+    public int PersonsUpdated { get; set; }
+    public int FunctionsSeen { get; set; }
+    public int FunctionsInserted { get; set; }
+    public int FunctionsUpdated { get; set; }
+
+    /// <summary>Open functions the file no longer carried, closed as of this run.</summary>
+    public int FunctionsEnded { get; set; }
+
+    public string? Error { get; set; }
+}
+
+/// <summary>A person as one source records them. The same human in two sources is two rows; nothing merges them.</summary>
+public class PepPerson
+{
+    public Guid Id { get; set; }
+    public Guid SourceId { get; set; }
+    public PepSource? Source { get; set; }
+
+    /// <summary>The publisher's own identifier, or a documented fingerprint where there is none.</summary>
+    public required string SourceKey { get; set; }
+
+    /// <summary>Given name then family name, without titles, as shown to the caller.</summary>
+    public required string DisplayName { get; set; }
+
+    /// <summary>
+    /// <see cref="DisplayName"/> through SancMeld's NameNormalizer, written at import.
+    /// The trigram index is built on it and a query is normalised the same way before it
+    /// is compared, which is what keeps the two in step.
+    /// </summary>
+    public required string NameNormalized { get; set; }
+
+    public string? GivenName { get; set; }
+    public string? FamilyName { get; set; }
+    public string? TitleBefore { get; set; }
+    public string? TitleAfter { get; set; }
+
+    /// <summary>Null when the source does not publish it or marks it unknown.</summary>
+    public DateOnly? BirthDate { get; set; }
+    public DateOnly? DeathDate { get; set; }
+    public string? BirthPlace { get; set; }
+    public string? Residence { get; set; }
+
+    /// <summary>The page a person can be checked on, cited as evidence.</summary>
+    public required string SourceUrl { get; set; }
+
+    public Guid FirstSeenRunId { get; set; }
+    public Guid LastSeenRunId { get; set; }
+
+    public ICollection<PepFunction> Functions { get; set; } = [];
+}
+
+/// <summary>
+/// One function of one person, with its dates. Nothing is deleted: a function that ends
+/// gets <see cref="ValidTo"/> and stays, because the person stays politically exposed
+/// for at least twelve months after it (SK § 12 ods. 3) and "is or was" in Czech law.
+/// </summary>
+public class PepFunction
+{
+    public Guid Id { get; set; }
+    public Guid PersonId { get; set; }
+    public PepPerson? Person { get; set; }
+
+    /// <summary>The publisher's identifier of this membership or office, unique within the person.</summary>
+    public required string SourceKey { get; set; }
+
+    public Country Country { get; set; }
+    public PepCategory Category { get; set; }
+
+    /// <summary>The paragraph as cited at import, see <see cref="Domain.LegalBasis"/>.</summary>
+    public required string LegalBasis { get; set; }
+
+    public required string Institution { get; set; }
+    public required string Role { get; set; }
+    public DateOnly? ValidFrom { get; set; }
+    public DateOnly? ValidTo { get; set; }
+
+    /// <summary>
+    /// True when the end date is ours, not the publisher's: the function was in the file
+    /// on one import and gone on the next. Such a date is only as precise as the import
+    /// schedule, and the answer says so.
+    /// </summary>
+    public bool EndedByDisappearance { get; set; }
+
+    /// <summary>What the dates are when they are a term's bounds rather than the person's own mandate; null when they are the person's.</summary>
+    public string? DateNote { get; set; }
+
+    public string? SourceUrl { get; set; }
+    public Guid FirstSeenRunId { get; set; }
+    public Guid LastSeenRunId { get; set; }
+}
+
+/// <summary>Everyone who may run a check, with a request budget. The same shape as SancMeld's api_user, in this database, until the two share an account.</summary>
+public class ApiUser
+{
+    public Guid Id { get; set; }
+
+    /// <summary>Lower-cased; matched against the verified address in the token or the key's owner.</summary>
+    public required string Email { get; set; }
+    public string? DisplayName { get; set; }
+    public string? GoogleSubject { get; set; }
+
+    /// <summary>Checks this address may start in total. Raised by hand in the database or with the CLI.</summary>
+    public int RequestLimit { get; set; }
+    public int RequestsUsed { get; set; }
+
+    public bool IsBlocked { get; set; }
+    public string? BlockedBy { get; set; }
+    public DateTimeOffset? BlockedAt { get; set; }
+
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset? LastSeenAt { get; set; }
+}
+
+public class ApiKey
+{
+    public Guid Id { get; set; }
+    public required string Name { get; set; }
+    public required string OwnerEmail { get; set; }
+
+    /// <summary>Lowercase hex SHA-256 of the key.</summary>
+    public required string KeyHash { get; set; }
+    public required string DisplayPrefix { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset? LastUsedAt { get; set; }
+    public DateTimeOffset? RevokedAt { get; set; }
+}
+
+/// <summary>
+/// A check: who asked, what they asked, and how it went. The query is kept verbatim
+/// because the answer is only meaningful next to the question it answered.
+/// </summary>
+public class PepCheck
+{
+    public Guid Id { get; set; }
+    public required string UserEmail { get; set; }
+
+    public required string Name { get; set; }
+    public DateOnly BirthDate { get; set; }
+    public Country? Country { get; set; }
+    public string? Nationality { get; set; }
+    public string? PlaceOfBirth { get; set; }
+
+    /// <summary>The caller's own reference, e.g. a KYC case number, returned with the result and kept for the audit.</summary>
+    public string? Reference { get; set; }
+
+    /// <summary>Stage names, as text so the database needs no enum type.</summary>
+    public string[] Scope { get; set; } = [];
+
+    public CheckStatus Status { get; set; }
+    public DateTimeOffset StartedAt { get; set; }
+    public DateTimeOffset? FinishedAt { get; set; }
+    public CheckOutcome? Outcome { get; set; }
+
+    /// <summary>One sentence for a person, in Slovak.</summary>
+    public string? Summary { get; set; }
+    public string? Error { get; set; }
+
+    /// <summary>What was searched: the sources and their last import at the moment of the check, as JSON. "What we knew on the day."</summary>
+    public string? CoverageJson { get; set; }
+
+    public ICollection<PepCheckStage> Stages { get; set; } = [];
+    public ICollection<Finding> Findings { get; set; } = [];
+}
+
+public class PepCheckStage
+{
+    public Guid CheckId { get; set; }
+    public CheckStage Stage { get; set; }
+    public StageStatus Status { get; set; }
+    public DateTimeOffset? StartedAt { get; set; }
+    public DateTimeOffset? FinishedAt { get; set; }
+
+    /// <summary>What the stage wants the reader to know: what it could not cover, why it was skipped.</summary>
+    public string? Note { get; set; }
+    public string? Error { get; set; }
+}
+
+/// <summary>A finding, stored as the JSON the API returns, so a past answer is reproduced exactly and not re-rendered from today's data.</summary>
+public class Finding
+{
+    public Guid Id { get; set; }
+    public Guid CheckId { get; set; }
+    public CheckStage Stage { get; set; }
+    public FindingKind Kind { get; set; }
+    public EvidenceLevel Level { get; set; }
+    public required string PayloadJson { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+}

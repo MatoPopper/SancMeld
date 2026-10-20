@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>PepMeld.Api</RootNamespace>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <!-- Google sign-in by verifying the ID token's signature against Google's published
+       keys, as in SancMeld.Api: no client secret anywhere, see SancMeldAuth.cs there. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../PepMeld.Core/PepMeld.Core.csproj" />
+    <ProjectReference Include="../PepMeld.Connectors.CzPsp/PepMeld.Connectors.CzPsp.csproj" />
+    <ProjectReference Include="../PepMeld.Connectors.SkNrsr/PepMeld.Connectors.SkNrsr.csproj" />
+  </ItemGroup>
+
+</Project>

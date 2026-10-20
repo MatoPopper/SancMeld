@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/PepMeld.Connectors.CzPsp/PepMeld.Connectors.CzPsp.csproj" />
+  </ItemGroup>
+
+  <!-- Cut from poslanci.zip as published on 2026-10-20: every body of the five types the
+       mapper reads plus two political clubs it must ignore, the offices in them, and the
+       rows of eleven persons chosen for what can go wrong: two presidents with the
+       mandate dates in od_f, one who has died, two namesakes of the prime minister with
+       the 1900 sentinel for an unknown birthday, a senator across eight terms. -->
+  <ItemGroup>
+    <Content Include="../../fixtures/cz-psp/*.unl" Link="fixtures/cz-psp/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

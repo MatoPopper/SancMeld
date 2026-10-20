@@ -17,7 +17,7 @@ namespace SancMeld.Core.Data;
 /// the designation_current view filters on <c>status = 'active'</c>. Renaming an
 /// enum member is therefore a data migration, not a rename.
 /// </summary>
-internal sealed class EnumAsSnakeCaseText<TEnum>()
+public sealed class EnumAsSnakeCaseText<TEnum>()
     : ValueConverter<TEnum, string>(v => ToSnakeCase(v.ToString()!), v => FromSnakeCase(v))
     where TEnum : struct, Enum
 {

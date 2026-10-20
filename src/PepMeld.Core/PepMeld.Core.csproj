@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>PepMeld.Core</RootNamespace>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="PepMeld.Core.Tests" />
+    <InternalsVisibleTo Include="PepMeld.Core.IntegrationTests" />
+  </ItemGroup>
+
+  <!-- The same data stack as SancMeld.Core, and the same versions: the two schemas are
+       meant to be run on one PostgreSQL server by one operator. -->
+  <ItemGroup>
+    <PackageReference Include="EFCore.NamingConventions" Version="10.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.3">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.4" />
+    <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="10.0.4" />
+  </ItemGroup>
+
+  <!-- Name normalisation and trigram scoring come from SancMeld.Core by reference, not by
+       copy: a PEP list and a sanctions list are searched by the same rules, and the parity
+       between NameNormalizer and the trigram index is already proven there. -->
+  <ItemGroup>
+    <ProjectReference Include="../SancMeld.Core/SancMeld.Core.csproj" />
+  </ItemGroup>
+
+</Project>

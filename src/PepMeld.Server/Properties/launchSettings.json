@@ -1,0 +1,13 @@
+{
+  "profiles": {
+    "PepMeld.Server": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "launchUrl": "swagger",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:63462;http://localhost:63463"
+    }
+  }
+}
