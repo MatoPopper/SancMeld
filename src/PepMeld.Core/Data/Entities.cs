@@ -19,6 +19,14 @@ public class PepSource
     /// </summary>
     public bool HasBirthDate { get; set; }
 
+    /// <summary>
+    /// Whether the publisher is the institution itself or a register the law keeps.
+    /// A name and date of birth from an official source confirm a match (level A); the
+    /// same from a source anyone can edit, such as Wikidata, is level B: strong, cited,
+    /// and still worth a look at the institution's own page.
+    /// </summary>
+    public bool IsOfficial { get; set; } = true;
+
     public string? Licence { get; set; }
 
     /// <summary>A parse that yields fewer persons than this is refused rather than applied: a truncated file must not end everyone's functions.</summary>

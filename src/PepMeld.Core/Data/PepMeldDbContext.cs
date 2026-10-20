@@ -127,6 +127,27 @@ public class PepMeldDbContext(DbContextOptions<PepMeldDbContext> options) : DbCo
                 RefreshHours = 24,
                 IsEnabled = true,
                 CreatedAt = new DateTimeOffset(2026, 10, 21, 0, 0, 0, TimeSpan.Zero),
+            },
+            new PepSource
+            {
+                Id = WellKnownIds.CzWikidataSource,
+                Code = "CZ_WIKIDATA",
+                Country = Country.CZ,
+                Name = "Wikidata – držitelé funkcí v ČR (senátoři)",
+                Publisher = "Wikidata (Wikimedia Foundation), CC0",
+                Url = "https://query.wikidata.org/",
+                HasBirthDate = true,
+
+                // Anyone can edit it; the senate's own site publishes no birthday and
+                // forbids robots, so this is the only source of the date, cited as such.
+                IsOfficial = false,
+                Licence = "CC0 1.0",
+
+                // 348 senators since 1996 with a date of birth on 2026-10-20.
+                MinExpectedPersons = 200,
+                RefreshHours = 24,
+                IsEnabled = true,
+                CreatedAt = new DateTimeOffset(2026, 10, 21, 0, 0, 0, TimeSpan.Zero),
             });
         });
 

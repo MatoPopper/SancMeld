@@ -1,0 +1,208 @@
+{
+ "head": {
+  "vars": [
+   "p",
+   "pLabel",
+   "dob",
+   "dobPrecision",
+   "start",
+   "end"
+  ]
+ },
+ "results": {
+  "bindings": [
+   {
+    "p": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q104123076"
+    },
+    "pLabel": {
+     "xml:lang": "cs",
+     "type": "literal",
+     "value": "Petr Fiala"
+    },
+    "dob": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "1968-11-24T00:00:00Z"
+    },
+    "dobPrecision": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#integer",
+     "type": "literal",
+     "value": "11"
+    },
+    "start": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "2022-09-24T00:00:00Z"
+    }
+   },
+   {
+    "p": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11775134"
+    },
+    "pLabel": {
+     "xml:lang": "cs",
+     "type": "literal",
+     "value": "Tomáš Czernin"
+    },
+    "dob": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "1962-03-04T00:00:00Z"
+    },
+    "dobPrecision": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#integer",
+     "type": "literal",
+     "value": "11"
+    },
+    "start": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "2016-10-15T00:00:00Z"
+    }
+   },
+   {
+    "p": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11985694"
+    },
+    "pLabel": {
+     "xml:lang": "cs",
+     "type": "literal",
+     "value": "Václav Láska"
+    },
+    "dob": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "1974-08-04T00:00:00Z"
+    },
+    "dobPrecision": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#integer",
+     "type": "literal",
+     "value": "11"
+    },
+    "start": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "2014-10-18T00:00:00Z"
+    },
+    "end": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "2020-10-18T00:00:00Z"
+    }
+   },
+   {
+    "p": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11985694"
+    },
+    "pLabel": {
+     "xml:lang": "cs",
+     "type": "literal",
+     "value": "Václav Láska"
+    },
+    "dob": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "1974-08-04T00:00:00Z"
+    },
+    "dobPrecision": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#integer",
+     "type": "literal",
+     "value": "11"
+    },
+    "start": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "2020-10-10T00:00:00Z"
+    }
+   },
+   {
+    "p": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q12025103"
+    },
+    "pLabel": {
+     "xml:lang": "cs",
+     "type": "literal",
+     "value": "Jiří Drahoš"
+    },
+    "dob": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "1949-02-20T00:00:00Z"
+    },
+    "dobPrecision": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#integer",
+     "type": "literal",
+     "value": "11"
+    },
+    "start": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "2018-10-06T00:00:00Z"
+    }
+   },
+   {
+    "p": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q12037619"
+    },
+    "pLabel": {
+     "xml:lang": "cs",
+     "type": "literal",
+     "value": "Miloš Vystrčil"
+    },
+    "dob": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "1960-08-10T00:00:00Z"
+    },
+    "dobPrecision": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#integer",
+     "type": "literal",
+     "value": "11"
+    },
+    "start": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "2010-10-23T00:00:00Z"
+    },
+    "end": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "2016-10-23T00:00:00Z"
+    }
+   },
+   {
+    "p": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q12037619"
+    },
+    "pLabel": {
+     "xml:lang": "cs",
+     "type": "literal",
+     "value": "Miloš Vystrčil"
+    },
+    "dob": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "1960-08-10T00:00:00Z"
+    },
+    "dobPrecision": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#integer",
+     "type": "literal",
+     "value": "11"
+    },
+    "start": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "2016-10-15T00:00:00Z"
+    }
+   }
+  ]
+ }
+}

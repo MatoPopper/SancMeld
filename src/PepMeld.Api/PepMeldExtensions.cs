@@ -10,6 +10,7 @@ using PepMeld.Connectors.CzAres;
 using PepMeld.Connectors.CzPsp;
 using PepMeld.Connectors.SkNrsr;
 using PepMeld.Connectors.SkNrsrVnf;
+using PepMeld.Connectors.Wikidata;
 using PepMeld.Core.Checks;
 using PepMeld.Core.Configuration;
 using PepMeld.Core.Data;
@@ -81,6 +82,7 @@ public static class PepMeldExtensions
         services.AddSkNrsrConnector(configuration);
         services.AddSkNrsrVnfConnector(configuration);
         services.AddCzAresConnector(configuration);
+        services.AddWikidataPositionsConnector(configuration);
         return services;
     }
 

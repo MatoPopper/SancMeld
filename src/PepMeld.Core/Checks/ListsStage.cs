@@ -49,9 +49,18 @@ public sealed class ListsStage(
                     continue;
                 }
 
-                level = EvidenceLevel.A;
                 dateMatched = true;
-                toVerify = null;
+                if (match.Source.IsOfficial)
+                {
+                    level = EvidenceLevel.A;
+                    toVerify = null;
+                }
+                else
+                {
+                    // The date agrees, but anyone could have written it.
+                    level = EvidenceLevel.B;
+                    toVerify = "Zdroj nie je úradný (Wikidata). Overiť funkciu na stránke inštitúcie alebo v úradnom zozname.";
+                }
             }
             else
             {
@@ -113,7 +122,7 @@ public sealed class ListsStage(
     private static string Explain(PepSource source, PepFunction function, bool dateMatched, int? monthsSinceEnd, int formerMonths)
     {
         var who = dateMatched
-            ? $"{source.Name} uvádza osobu s rovnakým menom a dátumom narodenia"
+            ? $"{source.Name} uvádza osobu s rovnakým menom a dátumom narodenia{(source.IsOfficial ? string.Empty : " (neúradný zdroj)")}"
             : $"{source.Name} uvádza osobu s rovnakým menom, dátum narodenia zdroj nepublikuje";
 
         var period = function.ValidTo is { } to

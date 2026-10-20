@@ -597,6 +597,10 @@ namespace PepMeld.Core.Data.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_enabled");
 
+                    b.Property<bool>("IsOfficial")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_official");
+
                     b.Property<string>("Licence")
                         .HasColumnType("text")
                         .HasColumnName("licence");
@@ -642,6 +646,7 @@ namespace PepMeld.Core.Data.Migrations
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 20, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             HasBirthDate = true,
                             IsEnabled = true,
+                            IsOfficial = true,
                             Licence = "Otevřená data PSP (https://www.psp.cz/sqw/hp.sqw?k=1300)",
                             MinExpectedPersons = 1000,
                             Name = "Poslanecká sněmovna Parlamentu ČR – otevřená data (osoby a orgány)",
@@ -657,6 +662,7 @@ namespace PepMeld.Core.Data.Migrations
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 20, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             HasBirthDate = true,
                             IsEnabled = true,
+                            IsOfficial = true,
                             Licence = "Verejná webová stránka NR SR; sťahované raz denne s identifikovateľným User-Agentom",
                             MinExpectedPersons = 120,
                             Name = "Národná rada SR – poslanci (profily na nrsr.sk)",
@@ -672,6 +678,7 @@ namespace PepMeld.Core.Data.Migrations
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 21, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             HasBirthDate = false,
                             IsEnabled = true,
+                            IsOfficial = true,
                             Licence = "Verejná webová stránka NR SR; sťahované raz denne s identifikovateľným User-Agentom, oznámenia v cache 30 dní",
                             MinExpectedPersons = 1000,
                             Name = "Národná rada SR – zoznam verejných funkcionárov (oznámenia podľa ú. z. č. 357/2004 Z. z.)",
@@ -687,12 +694,29 @@ namespace PepMeld.Core.Data.Migrations
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 21, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             HasBirthDate = true,
                             IsEnabled = true,
+                            IsOfficial = true,
                             Licence = "Otevřená data ARES (podmínky užití ares.gov.cz)",
                             MinExpectedPersons = 300,
                             Name = "ARES – orgány státních podniků a obchodních korporací ovládaných státem",
                             Publisher = "Ministerstvo financí ČR (veřejný rejstřík přes ARES)",
                             RefreshHours = 24,
                             Url = "https://ares.gov.cz/"
+                        },
+                        new
+                        {
+                            Id = new Guid("7b1c2e3a-0001-4c5d-9e8f-000000000005"),
+                            Code = "CZ_WIKIDATA",
+                            Country = "c_z",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 21, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            HasBirthDate = true,
+                            IsEnabled = true,
+                            IsOfficial = false,
+                            Licence = "CC0 1.0",
+                            MinExpectedPersons = 200,
+                            Name = "Wikidata – držitelé funkcí v ČR (senátoři)",
+                            Publisher = "Wikidata (Wikimedia Foundation), CC0",
+                            RefreshHours = 24,
+                            Url = "https://query.wikidata.org/"
                         });
                 });
 

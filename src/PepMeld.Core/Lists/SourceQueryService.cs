@@ -31,7 +31,7 @@ public sealed class SourceQueryService(PepMeldDbContext db)
             var persons = await db.Persons.CountAsync(p => p.SourceId == source.Id, ct).ConfigureAwait(false);
             var open = await db.Functions.CountAsync(f => f.Person!.SourceId == source.Id && f.ValidTo == null, ct).ConfigureAwait(false);
 
-            result.Add(new SourceView(source.Code, source.Country, source.Name, source.Publisher, source.Url, source.HasBirthDate,
+            result.Add(new SourceView(source.Code, source.Country, source.Name, source.Publisher, source.Url, source.HasBirthDate, source.IsOfficial,
                 source.Licence, source.IsEnabled, lastSuccess, lastRun?.Status, lastRun?.Error, persons, open));
         }
 
@@ -46,6 +46,7 @@ public sealed record SourceView(
     string Publisher,
     string Url,
     bool HasBirthDate,
+    bool IsOfficial,
     string? Licence,
     bool IsEnabled,
     DateTimeOffset? LastImportedAt,
