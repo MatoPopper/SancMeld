@@ -30,7 +30,7 @@ public sealed class ListsStage(
         ArgumentNullException.ThrowIfNull(check);
 
         var today = DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
-        var matches = await matcher.FindAsync(check.Name, check.Country, ct).ConfigureAwait(false);
+        var matches = await matcher.FindAsync(check.Name, check.Country, ct, check.BirthDate).ConfigureAwait(false);
         var findings = new List<FindingView>();
 
         foreach (var match in matches)
@@ -61,6 +61,12 @@ public sealed class ListsStage(
                     level = EvidenceLevel.B;
                     toVerify = "Zdroj nie je úradný (Wikidata). Overiť funkciu na stránke inštitúcie alebo v úradnom zozname.";
                 }
+            }
+            else if (match.Score < options.Value.Matching.SimilarityThreshold)
+            {
+                // A surname alone, in a source that cannot confirm or exclude by date:
+                // every namesake in the list would come back. Not reported.
+                continue;
             }
             else
             {

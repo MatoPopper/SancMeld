@@ -56,6 +56,19 @@ public class PersonNamesTests
     public void Score_IsOneForTheSameName()
         => Assert.Equal(1.0, PepListMatcher.Score("andrej babis", "andrej babis", 0.9));
 
+    [Theory]
+    [InlineData("fico", "robert fico", true)]
+    [InlineData("r fico", "robert fico", true)]
+    [InlineData("fico robert", "robert fico", true)]
+    [InlineData("robert fico", "robert fico", true)]
+    [InlineData("fic", "robert fico", false)]
+    [InlineData("j fico", "robert fico", false)]
+    [InlineData("r", "robert fico", false)]
+    [InlineData("fico fico", "robert fico", false)]
+    [InlineData("jan fico", "robert fico", false)]
+    public void Contains_TakesWholeWordsAndInitials(string query, string stored, bool expected)
+        => Assert.Equal(expected, PepListMatcher.Contains(query, stored));
+
     [Fact]
     public void Score_IgnoresWordOrder()
     {

@@ -161,6 +161,33 @@ public sealed class ImportAndCheckTests(DatabaseFixture fixture) : IAsyncLifetim
         Assert.All(check.Stages.Single(s => s.Stage == CheckStage.Lists).Findings, f => Assert.Equal(EvidenceLevel.C, f.Level));
     }
 
+    /// <summary>
+    /// What a user typed on 2026-10-20: a surname and a date of birth. The date settles who
+    /// it is, so the surname alone is enough where the source records the date; "Zeman"
+    /// against "Miloš Zeman" scores well below the name threshold and used to be dropped.
+    /// </summary>
+    [Fact]
+    public async Task ASurnameAloneWithTheRightDateOfBirthFindsThePerson()
+    {
+        var check = await RunCheckAsync(Email(), new NewCheck("zeman", new DateOnly(1944, 9, 28), null, null, null, null, null));
+
+        Assert.Equal(CheckOutcome.FormerPep, check.Outcome);
+        Assert.Contains(check.Stages.Single(s => s.Stage == CheckStage.Lists).Findings, f => f.Function!.Category == PepCategory.HeadOfState && f.Level == EvidenceLevel.A);
+
+        var initial = await RunCheckAsync(Email(), new NewCheck("M. Zeman", new DateOnly(1944, 9, 28), null, null, null, null, null));
+        Assert.Equal(CheckOutcome.FormerPep, initial.Outcome);
+    }
+
+    /// <summary>A surname alone against a source without birthdays would return every namesake; it returns none.</summary>
+    [Fact]
+    public async Task ASurnameAloneIsNotEnoughWhereTheSourceHasNoDateOfBirth()
+    {
+        var check = await RunCheckAsync(Email(), new NewCheck("Fiala", new DateOnly(1970, 1, 1), null, null, null, null, null));
+
+        Assert.Equal(CheckOutcome.NoMatch, check.Outcome);
+        Assert.Empty(check.Stages.Single(s => s.Stage == CheckStage.Lists).Findings);
+    }
+
     [Fact]
     public async Task AnEndedOfficeIsAFormerPepWithTheMonthsSinceTheEnd()
     {
