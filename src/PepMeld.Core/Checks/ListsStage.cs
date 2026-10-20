@@ -159,7 +159,7 @@ public sealed class ListsStage(
 
         // Honest about the gaps, per source country. These shrink as connectors land;
         // keep the sentence in step with the seeded sources.
-        const string cz = "ČR: súdy, ČNB, NKÚ, veľvyslanci, orgány strán, regionálna samospráva, orgány firiem so štátnou účasťou; senátori sú bez dátumu narodenia";
+        const string cz = "ČR: súdy, ČNB, NKÚ, veľvyslanci, orgány strán, regionálna samospráva; senátori sú bez dátumu narodenia; z firiem so štátnou účasťou len štátne podniky a firmy v zozname CZ_ARES_STATE";
         const string sk = "SR: veľvyslanci, orgány politických strán, sudcovia a prokurátori nižších súdov; verejní funkcionári vrátane orgánov štátnych firiem sú bez dátumu narodenia";
 
         note += country switch
