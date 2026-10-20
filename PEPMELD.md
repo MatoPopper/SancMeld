@@ -107,6 +107,15 @@ dotnet test tests/PepMeld.Core.IntegrationTests      # needs the compose databas
 (`PepMeld__Database__AutoMigrate=true`) and expects `ConnectionStrings__PepMeld`.
 The snapshots of downloaded lists live under `/var/lib/pepmeld/snapshots`; mount a volume.
 
+`deploy-pepmeld.sh` ships HEAD to the host named in `deploy.env`, builds the image there
+and restarts the container, exactly as `deploy.sh` does for the sanctions API, in its own
+directory (`~/pepmeld`), image (`pepmeld-api`) and port (5212, loopback only), so neither
+deploy can touch the other's containers. On badcat.eu the service runs beside the sanctions
+API on the shared `postgres:16` container, in its own database `pepmeld`, with
+`mem_limit: 1g` and `cpus: 2`; the first fill of every source runs from the container's
+hourly scheduler. Apache is not configured for it yet: until a vhost fronts 127.0.0.1:5212,
+the API is reachable on the box alone.
+
 ## Design notes
 
 - **Nothing is deleted.** A function that ends gets `valid_to` and stays: a person remains
