@@ -16,13 +16,20 @@ public class SkNrsrVnfConnectorTests
     /// <summary>Serves the saved pages: a GET of the list is the bare page, a POST to it the alphabetical view, a declaration by its UserId.</summary>
     private sealed class FixtureHandler : HttpMessageHandler
     {
+        private readonly Lock gate = new();
+
         public List<(string Method, string Url, string? Body)> Requests { get; } = [];
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             var url = request.RequestUri!.ToString();
             var body = request.Content is null ? null : await request.Content.ReadAsStringAsync(cancellationToken);
-            Requests.Add((request.Method.Method, url, body));
+
+            // Declarations arrive on several lanes at once.
+            lock (gate)
+            {
+                Requests.Add((request.Method.Method, url, body));
+            }
 
             string? file = null;
             if (url.Contains("sid=vnf/zoznam", StringComparison.Ordinal))
@@ -77,8 +84,7 @@ public class SkNrsrVnfConnectorTests
         Assert.Equal(3, persons.Count);
         Assert.Equal(5, handler.Requests.Count);
 
-        var post = handler.Requests[1];
-        Assert.Equal("POST", post.Method);
+        var post = handler.Requests.Single(r => r.Method == "POST");
         Assert.Contains("__VIEWSTATE=", post.Body);
         Assert.Contains("__EVENTVALIDATION=", post.Body);
         Assert.Contains("ViewsList=1", post.Body);

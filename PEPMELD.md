@@ -52,7 +52,7 @@ docker compose up -d db                      # the same server SancMeld uses; Pe
 dotnet ef database update --project src/PepMeld.Core       # creates "pepmeld" and the schema
 dotnet run --project src/PepMeld.Server -- import CZ_PSP    # first fill, ~1 650 persons, seconds
 dotnet run --project src/PepMeld.Server -- import SK_NRSR   # ~700 profiles; the site answers in 1-4 s, so the first fill takes about 45 min, later runs ~10 min (profiles cached 30 days)
-dotnet run --project src/PepMeld.Server -- import SK_NRSR_VNF   # ~1 650 declarations at 1-15 s each: the first fill runs for hours, later runs read the cache
+dotnet run --project src/PepMeld.Server -- import SK_NRSR_VNF   # ~1 650 declarations at 1-20 s each on four lanes: the first fill takes about two hours, later runs read the cache
 dotnet run --project src/PepMeld.Server -- apikey create you@example.com --name dev
 dotnet run --project src/PepMeld.Server                     # http://localhost:63463/swagger
 ```

@@ -33,6 +33,18 @@ public sealed class PepImportService(
             ?? throw new InvalidOperationException($"No connector is registered for source '{source.Code}'.");
 
         var watch = Stopwatch.StartNew();
+
+        // A run still "running" when another starts belongs to a process that died
+        // mid-download; nothing of it was applied, and leaving it open would show the
+        // source as importing forever.
+        await db.ImportRuns
+            .Where(r => r.SourceId == source.Id && r.Status == ImportStatus.Running)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(r => r.Status, ImportStatus.Failed)
+                .SetProperty(r => r.Error, "Interrupted: the process ended before the run did.")
+                .SetProperty(r => r.FinishedAt, clock.GetUtcNow()), ct)
+            .ConfigureAwait(false);
+
         var run = new ImportRun { Id = Guid.CreateVersion7(), SourceId = source.Id, StartedAt = clock.GetUtcNow(), Status = ImportStatus.Running };
         db.ImportRuns.Add(run);
         await db.SaveChangesAsync(ct).ConfigureAwait(false);

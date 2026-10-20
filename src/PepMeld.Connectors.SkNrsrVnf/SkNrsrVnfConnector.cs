@@ -77,24 +77,41 @@ public sealed class SkNrsrVnfConnector(
                 Directory.CreateDirectory(cacheDirectory);
                 var fetched = 0;
 
-                foreach (var official in officials)
-                {
-                    var cached = Path.Combine(cacheDirectory, CacheName(official.UserId));
-                    string html;
+                // Several lanes against the site, one writer into the zip: ZipArchive is
+                // not thread-safe, and the entries are written in list order so the same
+                // pages give the same bytes whichever lane finished first.
+                var pages = new string[officials.Count];
+                var lanes = new SemaphoreSlim(settings.Concurrency, settings.Concurrency);
 
-                    if (File.Exists(cached) && clock.GetUtcNow() - File.GetLastWriteTimeUtc(cached) < TimeSpan.FromDays(settings.DeclarationCacheDays))
+                await Task.WhenAll(officials.Select(async (official, index) =>
+                {
+                    await lanes.WaitAsync(ct).ConfigureAwait(false);
+
+                    try
                     {
-                        html = await File.ReadAllTextAsync(cached, ct).ConfigureAwait(false);
-                    }
-                    else
-                    {
-                        html = await GetAsync(client, DeclarationUrl(official.UserId), ct).ConfigureAwait(false);
+                        var cached = Path.Combine(cacheDirectory, CacheName(official.UserId));
+
+                        if (File.Exists(cached) && clock.GetUtcNow() - File.GetLastWriteTimeUtc(cached) < TimeSpan.FromDays(settings.DeclarationCacheDays))
+                        {
+                            pages[index] = await File.ReadAllTextAsync(cached, ct).ConfigureAwait(false);
+                            return;
+                        }
+
+                        var html = await GetAsync(client, DeclarationUrl(official.UserId), ct).ConfigureAwait(false);
                         await File.WriteAllTextAsync(cached, html, ct).ConfigureAwait(false);
-                        fetched++;
+                        pages[index] = html;
+                        Interlocked.Increment(ref fetched);
                         await Task.Delay(delay, clock, ct).ConfigureAwait(false);
                     }
+                    finally
+                    {
+                        lanes.Release();
+                    }
+                })).ConfigureAwait(false);
 
-                    await WriteAsync(archive, DeclarationEntry(official.UserId), html, ct).ConfigureAwait(false);
+                for (var i = 0; i < officials.Count; i++)
+                {
+                    await WriteAsync(archive, DeclarationEntry(officials[i].UserId), pages[i], ct).ConfigureAwait(false);
                 }
 
                 logger.LogInformation("NR SR public officials: {Officials} listed, {Fetched} declarations fetched, the rest from the cache.", officials.Count, fetched);
