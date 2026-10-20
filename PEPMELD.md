@@ -52,7 +52,7 @@ docker compose up -d db                      # the same server SancMeld uses; Pe
 dotnet ef database update --project src/PepMeld.Core       # creates "pepmeld" and the schema
 dotnet run --project src/PepMeld.Server -- import CZ_PSP    # first fill, ~1 650 persons, seconds
 dotnet run --project src/PepMeld.Server -- import SK_NRSR   # ~700 profiles; the site answers in 1-4 s, so the first fill takes about 45 min, later runs ~10 min (profiles cached 30 days)
-dotnet run --project src/PepMeld.Server -- import SK_NRSR_VNF   # ~1 650 declarations at 1-20 s each on two lanes, pausing when the site answers 429: the first fill takes a few hours, later runs read the cache
+dotnet run --project src/PepMeld.Server -- import SK_NRSR_VNF   # ~1 650 declarations at 1-20 s each, one lane, pausing on 429: the first fill runs overnight, later runs read the cache
 dotnet run --project src/PepMeld.Server -- apikey create you@example.com --name dev
 dotnet run --project src/PepMeld.Server                     # http://localhost:63463/swagger
 ```
@@ -78,6 +78,13 @@ GET /sources            what is held and when it was last imported (no sign-in n
 Imports run on a timer inside the service (every source older than its `refresh_hours`,
 checked hourly); `PepMeld:Jobs:Enabled=false` turns that off. `import <CODE> [--force]`
 runs one by hand.
+
+nrsr.sk has no robots.txt and no API. On 2026-10-20 four parallel lanes against the
+declaration pages drew a 429 after some 600 pages and then a 403 for the whole site, every
+page and every client, from that address. Keep the defaults (one lane, a second between
+requests, a month's cache) and run the first fill once, preferably on the server that will
+keep importing; a blocked address stays blocked for hours. The person to ask for a
+machine-readable export is the Kancelária NR SR, which the User-Agent names.
 
 ## Tests
 

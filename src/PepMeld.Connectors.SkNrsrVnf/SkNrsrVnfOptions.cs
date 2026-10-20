@@ -12,18 +12,18 @@ public sealed class SkNrsrVnfOptions
 
     /// <summary>Pause after each request, per lane. The declaration pages take the site 1 to 20 seconds each; this is on top.</summary>
     [Range(0, 10000)]
-    public int DelayMilliseconds { get; set; } = 500;
+    public int DelayMilliseconds { get; set; } = 1000;
 
     /// <summary>
     /// Declarations fetched at once. The site needs 1 to 20 seconds per declaration page
-    /// whatever the client does, so one lane would take a first fill of 1 650 pages
-    /// through the night. Four lanes managed about 35 pages a minute on 2026-10-20 and
-    /// were answered 429 after some 600 pages; two is the default, with the back-off
-    /// below for when the site still says no. The list page is always one request, and
-    /// later runs mostly read the cache.
+    /// whatever the client does, so one lane takes a first fill of 1 650 pages through a
+    /// night. Four lanes managed about 35 pages a minute on 2026-10-20, were answered
+    /// 429 after some 600 pages, and the address was then refused outright (403, every
+    /// page, every client) for a time. One lane and a second between requests is the
+    /// default; the first fill is slow and happens once, and later runs read the cache.
     /// </summary>
     [Range(1, 8)]
-    public int Concurrency { get; set; } = 2;
+    public int Concurrency { get; set; } = 1;
 
     /// <summary>
     /// Times a request answered 429 or 503 is tried again before the import fails. Every
