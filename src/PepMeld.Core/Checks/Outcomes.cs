@@ -55,7 +55,7 @@ public static class Outcomes
                 $"Zhoda mena ({persons} {(persons == 1 ? "osoba" : persons < 5 ? "osoby" : "osôb")}) v zdrojoch bez dátumu narodenia; zhodu nemožno potvrdiť ani vylúčiť.");
         }
 
-        var searched = coverage.Where(c => c.LastImportedAt is not null).Select(c => c.Source).ToList();
+        var searched = coverage.Where(c => c.WasSearched).Select(c => c.Source).ToList();
         return (CheckOutcome.NoMatch, searched.Count > 0
             ? $"Žiadna zhoda v prehľadaných zoznamoch ({string.Join(", ", searched)})."
             : "Žiadna zhoda, ale žiadny zoznam ešte nebol importovaný.");

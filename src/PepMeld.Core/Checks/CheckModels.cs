@@ -111,7 +111,12 @@ public sealed record CoverageView(
     string Name,
     bool HasBirthDate,
     DateTimeOffset? LastImportedAt,
-    int Persons);
+    int Persons)
+{
+    /// <summary>Whether the list had anyone in it to search: an import ran, or rows were put there by other means.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public bool WasSearched => LastImportedAt is not null || Persons > 0;
+}
 
 /// <summary>A check in the caller's history.</summary>
 public sealed record CheckSummaryView(

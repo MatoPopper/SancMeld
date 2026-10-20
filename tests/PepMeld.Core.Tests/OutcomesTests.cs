@@ -80,7 +80,7 @@ public class OutcomesTests
     [Fact]
     public void NothingFoundInNoListsIsSaidPlainly()
     {
-        var (outcome, summary) = Outcomes.Derive([], [Psp with { LastImportedAt = null }], 12);
+        var (outcome, summary) = Outcomes.Derive([], [Psp with { LastImportedAt = null, Persons = 0 }], 12);
 
         Assert.Equal(CheckOutcome.NoMatch, outcome);
         Assert.Contains("nebol importovaný", summary);

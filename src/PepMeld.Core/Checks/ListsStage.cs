@@ -155,8 +155,10 @@ public sealed class ListsStage(
 
     private static string Note(IReadOnlyList<CoverageView> coverage, Country? country)
     {
-        var searched = coverage.Where(c => c.LastImportedAt is not null && (country is null || c.Country == country)).Select(c => c.Source).ToList();
-        var empty = coverage.Where(c => c.LastImportedAt is null && (country is null || c.Country == country)).Select(c => c.Source).ToList();
+        // A list counts as searched when it holds anyone, not only when this instance
+        // imported it: rows can also arrive by hand, from another instance's import.
+        var searched = coverage.Where(c => c.WasSearched && (country is null || c.Country == country)).Select(c => c.Source).ToList();
+        var empty = coverage.Where(c => !c.WasSearched && (country is null || c.Country == country)).Select(c => c.Source).ToList();
 
         var note = searched.Count > 0
             ? $"Prehľadané zoznamy: {string.Join(", ", searched)}."
