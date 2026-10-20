@@ -33,7 +33,12 @@ sees the lists within seconds while a later stage still runs:
    (`CZ_ARES_STATE`, `SK_NRSR_VNF`), which come back as findings of kind `BoardSeat`. Implemented.
 2. **Boards**: who sits on a board together with a PEP, for close associates. Reported as
    skipped until it exists.
-3. **Family**: family members and close associates. Reported as skipped until it exists.
+3. **Family**: family members, from the ties research has stored. The person checked as a
+   relative of a PEP (outcome `FamilyMember`), and for a PEP their known relatives
+   (`KnownRelative`, to screen as well). Until a model of our own does the research, an agent
+   does it one PEP at a time from the brief in `tools/family-research/AGENT.md`; every tie is
+   level D, with the quotes checked against the pages they cite. A relative without a recorded
+   date of birth needs the given name and the surname word for word.
 
 ## Sources
 

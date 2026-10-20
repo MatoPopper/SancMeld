@@ -26,6 +26,9 @@ public class PepMeldDbContext(DbContextOptions<PepMeldDbContext> options) : DbCo
     public DbSet<PepCheckStage> CheckStages => Set<PepCheckStage>();
     public DbSet<Finding> Findings => Set<Finding>();
 
+    public DbSet<FamilyResearchRun> FamilyResearchRuns => Set<FamilyResearchRun>();
+    public DbSet<FamilyLink> FamilyLinks => Set<FamilyLink>();
+
     protected override void ConfigureConventions(ModelConfigurationBuilder b)
     {
         // Enums as snake_case text, as in SancMeld: readable in psql, no enum types to
@@ -40,6 +43,9 @@ public class PepMeldDbContext(DbContextOptions<PepMeldDbContext> options) : DbCo
         b.Properties<FindingKind>().HaveConversion<EnumAsSnakeCaseText<FindingKind>>();
         b.Properties<EvidenceLevel>().HaveConversion<EnumAsSnakeCaseText<EvidenceLevel>>();
         b.Properties<ImportStatus>().HaveConversion<EnumAsSnakeCaseText<ImportStatus>>();
+        b.Properties<FamilyRelation>().HaveConversion<EnumAsSnakeCaseText<FamilyRelation>>();
+        b.Properties<FamilyFoundBy>().HaveConversion<EnumAsSnakeCaseText<FamilyFoundBy>>();
+        b.Properties<FamilyReviewStatus>().HaveConversion<EnumAsSnakeCaseText<FamilyReviewStatus>>();
     }
 
     protected override void OnModelCreating(ModelBuilder b)
@@ -247,6 +253,30 @@ public class PepMeldDbContext(DbContextOptions<PepMeldDbContext> options) : DbCo
         {
             e.ToTable("pep_check_stage");
             e.HasKey(x => new { x.CheckId, x.Stage });
+        });
+
+        b.Entity<FamilyResearchRun>(e =>
+        {
+            e.ToTable("family_research_run");
+            e.Property(x => x.RawJson).HasColumnType("jsonb");
+            e.HasIndex(x => new { x.PepName, x.PepBirthDate });
+            e.Ignore(x => x.DurationSeconds);
+        });
+
+        b.Entity<FamilyLink>(e =>
+        {
+            e.ToTable("family_link");
+            e.Property(x => x.EvidenceJson).HasColumnType("jsonb");
+            e.HasOne<FamilyResearchRun>().WithMany().HasForeignKey(x => x.RunId);
+
+            // One tie per PEP, relation and relative: a second run updates it, keeping the
+            // decision a person made on it.
+            e.HasIndex(x => new { x.PepNameNormalized, x.PepBirthDate, x.Relation, x.RelativeNameNormalized }).IsUnique();
+            e.HasIndex(x => x.RelativeNameNormalized)
+                .HasMethod("gin")
+                .HasOperators("gin_trgm_ops")
+                .HasDatabaseName("ix_family_link_relative_name_trgm");
+            e.HasIndex(x => x.RelativeBirthDate);
         });
 
         b.Entity<Finding>(e =>

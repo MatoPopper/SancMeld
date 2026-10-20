@@ -43,7 +43,9 @@ public static class Outcomes
                 $"Bývalá politicky exponovaná osoba: {former.Function!.Role}, {former.Function.Institution}, skončila {Date(former.Function.To)} ({care}).");
         }
 
-        var family = findings.FirstOrDefault(f => f.Kind == FindingKind.FamilyMember);
+        // A tie the law of the PEP's country does not count (a sibling under Slovak law
+        // until 2027) is shown, never the outcome.
+        var family = findings.FirstOrDefault(f => f.Kind == FindingKind.FamilyMember && f.LegallyRelevant != false);
         if (family is not null)
         {
             return (CheckOutcome.FamilyMember, $"Rodinný príslušník politicky exponovanej osoby ({family.RelatedTo}); úroveň dôkazu {family.Level}.");
@@ -55,9 +57,11 @@ public static class Outcomes
             return (CheckOutcome.CloseAssociate, $"Blízka osoba politicky exponovanej osoby ({associate.RelatedTo}); úroveň dôkazu {associate.Level}.");
         }
 
-        if (findings.Count > 0)
+        // Known relatives of a PEP and ties the law does not count say nothing about the
+        // person checked being exposed themselves.
+        if (findings.Any(f => f.Kind is FindingKind.Function or FindingKind.BoardSeat))
         {
-            var persons = findings.Select(f => f.Person.Name).Distinct(StringComparer.Ordinal).Count();
+            var persons = findings.Where(f => f.Kind is FindingKind.Function or FindingKind.BoardSeat).Select(f => f.Person.Name).Distinct(StringComparer.Ordinal).Count();
             return (CheckOutcome.Unverified,
                 $"Zhoda mena ({persons} {(persons == 1 ? "osoba" : persons < 5 ? "osoby" : "osôb")}) v zdrojoch bez dátumu narodenia; zhodu nemožno potvrdiť ani vylúčiť.");
         }

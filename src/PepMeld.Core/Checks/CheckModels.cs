@@ -82,7 +82,8 @@ public sealed record FindingView(
     IReadOnlyList<Evidence> Evidence,
     string Explanation,
     string? ToVerify,
-    IReadOnlyList<string>? Sources = null);
+    IReadOnlyList<string>? Sources = null,
+    bool? LegallyRelevant = null);
 
 public sealed record FindingPerson(
     string Name,
@@ -102,7 +103,11 @@ public sealed record FindingFunction(
     bool EndedByDisappearance,
     string? DateNote);
 
-public sealed record Evidence(string Url, DateTimeOffset? RetrievedAt, string? Quote);
+/// <param name="Url">The page the evidence is on.</param>
+/// <param name="RetrievedAt">When it was read.</param>
+/// <param name="Quote">What it says, verbatim.</param>
+/// <param name="QuoteCheck">For research evidence: whether the quote was found on the page at import (Exact, Partial, NotFound, Unreachable); null for list evidence.</param>
+public sealed record Evidence(string Url, DateTimeOffset? RetrievedAt, string? Quote, string? QuoteCheck = null);
 
 /// <summary>A source as it was at the moment of the check: what was searched and how fresh it was.</summary>
 public sealed record CoverageView(

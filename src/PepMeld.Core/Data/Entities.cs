@@ -243,3 +243,76 @@ public class Finding
     public required string PayloadJson { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
 }
+
+/// <summary>
+/// One research run for the family of one PEP: who did it, when, how long it took and what
+/// it cost in searches. Kept so the time per PEP is measured rather than guessed, and so a
+/// tie can be traced to the run that found it.
+/// </summary>
+public class FamilyResearchRun
+{
+    public Guid Id { get; set; }
+    public required string PepName { get; set; }
+    public DateOnly PepBirthDate { get; set; }
+    public Country PepCountry { get; set; }
+
+    /// <summary>"claude-code-agent" and the like: what ran the research.</summary>
+    public required string Agent { get; set; }
+    public DateTimeOffset StartedAt { get; set; }
+    public DateTimeOffset FinishedAt { get; set; }
+    public int Searches { get; set; }
+    public int PagesOpened { get; set; }
+    public int RelativesFound { get; set; }
+
+    /// <summary>Relatives the file named that were refused at import, and why: no evidence, no quote.</summary>
+    public int RelativesRefused { get; set; }
+    public string? Notes { get; set; }
+
+    /// <summary>The file as delivered, verbatim, for the audit.</summary>
+    public required string RawJson { get; set; }
+    public DateTimeOffset ImportedAt { get; set; }
+
+    public double DurationSeconds => (FinishedAt - StartedAt).TotalSeconds;
+}
+
+/// <summary>
+/// A family tie of a PEP: spouse or partner, child, child's spouse, parent, sibling. The
+/// PEP is named by name and date of birth, not by a person row, because the same human is a
+/// row in every list that names them. A relative is a private person: only the name, the
+/// tie, a published date or year of birth and the evidence are kept, and nothing of a minor
+/// but the name and the tie.
+/// </summary>
+public class FamilyLink
+{
+    public Guid Id { get; set; }
+    public Guid RunId { get; set; }
+
+    public required string PepName { get; set; }
+    public required string PepNameNormalized { get; set; }
+    public DateOnly PepBirthDate { get; set; }
+    public Country PepCountry { get; set; }
+
+    public FamilyRelation Relation { get; set; }
+    public required string RelativeName { get; set; }
+    public required string RelativeNameNormalized { get; set; }
+    public DateOnly? RelativeBirthDate { get; set; }
+    public int? RelativeBirthYear { get; set; }
+    public bool IsMinor { get; set; }
+
+    /// <summary>current, former, deceased or unknown. A former spouse is no family member in law.</summary>
+    public required string Status { get; set; }
+    public required string Confidence { get; set; }
+
+    /// <summary>[{url, quote, publisher, retrievedAt}] as JSON; every tie has at least one.</summary>
+    public required string EvidenceJson { get; set; }
+    public string? Note { get; set; }
+
+    public FamilyFoundBy FoundBy { get; set; }
+    public EvidenceLevel Level { get; set; }
+    public FamilyReviewStatus ReviewStatus { get; set; }
+    public string? DecidedBy { get; set; }
+    public DateTimeOffset? DecidedAt { get; set; }
+
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
+}

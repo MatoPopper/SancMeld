@@ -14,6 +14,7 @@ using PepMeld.Connectors.Wikidata;
 using PepMeld.Core.Checks;
 using PepMeld.Core.Configuration;
 using PepMeld.Core.Data;
+using PepMeld.Core.Family;
 using PepMeld.Core.Lists;
 
 namespace PepMeld.Api;
@@ -69,8 +70,21 @@ public static class PepMeldExtensions
         services.AddScoped<CheckRunner>();
         services.AddScoped<PepListMatcher>();
 
-        // The stages that exist. Boards and Family are reported as skipped until they do.
+        // The stages that exist. Boards is reported as skipped until it does.
         services.AddScoped<ICheckStage, ListsStage>();
+        services.AddScoped<ICheckStage, FamilyStage>();
+
+        // Family research: the import of an agent's file, the check of its quotes against the
+        // pages it cites, and the queue of who is next.
+        services.AddScoped<FamilyImportService>();
+        services.AddScoped<FamilyResearchQueue>();
+        services.AddScoped<IQuoteVerifier, HttpQuoteVerifier>();
+        services.AddHttpClient(HttpQuoteVerifier.HttpClientName, (provider, client) =>
+        {
+            var ingest = provider.GetRequiredService<Microsoft.Extensions.Options.IOptions<PepMeldOptions>>().Value.Ingest;
+            client.Timeout = TimeSpan.FromSeconds(30);
+            client.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", ingest.UserAgent);
+        });
 
         services.ConfigureHttpJsonOptions(json =>
         {

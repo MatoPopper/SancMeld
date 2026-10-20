@@ -145,6 +145,207 @@ namespace PepMeld.Core.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("PepMeld.Core.Data.FamilyLink", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Confidence")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("confidence");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset?>("DecidedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("decided_at");
+
+                    b.Property<string>("DecidedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("decided_by");
+
+                    b.Property<string>("EvidenceJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("evidence_json");
+
+                    b.Property<string>("FoundBy")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("found_by");
+
+                    b.Property<bool>("IsMinor")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_minor");
+
+                    b.Property<string>("Level")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("level");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("text")
+                        .HasColumnName("note");
+
+                    b.Property<DateOnly>("PepBirthDate")
+                        .HasColumnType("date")
+                        .HasColumnName("pep_birth_date");
+
+                    b.Property<string>("PepCountry")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("pep_country");
+
+                    b.Property<string>("PepName")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("pep_name");
+
+                    b.Property<string>("PepNameNormalized")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("pep_name_normalized");
+
+                    b.Property<string>("Relation")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("relation");
+
+                    b.Property<DateOnly?>("RelativeBirthDate")
+                        .HasColumnType("date")
+                        .HasColumnName("relative_birth_date");
+
+                    b.Property<int?>("RelativeBirthYear")
+                        .HasColumnType("integer")
+                        .HasColumnName("relative_birth_year");
+
+                    b.Property<string>("RelativeName")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("relative_name");
+
+                    b.Property<string>("RelativeNameNormalized")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("relative_name_normalized");
+
+                    b.Property<string>("ReviewStatus")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("review_status");
+
+                    b.Property<Guid>("RunId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("run_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_family_link");
+
+                    b.HasIndex("RelativeBirthDate")
+                        .HasDatabaseName("ix_family_link_relative_birth_date");
+
+                    b.HasIndex("RelativeNameNormalized")
+                        .HasDatabaseName("ix_family_link_relative_name_trgm");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("RelativeNameNormalized"), "gin");
+                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("RelativeNameNormalized"), new[] { "gin_trgm_ops" });
+
+                    b.HasIndex("RunId")
+                        .HasDatabaseName("ix_family_link_run_id");
+
+                    b.HasIndex("PepNameNormalized", "PepBirthDate", "Relation", "RelativeNameNormalized")
+                        .IsUnique()
+                        .HasDatabaseName("ix_family_link_pep_name_normalized_pep_birth_date_relation_rel");
+
+                    b.ToTable("family_link", (string)null);
+                });
+
+            modelBuilder.Entity("PepMeld.Core.Data.FamilyResearchRun", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Agent")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("agent");
+
+                    b.Property<DateTimeOffset>("FinishedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("finished_at");
+
+                    b.Property<DateTimeOffset>("ImportedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("imported_at");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("text")
+                        .HasColumnName("notes");
+
+                    b.Property<int>("PagesOpened")
+                        .HasColumnType("integer")
+                        .HasColumnName("pages_opened");
+
+                    b.Property<DateOnly>("PepBirthDate")
+                        .HasColumnType("date")
+                        .HasColumnName("pep_birth_date");
+
+                    b.Property<string>("PepCountry")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("pep_country");
+
+                    b.Property<string>("PepName")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("pep_name");
+
+                    b.Property<string>("RawJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("raw_json");
+
+                    b.Property<int>("RelativesFound")
+                        .HasColumnType("integer")
+                        .HasColumnName("relatives_found");
+
+                    b.Property<int>("RelativesRefused")
+                        .HasColumnType("integer")
+                        .HasColumnName("relatives_refused");
+
+                    b.Property<int>("Searches")
+                        .HasColumnType("integer")
+                        .HasColumnName("searches");
+
+                    b.Property<DateTimeOffset>("StartedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("started_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_family_research_run");
+
+                    b.HasIndex("PepName", "PepBirthDate")
+                        .HasDatabaseName("ix_family_research_run_pep_name_pep_birth_date");
+
+                    b.ToTable("family_research_run", (string)null);
+                });
+
             modelBuilder.Entity("PepMeld.Core.Data.Finding", b =>
                 {
                     b.Property<Guid>("Id")
@@ -734,6 +935,16 @@ namespace PepMeld.Core.Data.Migrations
                             RefreshHours = 24,
                             Url = "https://query.wikidata.org/"
                         });
+                });
+
+            modelBuilder.Entity("PepMeld.Core.Data.FamilyLink", b =>
+                {
+                    b.HasOne("PepMeld.Core.Data.FamilyResearchRun", null)
+                        .WithMany()
+                        .HasForeignKey("RunId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_family_link_family_research_run_run_id");
                 });
 
             modelBuilder.Entity("PepMeld.Core.Data.Finding", b =>

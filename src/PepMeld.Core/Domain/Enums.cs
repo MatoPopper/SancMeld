@@ -122,8 +122,35 @@ public enum FindingKind
 {
     Function,
     BoardSeat,
+
+    /// <summary>The person checked is a family member of a PEP; <c>relatedTo</c> names the PEP.</summary>
     FamilyMember,
     CloseAssociate,
+
+    /// <summary>
+    /// The person checked is a PEP, and this is one of their known family members, for the
+    /// obliged entity to screen as well. Information, not an outcome: it never makes a
+    /// check "family member".
+    /// </summary>
+    KnownRelative,
+}
+
+/// <summary>Who found a family tie. Decides the highest level it can carry.</summary>
+public enum FamilyFoundBy
+{
+    /// <summary>A research agent reading open sources. Never above D until a register or a person confirms it.</summary>
+    Agent,
+    Wikidata,
+    Register,
+    Analyst,
+}
+
+/// <summary>Whether a person has looked at a tie a machine found.</summary>
+public enum FamilyReviewStatus
+{
+    Candidate,
+    Confirmed,
+    Rejected,
 }
 
 /// <summary>

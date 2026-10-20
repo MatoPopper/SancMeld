@@ -186,6 +186,73 @@ if (args is ["users", var userAction, ..])
     }
 }
 
+// Family research, done outside the service by an agent and brought in as a file:
+//
+//   dotnet PepMeld.Server.dll family queue 100 [--days 365]     who is next, as JSON for the agent
+//   dotnet PepMeld.Server.dll family import <file> [--agent name] [--no-verify]
+//   dotnet PepMeld.Server.dll family runs                       what the runs took
+if (args is ["family", var familyAction, ..])
+{
+    using var scope = app.Services.CreateScope();
+
+    switch (familyAction)
+    {
+        case "queue":
+            {
+                var count = args.Length > 2 && int.TryParse(args[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out var n) ? n : 100;
+                var days = int.TryParse(Flag(args, "--days"), NumberStyles.Integer, CultureInfo.InvariantCulture, out var d) ? d : 365;
+                var queue = scope.ServiceProvider.GetRequiredService<PepMeld.Core.Family.FamilyResearchQueue>();
+                var tasks = await queue.NextAsync(count, days, CancellationToken.None);
+                Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(tasks, PepMeld.Core.Checks.PepMeldJson.Options));
+                return 0;
+            }
+
+        case "import" when args.Length > 2:
+            {
+                var services = scope.ServiceProvider;
+                PepMeld.Core.Family.IQuoteVerifier verifier = args.Contains("--no-verify")
+                    ? new PepMeld.Core.Family.TrustingQuoteVerifier()
+                    : services.GetRequiredService<PepMeld.Core.Family.IQuoteVerifier>();
+                var importer = new PepMeld.Core.Family.FamilyImportService(
+                    services.GetRequiredService<PepMeldDbContext>(), verifier, TimeProvider.System,
+                    services.GetRequiredService<ILogger<PepMeld.Core.Family.FamilyImportService>>());
+
+                var outcome = await importer.ImportAsync(await File.ReadAllTextAsync(args[2]), Flag(args, "--agent") ?? "claude-code-agent", CancellationToken.None);
+                Console.WriteLine($"{outcome.Pep}: {outcome.Imported} new, {outcome.Updated} updated, {outcome.Refused} refused; "
+                    + $"quotes found {outcome.QuotesFound}/{outcome.QuotesChecked}; research took {outcome.DurationSeconds:N0} s");
+                foreach (var refusal in outcome.Refusals)
+                {
+                    Console.WriteLine($"  refused {refusal}");
+                }
+
+                return 0;
+            }
+
+        case "runs":
+            {
+                var db = scope.ServiceProvider.GetRequiredService<PepMeldDbContext>();
+                var runs = await db.FamilyResearchRuns.AsNoTracking().OrderBy(r => r.StartedAt).ToListAsync();
+                foreach (var r in runs)
+                {
+                    Console.WriteLine($"{r.StartedAt:yyyy-MM-dd HH:mm} {r.PepName,-28} {r.DurationSeconds,6:N0} s  searches {r.Searches,3}  pages {r.PagesOpened,3}  relatives {r.RelativesFound,2}  refused {r.RelativesRefused}  {r.Agent}");
+                }
+
+                if (runs.Count > 0)
+                {
+                    var seconds = runs.Select(r => r.DurationSeconds).Order().ToList();
+                    Console.WriteLine($"{runs.Count} runs; median {seconds[seconds.Count / 2]:N0} s, mean {seconds.Average():N0} s; "
+                        + $"100 PEPs one after another ~{seconds.Average() * 100 / 3600:N1} h");
+                }
+
+                return 0;
+            }
+
+        default:
+            Console.Error.WriteLine("Usage: family queue [n] [--days 365] | family import <file> [--agent name] [--no-verify] | family runs");
+            return 1;
+    }
+}
+
 // Migrations on start, for the container:
 //
 //   PepMeld__Database__AutoMigrate=true
