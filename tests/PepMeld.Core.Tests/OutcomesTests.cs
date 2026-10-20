@@ -14,6 +14,21 @@ public class OutcomesTests
             new FindingFunction(Country.CZ, PepCategory.MemberOfParliament, "§ 4", "čl. 2", "Poslanecká sněmovna", role, from, to, false, null),
             null, null, monthsSinceEnd, [], "x", null);
 
+    /// <summary>A prime minister who took over a ministry last month is reported as the prime minister.</summary>
+    [Fact]
+    public void TheHeadlineIsTheMostProminentOfficeHeldLongest()
+    {
+        static FindingView Government(FindingView f) => f with { Function = f.Function! with { Category = PepCategory.GovernmentMember } };
+
+        var pm = Government(Function(EvidenceLevel.B, new DateOnly(2023, 10, 25), null, role: "Predseda vlády"));
+        var ministry = Government(Function(EvidenceLevel.B, new DateOnly(2026, 9, 30), null, role: "minister životného prostredia"));
+        var deputy = Function(EvidenceLevel.A, new DateOnly(2023, 10, 25), null, role: "poslanec");
+
+        var (_, summary) = Outcomes.Derive([ministry, deputy, pm], [Psp], 12);
+
+        Assert.Contains("Predseda vlády", summary);
+    }
+
     [Fact]
     public void ACurrentConfirmedFunctionIsPep()
     {

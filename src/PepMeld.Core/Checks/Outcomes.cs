@@ -18,7 +18,14 @@ public static class Outcomes
             .Where(f => f.Kind is FindingKind.Function or FindingKind.BoardSeat && f.Level is EvidenceLevel.A or EvidenceLevel.B && f.Function is not null)
             .ToList();
 
-        var current = confirmed.Where(f => f.Function!.To is null).OrderByDescending(f => f.Function!.From).FirstOrDefault();
+        // The headline is the most prominent office, not the newest: a prime minister who
+        // also took over a ministry last month is a prime minister. Within one category the
+        // office held longest leads, for the same reason.
+        var current = confirmed
+            .Where(f => f.Function!.To is null)
+            .OrderBy(f => Prominence(f.Function!.Category))
+            .ThenBy(f => f.Function!.From ?? DateOnly.MaxValue)
+            .FirstOrDefault();
         if (current is not null)
         {
             var since = current.Function!.From is { } from ? $" (od {Date(from)}, trvá)" : " (trvá)";
@@ -60,6 +67,25 @@ public static class Outcomes
             ? $"Žiadna zhoda v prehľadaných zoznamoch ({string.Join(", ", searched)})."
             : "Žiadna zhoda, ale žiadny zoznam ešte nebol importovaný.");
     }
+
+    /// <summary>Lower is more prominent; the order of SK § 6 ods. 2 for the national offices, then the rest.</summary>
+    internal static int Prominence(PepCategory category) => category switch
+    {
+        PepCategory.HeadOfState => 0,
+        PepCategory.GovernmentMember => 1,
+        PepCategory.MemberOfParliament => 2,
+        PepCategory.SeniorJudge => 3,
+        PepCategory.CentralBankBoard => 4,
+        PepCategory.CourtOfAuditors => 5,
+        PepCategory.Prosecutor => 6,
+        PepCategory.SeniorOfficer => 7,
+        PepCategory.Ambassador => 8,
+        PepCategory.EuOrInternational => 9,
+        PepCategory.RegionalLeader => 10,
+        PepCategory.PartyLeadership => 11,
+        PepCategory.StateEnterpriseBoard => 12,
+        _ => 13,
+    };
 
     private static string Date(DateOnly? date) => date?.ToString("d. M. yyyy", CultureInfo.InvariantCulture) ?? "?";
 }

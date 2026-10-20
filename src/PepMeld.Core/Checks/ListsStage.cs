@@ -115,7 +115,16 @@ public sealed class ListsStage(
             .ToList();
         check.CoverageJson = JsonSerializer.Serialize(coverage, PepMeldJson.Options);
 
-        return new StageResult(FindingMerger.Merge(findings), Note(coverage, check.Country));
+        // Best evidence first, then what is held now, then the most prominent, then the newest:
+        // the order a reader decides in.
+        var ordered = FindingMerger.Merge(findings)
+            .OrderBy(f => f.Level)
+            .ThenByDescending(f => f.Function?.To is null)
+            .ThenBy(f => f.Function is null ? int.MaxValue : Outcomes.Prominence(f.Function.Category))
+            .ThenByDescending(f => f.Function?.From)
+            .ToList();
+
+        return new StageResult(ordered, Note(coverage, check.Country));
     }
 
     private static string? Quote(PepPerson person)
