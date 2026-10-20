@@ -133,13 +133,24 @@ public class PspMapperTests
         Assert.Contains(zeman.Functions, f => f.Role.StartsWith("Předseda Poslanecké sněmovny", StringComparison.Ordinal) && f.From == new DateOnly(1996, 6, 27));
     }
 
+    /// <summary>
+    /// Eight records in the file for three mandates: the Senate is one body per two-year
+    /// period. The 2016 mandate is recorded open in one body and ended in two; the senator
+    /// was re-elected in 2022, so the ended records are right.
+    /// </summary>
     [Fact]
-    public void SenateTermsAreRead()
+    public void ASenateMandateIsOneFunctionHoweverManyBodiesRecordIt()
     {
-        var terms = Person("4775").Functions.Where(f => f.Role == "senátor").ToList();
+        var terms = Person("4775").Functions.Where(f => f.Role == "senátor").OrderBy(f => f.From).ToList();
 
-        Assert.Equal(8, terms.Count);
-        Assert.Contains(terms, f => f.Institution == "Senát Parlamentu ČR (SE15)" && f.To is null);
+        Assert.Equal(3, terms.Count);
+        Assert.All(terms, f => Assert.Equal("Senát Parlamentu ČR", f.Institution));
+        Assert.Equal(new DateOnly(2010, 10, 23), terms[0].From);
+        Assert.Equal(new DateOnly(2016, 10, 23), terms[0].To);
+        Assert.Equal(new DateOnly(2016, 10, 15), terms[1].From);
+        Assert.Equal(new DateOnly(2022, 10, 15), terms[1].To);
+        Assert.Equal(new DateOnly(2022, 10, 1), terms[2].From);
+        Assert.Null(terms[2].To);
     }
 
     [Fact]

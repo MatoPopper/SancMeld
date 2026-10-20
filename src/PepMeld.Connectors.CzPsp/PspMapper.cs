@@ -23,6 +23,8 @@ namespace PepMeld.Connectors.CzPsp;
 /// </summary>
 internal static class PspMapper
 {
+    private const int SenateType = 79;
+
     private sealed record BodyType(PepCategory Category, string Institution, string MemberRole, bool TakeMemberships, bool OnlyChairOffices);
 
     private static readonly Dictionary<int, BodyType> BodyTypes = new()
@@ -85,11 +87,16 @@ internal static class PspMapper
             if (!isOffice && bodies.TryGetValue(targetId, out var body) && BodyTypes[body.TypeId].TakeMemberships)
             {
                 var type = BodyTypes[body.TypeId];
+
+                // The Senate is one body per two-year electoral period, so a six-year
+                // mandate is recorded three times with the same dates. One mandate, one
+                // function: keyed by its start, not by the period's body.
+                var senate = body.TypeId == SenateType;
                 function = new ParsedFunction(
-                    $"m:{targetId}:{f[3]}",
+                    senate ? $"m:senat:{f[3]}" : $"m:{targetId}:{f[3]}",
                     Country.CZ,
                     type.Category,
-                    Institution(type, body),
+                    senate ? type.Institution : Institution(type, body),
                     type.MemberRole,
                     from,
                     to,
@@ -150,7 +157,7 @@ internal static class PspMapper
                 BirthDate(f[5]),
                 f.Length > 8 ? Date(f[8]) : null,
                 url,
-                list
+                OneMandatePerSenateTerm(list)
                     .Select(x => x with { SourceUrl = url })
                     .OrderByDescending(x => x.To is null)
                     .ThenByDescending(x => x.From)
@@ -158,6 +165,31 @@ internal static class PspMapper
         }
 
         return persons.OrderBy(p => Int(p.SourceKey)).ToList();
+    }
+
+    /// <summary>
+    /// The three records of one Senate mandate agree on the start and should agree on the
+    /// end; where one of them is left open and the senator went on to a later mandate,
+    /// the open one is the Chamber's slip and the dated ones are right.
+    /// </summary>
+    private static IEnumerable<ParsedFunction> OneMandatePerSenateTerm(IReadOnlyList<ParsedFunction> functions)
+    {
+        var starts = functions.Where(f => f.SourceKey.StartsWith("m:senat:", StringComparison.Ordinal)).Select(f => f.From).ToList();
+
+        foreach (var group in functions.GroupBy(f => f.SourceKey, StringComparer.Ordinal))
+        {
+            if (group.Count() == 1 || !group.Key.StartsWith("m:senat:", StringComparison.Ordinal))
+            {
+                yield return group.First();
+                continue;
+            }
+
+            var ended = group.Where(f => f.To is not null).OrderByDescending(f => f.To).FirstOrDefault();
+            var open = group.FirstOrDefault(f => f.To is null);
+            var hasLaterMandate = starts.Any(s => s > group.First().From);
+
+            yield return open is not null && !hasLaterMandate ? open : ended ?? open!;
+        }
     }
 
     private static string Institution(BodyType type, Body body) =>

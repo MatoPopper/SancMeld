@@ -115,6 +115,10 @@ The snapshots of downloaded lists live under `/var/lib/pepmeld/snapshots`; mount
   flagged `endedByDisappearance`, because such a date is only as precise as the schedule.
 - **A truncated file cannot end everyone's functions.** An import that parses fewer persons
   than `pep_source.min_expected_persons` is refused.
+- **One office, one finding.** When two sources name the same office of the same person
+  (the Chamber's data and Wikidata for a minister), the lesser-evidenced row is folded into
+  the better one as a second piece of evidence, and `sources` lists both. Only when both rows
+  carry the same date of birth: a row without one may be a namesake and stays on its own.
 - **Findings are stored as the JSON that was returned**, so a past answer is reproduced,
   not re-rendered from today's data; every check records which lists were searched and
   when they were last imported.

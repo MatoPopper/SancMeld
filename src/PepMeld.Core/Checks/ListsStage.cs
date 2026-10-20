@@ -97,7 +97,8 @@ public sealed class ListsStage(
                     months,
                     [new Evidence(function.SourceUrl ?? match.Person.SourceUrl, match.RetrievedAt, quote)],
                     Explain(match.Source, function, dateMatched, months, options.Value.Matching.FormerPepMonths),
-                    toVerify));
+                    toVerify,
+                    [match.Source.Code]));
             }
         }
 
@@ -108,7 +109,7 @@ public sealed class ListsStage(
             .ToList();
         check.CoverageJson = JsonSerializer.Serialize(coverage, PepMeldJson.Options);
 
-        return new StageResult(findings, Note(coverage, check.Country));
+        return new StageResult(FindingMerger.Merge(findings), Note(coverage, check.Country));
     }
 
     private static string? Quote(PepPerson person)

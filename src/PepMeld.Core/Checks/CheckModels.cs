@@ -81,7 +81,8 @@ public sealed record FindingView(
     int? MonthsSinceEnd,
     IReadOnlyList<Evidence> Evidence,
     string Explanation,
-    string? ToVerify);
+    string? ToVerify,
+    IReadOnlyList<string>? Sources = null);
 
 public sealed record FindingPerson(
     string Name,
