@@ -183,6 +183,10 @@ namespace PepMeld.Core.Data.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_minor");
 
+                    b.Property<DateTimeOffset>("LastFoundAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_found_at");
+
                     b.Property<string>("Level")
                         .IsRequired()
                         .HasColumnType("text")
@@ -324,6 +328,14 @@ namespace PepMeld.Core.Data.Migrations
                     b.Property<int>("RelativesFound")
                         .HasColumnType("integer")
                         .HasColumnName("relatives_found");
+
+                    b.Property<int>("RelativesNew")
+                        .HasColumnType("integer")
+                        .HasColumnName("relatives_new");
+
+                    b.Property<int>("RelativesNoLongerNamed")
+                        .HasColumnType("integer")
+                        .HasColumnName("relatives_no_longer_named");
 
                     b.Property<int>("RelativesRefused")
                         .HasColumnType("integer")

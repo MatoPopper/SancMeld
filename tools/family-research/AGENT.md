@@ -18,6 +18,11 @@ hour on four in parallel.
 
 ## Daily run
 
+The user runs it by hand in a Claude Code window with the personal skill `/pep-family [count]`
+(kept in the user's profile, `~/.claude/skills/pep-family`, because it names the server). The
+skill does the steps below: queue, one agent per PEP four at a time, upload, import, report.
+By hand they are:
+
 ```bash
 # 1. who is next: current functions first, most prominent first, not researched in a year
 docker exec pepmeld-api dotnet PepMeld.Server.dll family queue 100 > queue.json
@@ -102,3 +107,13 @@ Replace `{NAME}`, `{DATE_OF_BIRTH}`, `{COUNTRY}`, `{FUNCTIONS}` and `{OUTPUT_PAT
 - A minor's date and year of birth are dropped whatever the file says.
 - The file itself is kept verbatim on the run (`family_research_run.raw_json`).
 - A second run for the same PEP updates the ties it names again and keeps the decisions made on them.
+
+## Monitoring
+
+Every run is kept with its PEP (name and date of birth) and its start and end, so the date
+each PEP was last researched is known; `family queue` puts a PEP back in line once that is
+older than `--days` (365 by default). Every tie carries `last_found_at`, the end of the last
+run that named it, and the answer of a check cites it. A run that no longer names a tie an
+earlier run found counts it (`relatives_no_longer_named`) and the import prints it as
+"no longer named": a divorce, a death or a search that missed, for a person to look at. Such
+a tie is kept, never deleted, with its old date.

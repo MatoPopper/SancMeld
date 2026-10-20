@@ -35,7 +35,7 @@ public sealed record FamilyResearchRelative(
 
 public sealed record FamilyResearchEvidence(string? Url, string? Quote, string? Publisher, string? RetrievedAt);
 
-public sealed record FamilyImportOutcome(Guid RunId, string Pep, int Imported, int Updated, int Refused, IReadOnlyList<string> Refusals, double DurationSeconds, int QuotesChecked, int QuotesFound);
+public sealed record FamilyImportOutcome(Guid RunId, string Pep, int Imported, int Updated, int Refused, IReadOnlyList<string> Refusals, double DurationSeconds, int QuotesChecked, int QuotesFound, IReadOnlyList<string> NoLongerNamed);
 
 /// <summary>
 /// Takes a research file into the database, refusing what a compliance file cannot rest on:
@@ -96,6 +96,7 @@ public sealed class FamilyImportService(PepMeldDbContext db, IQuoteVerifier quot
 
         var refusals = new List<string>();
         int imported = 0, updated = 0;
+        var named = new HashSet<Guid>();
 
         int quotesChecked = 0, quotesFound = 0;
 
@@ -175,10 +176,25 @@ public sealed class FamilyImportService(PepMeldDbContext db, IQuoteVerifier quot
             link.EvidenceJson = JsonSerializer.Serialize(evidence, PepMeldJson.Options);
             link.Note = relative.Note;
             link.UpdatedAt = now;
+            link.LastFoundAt = run.FinishedAt;
+            named.Add(link.Id);
+        }
+
+        // What an earlier run found and this one did not name: counted and said, never deleted.
+        var notNamed = await db.FamilyLinks
+            .Where(l => l.PepNameNormalized == pepNormalized && l.PepBirthDate == file.Pep.DateOfBirth && !named.Contains(l.Id))
+            .Select(l => new { l.Relation, l.RelativeName, l.LastFoundAt })
+            .ToListAsync(ct)
+            .ConfigureAwait(false);
+        foreach (var gone in notNamed)
+        {
+            logger.LogWarning("Family research for {Pep}: {Relation} {Relative} was not named this time (last found {LastFound:yyyy-MM-dd}).", run.PepName, gone.Relation, gone.RelativeName, gone.LastFoundAt);
         }
 
         run.RelativesFound = imported + updated;
         run.RelativesRefused = refusals.Count;
+        run.RelativesNew = imported;
+        run.RelativesNoLongerNamed = notNamed.Count;
         await db.SaveChangesAsync(ct).ConfigureAwait(false);
 
         foreach (var refusal in refusals)
@@ -186,7 +202,8 @@ public sealed class FamilyImportService(PepMeldDbContext db, IQuoteVerifier quot
             logger.LogWarning("Family research for {Pep}: refused {Refusal}", run.PepName, refusal);
         }
 
-        return new FamilyImportOutcome(run.Id, run.PepName, imported, updated, refusals.Count, refusals, run.DurationSeconds, quotesChecked, quotesFound);
+        return new FamilyImportOutcome(run.Id, run.PepName, imported, updated, refusals.Count, refusals, run.DurationSeconds, quotesChecked, quotesFound,
+            [.. notNamed.Select(g => $"{g.Relation} {g.RelativeName} (last found {g.LastFoundAt:yyyy-MM-dd})")]);
     }
 
     private static string? Validate(FamilyResearchRelative relative, out FamilyRelation relation, out List<Evidence> evidence)

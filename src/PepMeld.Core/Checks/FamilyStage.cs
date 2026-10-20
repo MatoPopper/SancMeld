@@ -129,7 +129,7 @@ public sealed class FamilyStage(PepMeldDbContext db, IOptions<PepMeldOptions> op
             link.PepName,
             null,
             Evidence(link),
-            $"Preverovaná osoba je podľa verejných zdrojov {who}. {law}",
+            $"Preverovaná osoba je podľa verejných zdrojov {who}. {law} Väzba naposledy dohľadaná {link.LastFoundAt:d. M. yyyy}.",
             toVerify,
             [SourceCode(link)],
             relevant);
@@ -150,7 +150,7 @@ public sealed class FamilyStage(PepMeldDbContext db, IOptions<PepMeldOptions> op
             link.PepName,
             null,
             Evidence(link),
-            $"{RelationLabel(link.Relation)}: {link.RelativeName}{born}{minor}. {law}",
+            $"{RelationLabel(link.Relation)}: {link.RelativeName}{born}{minor}. {law} Naposledy dohľadané {link.LastFoundAt:d. M. yyyy}.",
             "Dohľadané agentom vo verejných zdrojoch; preveriť aj túto osobu.",
             [SourceCode(link)],
             relevant);

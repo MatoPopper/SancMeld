@@ -189,7 +189,7 @@ if (args is ["users", var userAction, ..])
 // Family research, done outside the service by an agent and brought in as a file:
 //
 //   dotnet PepMeld.Server.dll family queue 100 [--days 365]     who is next, as JSON for the agent
-//   dotnet PepMeld.Server.dll family import <file> [--agent name] [--no-verify]
+//   dotnet PepMeld.Server.dll family import <file|directory> [--agent name] [--no-verify]
 //   dotnet PepMeld.Server.dll family runs                       what the runs took
 if (args is ["family", var familyAction, ..])
 {
@@ -205,6 +205,40 @@ if (args is ["family", var familyAction, ..])
                 var tasks = await queue.NextAsync(count, days, CancellationToken.None);
                 Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(tasks, PepMeld.Core.Checks.PepMeldJson.Options));
                 return 0;
+            }
+
+        case "import" when args.Length > 2 && Directory.Exists(args[2]):
+            {
+                // A directory: every file in it, one after another, in name order.
+                PepMeld.Core.Family.IQuoteVerifier verifier = args.Contains("--no-verify")
+                    ? new PepMeld.Core.Family.TrustingQuoteVerifier()
+                    : scope.ServiceProvider.GetRequiredService<PepMeld.Core.Family.IQuoteVerifier>();
+                var failed = 0;
+
+                foreach (var path in Directory.GetFiles(args[2], "*.json").Order(StringComparer.Ordinal))
+                {
+                    using var fileScope = app.Services.CreateScope();
+                    var importer = new PepMeld.Core.Family.FamilyImportService(
+                        fileScope.ServiceProvider.GetRequiredService<PepMeldDbContext>(), verifier, TimeProvider.System,
+                        fileScope.ServiceProvider.GetRequiredService<ILogger<PepMeld.Core.Family.FamilyImportService>>());
+                    try
+                    {
+                        var outcome = await importer.ImportAsync(await File.ReadAllTextAsync(path), Flag(args, "--agent") ?? "claude-code-agent", CancellationToken.None);
+                        Console.WriteLine($"{Path.GetFileName(path)}: {outcome.Pep}: {outcome.Imported} new, {outcome.Updated} updated, {outcome.Refused} refused, "
+                            + $"{outcome.NoLongerNamed.Count} no longer named; quotes {outcome.QuotesFound}/{outcome.QuotesChecked}; {outcome.DurationSeconds:N0} s");
+                        foreach (var line in outcome.Refusals.Select(r => "  refused " + r).Concat(outcome.NoLongerNamed.Select(g => "  no longer named " + g)))
+                        {
+                            Console.WriteLine(line);
+                        }
+                    }
+                    catch (Exception ex) when (ex is System.Text.Json.JsonException or InvalidDataException)
+                    {
+                        failed++;
+                        Console.WriteLine($"{Path.GetFileName(path)}: NOT IMPORTED: {ex.Message}");
+                    }
+                }
+
+                return failed == 0 ? 0 : 1;
             }
 
         case "import" when args.Length > 2:
@@ -225,6 +259,11 @@ if (args is ["family", var familyAction, ..])
                     Console.WriteLine($"  refused {refusal}");
                 }
 
+                foreach (var gone in outcome.NoLongerNamed)
+                {
+                    Console.WriteLine($"  no longer named {gone}");
+                }
+
                 return 0;
             }
 
@@ -234,7 +273,7 @@ if (args is ["family", var familyAction, ..])
                 var runs = await db.FamilyResearchRuns.AsNoTracking().OrderBy(r => r.StartedAt).ToListAsync();
                 foreach (var r in runs)
                 {
-                    Console.WriteLine($"{r.StartedAt:yyyy-MM-dd HH:mm} {r.PepName,-28} {r.DurationSeconds,6:N0} s  searches {r.Searches,3}  pages {r.PagesOpened,3}  relatives {r.RelativesFound,2}  refused {r.RelativesRefused}  {r.Agent}");
+                    Console.WriteLine($"{r.StartedAt:yyyy-MM-dd HH:mm} {r.PepName,-28} {r.DurationSeconds,6:N0} s  searches {r.Searches,3}  pages {r.PagesOpened,3}  relatives {r.RelativesFound,2} (new {r.RelativesNew}, gone {r.RelativesNoLongerNamed})  refused {r.RelativesRefused}  {r.Agent}");
                 }
 
                 if (runs.Count > 0)

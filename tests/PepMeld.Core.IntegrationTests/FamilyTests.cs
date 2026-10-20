@@ -119,6 +119,36 @@ public sealed class FamilyTests(DatabaseFixture fixture) : IAsyncLifetime
         Assert.Equal(5, again.Updated);
     }
 
+    /// <summary>
+    /// Monitoring: a later run that no longer names a tie says so, keeps the tie, and leaves
+    /// its last-found date where it was, while the ties it names again move to the new date.
+    /// </summary>
+    [Fact]
+    public async Task ALaterRunReportsWhatItNoLongerNames()
+    {
+        await ImportAsync();
+
+        var later = File()
+            .Replace("2026-10-20T12:01:30Z", "2027-04-20T12:01:30Z", StringComparison.Ordinal)
+            .Replace($$"""{ "relation": "Child", "name": "{{Child}}", "dateOfBirth": "1990-03-04", "status": "current", "confidence": "high",""", """{ "relation": "Cousin", "name": "dropped",""", StringComparison.Ordinal);
+
+        await using var db = fixture.CreateContext();
+        var outcome = await new FamilyImportService(db, new FixedVerifier(QuoteCheck.Exact), TimeProvider.System, NullLogger<FamilyImportService>.Instance)
+            .ImportAsync(later, "test-agent", CancellationToken.None);
+
+        Assert.Equal(0, outcome.Imported);
+        Assert.Contains(outcome.NoLongerNamed, g => g.Contains(Child, StringComparison.Ordinal));
+
+        await using var read = fixture.CreateContext();
+        var child = await read.FamilyLinks.SingleAsync(l => l.RelativeName == Child);
+        var spouse = await read.FamilyLinks.SingleAsync(l => l.RelativeName == Spouse);
+        Assert.Equal(2026, child.LastFoundAt.Year);
+        Assert.Equal(2027, spouse.LastFoundAt.Year);
+
+        var run = await read.FamilyResearchRuns.SingleAsync(r => r.Id == outcome.RunId);
+        Assert.True(run.RelativesNoLongerNamed >= 1);
+    }
+
     [Fact]
     public async Task ARelativeWhoseQuotesAreNotOnTheirPagesIsRefused()
     {

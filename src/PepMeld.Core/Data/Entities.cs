@@ -266,6 +266,15 @@ public class FamilyResearchRun
 
     /// <summary>Relatives the file named that were refused at import, and why: no evidence, no quote.</summary>
     public int RelativesRefused { get; set; }
+
+    /// <summary>Ties this run found that no earlier run had.</summary>
+    public int RelativesNew { get; set; }
+
+    /// <summary>
+    /// Ties an earlier run found and this one did not name: a divorce, a death, or a search
+    /// that missed. Kept, not deleted; their LastFoundAt says since when nobody has seen them.
+    /// </summary>
+    public int RelativesNoLongerNamed { get; set; }
     public string? Notes { get; set; }
 
     /// <summary>The file as delivered, verbatim, for the audit.</summary>
@@ -315,4 +324,7 @@ public class FamilyLink
 
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
+
+    /// <summary>When a research run last named this tie: the date the answer cites, and what monitoring watches.</summary>
+    public DateTimeOffset LastFoundAt { get; set; }
 }
