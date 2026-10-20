@@ -73,4 +73,41 @@ public class FamilyRulesTests
         var text = HttpQuoteVerifier.Fold(System.Text.RegularExpressions.Regex.Replace(html, "<[^>]+>", " "));
         Assert.Equal(expected, HttpQuoteVerifier.Find(HttpQuoteVerifier.Fold(quote), text));
     }
+
+    /// <summary>"ml." from the agent and "mladší" from Wikidata are the same son, not two.</summary>
+    [Theory]
+    [InlineData("andrej babis ml", "andrej babis mladsi")]
+    [InlineData("jan novak st", "jan novak")]
+    public void TheJuniorWordDoesNotMakeASecondRelative(string agent, string wikidata)
+    {
+        var link = new FamilyLink
+        {
+            PepName = "x",
+            PepNameNormalized = "x",
+            RelativeName = wikidata,
+            RelativeNameNormalized = wikidata,
+            Status = "current",
+            Confidence = "high",
+            EvidenceJson = "[]",
+        };
+
+        Assert.Same(link, FamilyLinkMerge.FindExisting([link], agent));
+    }
+
+    [Fact]
+    public void TwoDifferentChildrenOfTheSameSurnameStayTwo()
+    {
+        var link = new FamilyLink
+        {
+            PepName = "x",
+            PepNameNormalized = "x",
+            RelativeName = "Eva Novakova",
+            RelativeNameNormalized = "eva novakova",
+            Status = "current",
+            Confidence = "high",
+            EvidenceJson = "[]",
+        };
+
+        Assert.Null(FamilyLinkMerge.FindExisting([link], "jana novakova"));
+    }
 }

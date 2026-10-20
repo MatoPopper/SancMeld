@@ -28,7 +28,7 @@ public sealed class FamilyResearchQueue(PepMeldDbContext db, TimeProvider clock)
         var horizon = today.AddYears(-2);
 
         var rows = await db.Functions.AsNoTracking()
-            .Where(f => f.Person!.BirthDate != null && (f.ValidTo == null || f.ValidTo >= horizon))
+            .Where(f => f.Person!.BirthDate != null && f.Person.DeathDate == null && (f.ValidTo == null || f.ValidTo >= horizon))
             .Select(f => new
             {
                 f.Person!.DisplayName,

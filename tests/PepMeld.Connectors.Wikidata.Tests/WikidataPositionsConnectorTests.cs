@@ -73,9 +73,20 @@ public class WikidataPositionsConnectorTests
 
         Assert.Single(handler.Requests);
         Assert.Contains("query=", handler.Requests[0], StringComparison.Ordinal);
-        Assert.Equal(5, persons.Count);
+        Assert.Equal(6, persons.Count);
         Assert.All(persons, p => Assert.StartsWith("Q", p.SourceKey, StringComparison.Ordinal));
         Assert.All(persons, p => Assert.NotNull(p.BirthDate));
+    }
+
+    /// <summary>A holder who died with the term still open in Wikidata is no current PEP: the term ends on the day of death.</summary>
+    [Fact]
+    public async Task AnOpenTermEndsWithItsHoldersDeath()
+    {
+        var (connector, _) = Connector();
+        var dead = (await CrawlAndParseAsync(connector)).Single(p => p.SourceKey == "Q900000001");
+
+        Assert.Equal(new DateOnly(2021, 3, 4), dead.DeathDate);
+        Assert.Equal(new DateOnly(2021, 3, 4), Assert.Single(dead.Functions).To);
     }
 
     [Fact]

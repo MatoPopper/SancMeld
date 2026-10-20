@@ -82,7 +82,7 @@ public sealed class WikidataPositionsConnector(
         ArgumentNullException.ThrowIfNull(content);
 
         using var archive = new ZipArchive(content, ZipArchiveMode.Read, leaveOpen: true);
-        var byPerson = new Dictionary<string, (string Label, DateOnly Born, List<ParsedFunction> Functions)>(StringComparer.Ordinal);
+        var byPerson = new Dictionary<string, (string Label, DateOnly Born, DateOnly? Died, List<ParsedFunction> Functions)>(StringComparer.Ordinal);
 
         foreach (var position in Positions)
         {
@@ -115,13 +115,17 @@ public sealed class WikidataPositionsConnector(
                     continue;
                 }
 
+                var died = SparqlResults.Date(row, "death");
                 if (!byPerson.TryGetValue(item, out var person))
                 {
-                    byPerson[item] = person = (label, born.Value, []);
+                    byPerson[item] = person = (label, born.Value, died, []);
                 }
 
+                // A term Wikidata leaves open ends with its holder's death: Ferdinand Ďurčanský,
+                // foreign minister of the wartime Slovak State, died in 1974 and was still
+                // screened and queued as a current minister until 2026-10-20.
                 var start = SparqlResults.Date(row, "start");
-                var end = SparqlResults.Date(row, "end");
+                var end = SparqlResults.Date(row, "end") ?? died;
                 var role = position.Role is { Length: > 0 } fixedRole ? fixedRole : SparqlResults.Value(row, "posLabel") ?? positionItem;
 
                 person.Functions.Add(new ParsedFunction(
@@ -156,7 +160,7 @@ public sealed class WikidataPositionsConnector(
                     null,
                     null,
                     x.Value.Born,
-                    null,
+                    x.Value.Died,
                     $"https://www.wikidata.org/wiki/{x.Key}",
                     x.Value.Functions
                         .DistinctBy(f => f.SourceKey, StringComparer.Ordinal)
@@ -186,7 +190,7 @@ public sealed class WikidataPositionsConnector(
         var citizenship = position.Citizenship is { Length: > 0 } c ? $"?p wdt:P27 wd:{c} ." : string.Empty;
 
         return $$"""
-            SELECT ?p ?pLabel ?pos ?posLabel ?dob ?dobPrecision ?start ?end WHERE {
+            SELECT ?p ?pLabel ?pos ?posLabel ?dob ?dobPrecision ?start ?end ?death WHERE {
               {{positions}}
               ?p p:P39 ?st . ?st ps:P39 ?pos .
               {{citizenship}}
@@ -194,6 +198,7 @@ public sealed class WikidataPositionsConnector(
               ?dobNode wikibase:timeValue ?dob ; wikibase:timePrecision ?dobPrecision .
               OPTIONAL { ?st pq:P580 ?start }
               OPTIONAL { ?st pq:P582 ?end }
+              OPTIONAL { ?p wdt:P570 ?death }
               SERVICE wikibase:label { bd:serviceParam wikibase:language "{{languages}}". }
             }
             ORDER BY ?p ?pos ?start

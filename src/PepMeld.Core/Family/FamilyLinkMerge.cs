@@ -22,16 +22,18 @@ public static class FamilyLinkMerge
     {
         ArgumentNullException.ThrowIfNull(sameRelation);
 
+        var incoming = WithoutGeneration(relativeNameNormalized);
         FamilyLink? partial = null;
         foreach (var link in sameRelation)
         {
-            if (link.RelativeNameNormalized == relativeNameNormalized)
+            var known = WithoutGeneration(link.RelativeNameNormalized);
+            if (link.RelativeNameNormalized == relativeNameNormalized || known == incoming)
             {
                 return link;
             }
 
-            if (partial is null && WordsOf(relativeNameNormalized) >= 2 && WordsOf(link.RelativeNameNormalized) >= 2
-                && (PepListMatcher.Contains(relativeNameNormalized, link.RelativeNameNormalized) || PepListMatcher.Contains(link.RelativeNameNormalized, relativeNameNormalized)))
+            if (partial is null && WordsOf(incoming) >= 2 && WordsOf(known) >= 2
+                && (PepListMatcher.Contains(incoming, known) || PepListMatcher.Contains(known, incoming)))
             {
                 partial = link;
             }
@@ -55,6 +57,16 @@ public static class FamilyLinkMerge
     public static EvidenceLevel Best(EvidenceLevel a, EvidenceLevel b) => a < b ? a : b;
 
     public static bool IsWikidata(string url) => url.Contains("wikidata.org/", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// The name without the word that tells a son from his father: "andrej babis ml" (the
+    /// agent) and "andrej babis mladsi" (Wikidata) are the same son, kept as two ties until
+    /// 2026-10-20. Within one PEP and one relation two relatives never differ only by it.
+    /// </summary>
+    internal static string WithoutGeneration(string normalized) =>
+        string.Join(' ', normalized.Split(' ', StringSplitOptions.RemoveEmptyEntries).Where(w => !Generation.Contains(w)));
+
+    private static readonly HashSet<string> Generation = new(StringComparer.Ordinal) { "ml", "mladsi", "mladshi", "st", "starsi", "jr", "junior", "sr", "senior" };
 
     private static int WordsOf(string normalized) => normalized.Split(' ', StringSplitOptions.RemoveEmptyEntries).Count(w => w.Length > 1);
 }
