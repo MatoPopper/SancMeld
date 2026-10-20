@@ -9,9 +9,9 @@ normalisation and trigram scoring, and nothing else: no table, no endpoint and n
 process is shared.
 
 ```
-Status: first increment. Three lists (CZ Chamber of Deputies open data, SK National Council
-deputies, SK register of public officials), the asynchronous check API with stage 1 of
-three, API-key access with budgets. No front end yet.
+Status: first increment. Four lists (CZ Chamber of Deputies open data, SK National Council
+deputies, SK register of public officials, CZ state-company boards from ARES), the
+asynchronous check API with stage 1 of three, API-key access with budgets. No front end yet.
 ```
 
 ## What it answers
@@ -27,9 +27,10 @@ candidate (level **C**) and the finding says what would settle it.
 A check runs in three stages. Each writes its findings as soon as it ends, so the caller
 sees the lists within seconds while a later stage still runs:
 
-1. **Lists**: the PEP lists this instance holds. Implemented.
-2. **Boards**: boards of state enterprises and state-owned companies, from the company
-   registers. Reported as skipped until it exists.
+1. **Lists**: the PEP lists this instance holds, including the boards of state companies
+   (`CZ_ARES_STATE`, `SK_NRSR_VNF`), which come back as findings of kind `BoardSeat`. Implemented.
+2. **Boards**: who sits on a board together with a PEP, for close associates. Reported as
+   skipped until it exists.
 3. **Family**: family members and close associates. Reported as skipped until it exists.
 
 ## Sources
@@ -39,6 +40,7 @@ sees the lists within seconds while a later stage still runs:
 | `CZ_PSP` | CZ | Chamber of Deputies open data (`poslanci.zip`): every deputy since 1993, senators, members of government, presidents, with the dates of each mandate | **yes**, except senators: the Chamber records them without a birthday (the 1900 sentinel), so a senator is a level C finding until senat.cz is read | **implemented** |
 | `SK_NRSR` | SK | nrsr.sk: the alphabetical list of deputies per term (3rd term, 2002, onwards) and each deputy's profile, with the date of birth and the town of residence. No mandate dates per person: a membership carries the term's bounds and says so | **yes** | **implemented** |
 | `SK_NRSR_VNF` | SK | nrsr.sk register of public officials (ústavný zákon 357/2004): the alphabetical list (one form post) and each official's latest declaration, which names every function with the organisation. Government and state secretaries, constitutional and supreme court judges, the prosecutor general, the central bank's board, mayors and regional chairs, regulators, and the boards of state enterprises and state-owned companies (letter g), ~900 persons). No dates of office: a function carries the declaration year and ends when the person leaves the list | no | **implemented** |
+| `CZ_ARES_STATE` | CZ | ARES public register: the statutory bodies and supervisory boards of every state enterprise (legal forms 301, 302, found by the register's search) and of the state-owned companies listed by hand in `StateEntities.json` (ČEZ, ČEPS, ČEPRO, MERO, České dráhy, Letiště Praha, EGAP, ČEB, NRB, PRISKO, Explosia, Thermal-F). Every member with the date of birth and the dates of the seat; seats ended more than ten years ago are left out. Letter g) with level A evidence | **yes** | **implemented** |
 | Senators | CZ | senat.cz profiles, for the birthdays the Chamber's data lacks | yes | planned |
 | Courts, central bank, ambassadors, parties | CZ | institution web pages | no | planned |
 

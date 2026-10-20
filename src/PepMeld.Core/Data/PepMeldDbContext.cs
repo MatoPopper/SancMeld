@@ -109,6 +109,24 @@ public class PepMeldDbContext(DbContextOptions<PepMeldDbContext> options) : DbCo
                 RefreshHours = 24,
                 IsEnabled = true,
                 CreatedAt = new DateTimeOffset(2026, 10, 21, 0, 0, 0, TimeSpan.Zero),
+            },
+            new PepSource
+            {
+                Id = WellKnownIds.CzAresStateSource,
+                Code = "CZ_ARES_STATE",
+                Country = Country.CZ,
+                Name = "ARES – orgány státních podniků a obchodních korporací ovládaných státem",
+                Publisher = "Ministerstvo financí ČR (veřejný rejstřík přes ARES)",
+                Url = "https://ares.gov.cz/",
+                HasBirthDate = true,
+                Licence = "Otevřená data ARES (podmínky užití ares.gov.cz)",
+
+                // 92 state enterprises by legal form plus the listed companies, a few
+                // hundred current and recent seats.
+                MinExpectedPersons = 300,
+                RefreshHours = 24,
+                IsEnabled = true,
+                CreatedAt = new DateTimeOffset(2026, 10, 21, 0, 0, 0, TimeSpan.Zero),
             });
         });
 

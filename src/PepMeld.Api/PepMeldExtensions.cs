@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using PepMeld.Connectors.CzAres;
 using PepMeld.Connectors.CzPsp;
 using PepMeld.Connectors.SkNrsr;
 using PepMeld.Connectors.SkNrsrVnf;
@@ -79,6 +80,7 @@ public static class PepMeldExtensions
         services.AddCzPspConnector(configuration);
         services.AddSkNrsrConnector(configuration);
         services.AddSkNrsrVnfConnector(configuration);
+        services.AddCzAresConnector(configuration);
         return services;
     }
 

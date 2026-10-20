@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>PepMeld.Connectors.CzAres</RootNamespace>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="PepMeld.Connectors.CzAres.Tests" />
+    <InternalsVisibleTo Include="PepMeld.Core.IntegrationTests" />
+  </ItemGroup>
+
+  <!-- ARES answers JSON over HTTPS; the framework covers both. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.4" />
+    <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="10.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../PepMeld.Core/PepMeld.Core.csproj" />
+  </ItemGroup>
+
+  <!-- The companies the state owns outright or controls, by IČO, with the reason; see the
+       file for how it is kept. -->
+  <ItemGroup>
+    <EmbeddedResource Include="StateEntities.json" LogicalName="StateEntities.json" />
+  </ItemGroup>
+
+</Project>

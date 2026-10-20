@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/PepMeld.Connectors.CzAres/PepMeld.Connectors.CzAres.csproj" />
+  </ItemGroup>
+
+  <!-- ARES answers of 2026-10-20: six of the 90 subjects the search for legal form 301
+       returns (cut so that one of them, Lesy ČR, has its record here), the
+       public-register record of Lesy České republiky, s.p. (statutory body plus a
+       supervisory board under "ostatniOrgany", an audit committee in the free text) and
+       of ČEPS, a.s. (a board of directors, a ministry as sole shareholder, 106 historic
+       supervisory-board rows). -->
+  <ItemGroup>
+    <Content Include="../../fixtures/cz-ares-state/*.json" Link="fixtures/cz-ares-state/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

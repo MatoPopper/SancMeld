@@ -678,6 +678,21 @@ namespace PepMeld.Core.Data.Migrations
                             Publisher = "Výbor NR SR pre nezlučiteľnosť funkcií",
                             RefreshHours = 24,
                             Url = "https://www.nrsr.sk/web/Default.aspx?sid=vnf/zoznam"
+                        },
+                        new
+                        {
+                            Id = new Guid("7b1c2e3a-0001-4c5d-9e8f-000000000004"),
+                            Code = "CZ_ARES_STATE",
+                            Country = "c_z",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 21, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            HasBirthDate = true,
+                            IsEnabled = true,
+                            Licence = "Otevřená data ARES (podmínky užití ares.gov.cz)",
+                            MinExpectedPersons = 300,
+                            Name = "ARES – orgány státních podniků a obchodních korporací ovládaných státem",
+                            Publisher = "Ministerstvo financí ČR (veřejný rejstřík přes ARES)",
+                            RefreshHours = 24,
+                            Url = "https://ares.gov.cz/"
                         });
                 });
 

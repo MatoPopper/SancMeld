@@ -66,8 +66,10 @@ public sealed class ListsStage(
             {
                 var months = function.ValidTo is { } to ? MonthsBetween(to, today) : (int?)null;
 
+                // A seat on the board of a state company is its own kind: letter g) is
+                // the one category a register, not a parliament, answers.
                 findings.Add(new FindingView(
-                    FindingKind.Function,
+                    function.Category == PepCategory.StateEnterpriseBoard ? FindingKind.BoardSeat : FindingKind.Function,
                     level,
                     new FindingPerson(match.Person.DisplayName, match.Person.BirthDate, dateMatched, match.Person.Residence),
                     new FindingFunction(

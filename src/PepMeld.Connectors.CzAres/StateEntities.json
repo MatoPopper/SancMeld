@@ -1,0 +1,24 @@
+[
+  // Companies the Czech state owns as a shareholder, directly or through one of its own.
+  // ARES cannot be searched by shareholder, so they are listed by hand; state enterprises
+  // (legal forms 301, 302) are found by the register's search and need no row here.
+  //
+  // "why" is shown on every seat, so the reader knows on what ground the company counts
+  // as state-controlled. Each row was checked against the register's shareholder record
+  // on the date given; where the register shows no shareholder (shares, not a stake),
+  // the ground is the statute or the ministry's annual report on ownership policy.
+  //
+  // Never remove a row: a sold company's past seats still count for a year after they end.
+  { "ico": "45274649", "name": "ČEZ, a. s.", "why": "stát drží kolem 70 % akcií prostřednictvím Ministerstva financí; ověřeno 2026-10-20 podle zprávy MF o vlastnické politice" },
+  { "ico": "25702556", "name": "ČEPS, a.s.", "why": "jediný akcionář Ministerstvo průmyslu a obchodu; ověřeno v ARES 2026-10-20" },
+  { "ico": "60193531", "name": "ČEPRO, a.s.", "why": "jediný akcionář Česká republika – Ministerstvo financí; ověřeno v ARES 2026-10-20" },
+  { "ico": "60193468", "name": "MERO ČR, a.s.", "why": "jediný akcionář Ministerstvo financí; ověřeno v ARES 2026-10-20" },
+  { "ico": "70994226", "name": "České dráhy, a.s.", "why": "100 % stát podle zákona č. 77/2002 Sb.; ARES akcionáře neuvádí; ověřeno 2026-10-20" },
+  { "ico": "28244532", "name": "Letiště Praha, a. s.", "why": "jediný akcionář Ministerstvo financí; ověřeno v ARES 2026-10-20" },
+  { "ico": "45279314", "name": "Exportní garanční a pojišťovací společnost, a.s.", "why": "100 % stát (ministerstva financí, průmyslu a obchodu, zahraničních věcí, zemědělství) podle zákona č. 58/1995 Sb.; ověřeno 2026-10-20" },
+  { "ico": "63078333", "name": "Česká exportní banka, a.s.", "why": "akcionář Národní rozvojová banka, a.s., kterou vlastní stát; ověřeno v ARES 2026-10-20" },
+  { "ico": "44848943", "name": "Národní rozvojová banka, a.s.", "why": "jediný akcionář Ministerstvo financí; ověřeno v ARES 2026-10-20" },
+  { "ico": "46355901", "name": "PRISKO a.s.", "why": "jediný akcionář Ministerstvo financí; ověřeno v ARES 2026-10-20" },
+  { "ico": "25291581", "name": "Explosia a.s.", "why": "jediný akcionář Ministerstvo průmyslu a obchodu; ověřeno v ARES 2026-10-20" },
+  { "ico": "25401726", "name": "THERMAL-F, a.s.", "why": "jediný akcionář Ministerstvo financí; ověřeno v ARES 2026-10-20" }
+]

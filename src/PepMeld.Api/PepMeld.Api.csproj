@@ -20,6 +20,7 @@
     <ProjectReference Include="../PepMeld.Connectors.CzPsp/PepMeld.Connectors.CzPsp.csproj" />
     <ProjectReference Include="../PepMeld.Connectors.SkNrsr/PepMeld.Connectors.SkNrsr.csproj" />
     <ProjectReference Include="../PepMeld.Connectors.SkNrsrVnf/PepMeld.Connectors.SkNrsrVnf.csproj" />
+    <ProjectReference Include="../PepMeld.Connectors.CzAres/PepMeld.Connectors.CzAres.csproj" />
   </ItemGroup>
 
 </Project>

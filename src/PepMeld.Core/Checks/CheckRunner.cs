@@ -46,7 +46,9 @@ public sealed class CheckRunner(
             if (stage is null)
             {
                 stageRun.Status = StageStatus.Skipped;
-                stageRun.Note = "Táto etapa nie je v tejto verzii k dispozícii.";
+                stageRun.Note = stageRun.Stage == CheckStage.Boards
+                    ? "Orgány štátnych podnikov a firiem so štátnou účasťou sú súčasťou etapy Lists (zdroje CZ_ARES_STATE, SK_NRSR_VNF). Samostatná etapa pre spoločné pôsobenie v orgánoch (blízke osoby) nie je v tejto verzii k dispozícii."
+                    : "Táto etapa nie je v tejto verzii k dispozícii.";
                 stageRun.FinishedAt = clock.GetUtcNow();
                 await db.SaveChangesAsync(ct).ConfigureAwait(false);
                 continue;

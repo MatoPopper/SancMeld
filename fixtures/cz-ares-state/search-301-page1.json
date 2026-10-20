@@ -1,0 +1,1375 @@
+{
+ "pocetCelkem": 6,
+ "ekonomickeSubjekty": [
+  {
+   "ico": "00000205",
+   "obchodniJmeno": "Vojenské lesy a statky ČR, s.p.",
+   "sidlo": {
+    "kodStatu": "CZ",
+    "nazevStatu": "Česká republika",
+    "kodKraje": 19,
+    "nazevKraje": "Hlavní město Praha",
+    "kodObce": 554782,
+    "nazevObce": "Praha",
+    "kodSpravnihoObvodu": 60,
+    "nazevSpravnihoObvodu": "Praha 6",
+    "kodMestskehoObvodu": 60,
+    "nazevMestskehoObvodu": "Praha 6",
+    "kodMestskeCastiObvodu": 500178,
+    "kodUlice": 482501,
+    "nazevMestskeCastiObvodu": "Praha 6",
+    "nazevUlice": "Pod Juliskou",
+    "cisloDomovni": 1621,
+    "kodCastiObce": 400459,
+    "cisloOrientacni": 5,
+    "nazevCastiObce": "Dejvice",
+    "kodAdresnihoMista": 22204199,
+    "psc": 16000,
+    "textovaAdresa": "Pod Juliskou 1621/5, Dejvice, 16000 Praha 6",
+    "standardizaceAdresy": true,
+    "typCisloDomovni": 1
+   },
+   "pravniForma": "301",
+   "pravniFormaRos": "301",
+   "financniUrad": "013",
+   "datumVzniku": "1989-06-30",
+   "datumAktualizace": "2026-10-03",
+   "dic": "CZ00000205",
+   "icoId": "00000205",
+   "adresaDorucovaci": {
+    "radekAdresy1": "Pod Juliskou 1621/5",
+    "radekAdresy2": "Dejvice",
+    "radekAdresy3": "16000 Praha 6"
+   },
+   "czNace2008": [
+    "014",
+    "0149",
+    "016",
+    "02",
+    "03220",
+    "08",
+    "10",
+    "38120",
+    "4120",
+    "4939",
+    "49410",
+    "56100",
+    "711",
+    "71122",
+    "80100",
+    "84",
+    "931"
+   ],
+   "seznamRegistraci": {
+    "stavZdrojeRos": "AKTIVNI",
+    "stavZdrojeVr": "AKTIVNI",
+    "stavZdrojeRes": "AKTIVNI",
+    "stavZdrojeRzp": "AKTIVNI",
+    "stavZdrojeNrpzs": "NEEXISTUJICI",
+    "stavZdrojeRpsh": "NEEXISTUJICI",
+    "stavZdrojeRcns": "NEEXISTUJICI",
+    "stavZdrojeSzr": "AKTIVNI",
+    "stavZdrojeDph": "AKTIVNI",
+    "stavZdrojeSkDph": "NEEXISTUJICI",
+    "stavZdrojeSd": "NEEXISTUJICI",
+    "stavZdrojeIr": "NEEXISTUJICI",
+    "stavZdrojeCeu": "NEEXISTUJICI",
+    "stavZdrojeRs": "NEEXISTUJICI",
+    "stavZdrojeRed": "AKTIVNI",
+    "stavZdrojeMonitor": "NEEXISTUJICI"
+   },
+   "primarniZdroj": "ros",
+   "dalsiUdaje": [
+    {
+     "obchodniJmeno": [
+      {
+       "obchodniJmeno": "Vojenské lesy a statky ČR, s.p.",
+       "primarniZaznam": true
+      }
+     ],
+     "sidlo": [
+      {
+       "sidlo": {
+        "kodStatu": "CZ",
+        "nazevStatu": "Česká republika",
+        "kodKraje": 19,
+        "nazevKraje": "Hlavní město Praha",
+        "kodObce": 554782,
+        "nazevObce": "Praha",
+        "kodSpravnihoObvodu": 60,
+        "nazevSpravnihoObvodu": "Praha 6",
+        "kodMestskehoObvodu": 60,
+        "nazevMestskehoObvodu": "Praha 6",
+        "kodMestskeCastiObvodu": 500178,
+        "kodUlice": 482501,
+        "nazevMestskeCastiObvodu": "Praha 6",
+        "nazevUlice": "Pod Juliskou",
+        "cisloDomovni": 1621,
+        "kodCastiObce": 400459,
+        "cisloOrientacni": 5,
+        "nazevCastiObce": "Dejvice",
+        "kodAdresnihoMista": 22204199,
+        "psc": 16000,
+        "textovaAdresa": "Pod Juliskou 1621/5, Dejvice, 16000 Praha 6",
+        "standardizaceAdresy": true,
+        "typCisloDomovni": 1
+       },
+       "primarniZaznam": true
+      }
+     ],
+     "pravniForma": "301",
+     "pravniFormaRos": "301",
+     "datovyZdroj": "res"
+    },
+    {
+     "obchodniJmeno": [
+      {
+       "obchodniJmeno": "Vojenské lesy a statky ČR, s.p.",
+       "primarniZaznam": true
+      }
+     ],
+     "sidlo": [
+      {
+       "sidlo": {
+        "kodStatu": "CZ",
+        "nazevStatu": "Česká republika",
+        "kodKraje": 19,
+        "nazevKraje": "Hlavní město Praha",
+        "kodObce": 554782,
+        "nazevObce": "Praha",
+        "kodSpravnihoObvodu": 60,
+        "nazevSpravnihoObvodu": "Praha 6",
+        "kodMestskehoObvodu": 60,
+        "nazevMestskehoObvodu": "Praha 6",
+        "kodMestskeCastiObvodu": 500178,
+        "kodUlice": 482501,
+        "nazevMestskeCastiObvodu": "Praha 6",
+        "nazevUlice": "Pod Juliskou",
+        "cisloDomovni": 1621,
+        "kodCastiObce": 400459,
+        "cisloOrientacni": 5,
+        "nazevCastiObce": "Dejvice",
+        "kodAdresnihoMista": 22204199,
+        "psc": 16000,
+        "textovaAdresa": "Pod Juliskou 1621/5, Dejvice, 16000 Praha 6",
+        "standardizaceAdresy": true,
+        "typCisloDomovni": 1
+       },
+       "primarniZaznam": true
+      }
+     ],
+     "pravniFormaRos": "301",
+     "datovyZdroj": "ros"
+    },
+    {
+     "obchodniJmeno": [
+      {
+       "obchodniJmeno": "Vojenské lesy a statky ČR, s.p.",
+       "primarniZaznam": true
+      }
+     ],
+     "sidlo": [
+      {
+       "sidlo": {
+        "kodStatu": "CZ",
+        "nazevStatu": "Česká republika",
+        "kodKraje": 19,
+        "nazevKraje": "Hlavní město Praha",
+        "kodObce": 554782,
+        "nazevObce": "Praha",
+        "kodSpravnihoObvodu": 60,
+        "nazevSpravnihoObvodu": "Praha 6",
+        "kodMestskehoObvodu": 60,
+        "nazevMestskehoObvodu": "Praha 6",
+        "kodMestskeCastiObvodu": 500178,
+        "kodUlice": 482501,
+        "nazevMestskeCastiObvodu": "Praha 6",
+        "nazevUlice": "Pod Juliskou",
+        "cisloDomovni": 1621,
+        "kodCastiObce": 400459,
+        "cisloOrientacni": 5,
+        "nazevCastiObce": "Dejvice",
+        "kodAdresnihoMista": 22204199,
+        "psc": 16000,
+        "textovaAdresa": "Pod Juliskou 1621/5, Dejvice, 16000 Praha 6",
+        "standardizaceAdresy": true,
+        "typCisloDomovni": 1
+       },
+       "primarniZaznam": true
+      }
+     ],
+     "pravniForma": "301",
+     "datovyZdroj": "rzp"
+    },
+    {
+     "obchodniJmeno": [
+      {
+       "obchodniJmeno": "Vojenské lesy a statky ČR, s.p.",
+       "primarniZaznam": true
+      }
+     ],
+     "sidlo": [
+      {
+       "sidlo": {
+        "kodStatu": "CZ",
+        "nazevStatu": "Česká republika",
+        "kodKraje": 19,
+        "nazevKraje": "Hlavní město Praha",
+        "kodObce": 554782,
+        "nazevObce": "Praha",
+        "kodSpravnihoObvodu": 60,
+        "nazevSpravnihoObvodu": "Praha 6",
+        "kodMestskehoObvodu": 60,
+        "nazevMestskehoObvodu": "Praha 6",
+        "kodMestskeCastiObvodu": 500178,
+        "kodUlice": 482501,
+        "nazevMestskeCastiObvodu": "Praha 6",
+        "nazevUlice": "Pod Juliskou",
+        "cisloDomovni": 1621,
+        "kodCastiObce": 400459,
+        "cisloOrientacni": 5,
+        "nazevCastiObce": "Dejvice",
+        "kodAdresnihoMista": 22204199,
+        "psc": 16000,
+        "textovaAdresa": "Pod Juliskou 1621/5, Dejvice, 16000 Praha 6",
+        "standardizaceAdresy": true,
+        "typCisloDomovni": 1
+       },
+       "primarniZaznam": true
+      }
+     ],
+     "pravniForma": "301",
+     "datovyZdroj": "szr"
+    },
+    {
+     "obchodniJmeno": [
+      {
+       "obchodniJmeno": "Vojenské lesy a statky ČR, s.p.",
+       "primarniZaznam": true
+      }
+     ],
+     "sidlo": [
+      {
+       "sidlo": {
+        "kodStatu": "CZ",
+        "nazevStatu": "Česká republika",
+        "kodKraje": 19,
+        "nazevKraje": "Hlavní město Praha",
+        "kodObce": 554782,
+        "nazevObce": "Praha",
+        "kodSpravnihoObvodu": 60,
+        "nazevSpravnihoObvodu": "Praha 6",
+        "kodMestskehoObvodu": 60,
+        "nazevMestskehoObvodu": "Praha 6",
+        "kodMestskeCastiObvodu": 500178,
+        "kodUlice": 482501,
+        "nazevMestskeCastiObvodu": "Praha 6",
+        "nazevUlice": "Pod Juliskou",
+        "cisloDomovni": 1621,
+        "kodCastiObce": 400459,
+        "cisloOrientacni": 5,
+        "nazevCastiObce": "Dejvice",
+        "kodAdresnihoMista": 22204199,
+        "psc": 16000,
+        "textovaAdresa": "Pod Juliskou 1621/5, Dejvice, 16000 Praha 6",
+        "standardizaceAdresy": true,
+        "typCisloDomovni": 1
+       },
+       "primarniZaznam": true
+      }
+     ],
+     "pravniForma": "301",
+     "spisovaZnacka": "ALX 256/MSPH",
+     "datovyZdroj": "vr"
+    }
+   ],
+   "czNace": [
+    "08",
+    "49410",
+    "711",
+    "71120",
+    "01480",
+    "56110",
+    "03220",
+    "41000",
+    "84",
+    "10",
+    "80010",
+    "014",
+    "016",
+    "49320",
+    "38120",
+    "931",
+    "02"
+   ],
+   "subRegistrSzr": "ezp"
+  },
+  {
+   "ico": "00001279",
+   "obchodniJmeno": "Státní tiskárna cenin, s. p.",
+   "sidlo": {
+    "kodStatu": "CZ",
+    "nazevStatu": "Česká republika",
+    "kodKraje": 19,
+    "nazevKraje": "Hlavní město Praha",
+    "kodObce": 554782,
+    "nazevObce": "Praha",
+    "kodSpravnihoObvodu": 19,
+    "nazevSpravnihoObvodu": "Praha 1",
+    "kodMestskehoObvodu": 19,
+    "nazevMestskehoObvodu": "Praha 1",
+    "kodMestskeCastiObvodu": 500054,
+    "kodUlice": 468177,
+    "nazevMestskeCastiObvodu": "Praha 1",
+    "nazevUlice": "Růžová",
+    "cisloDomovni": 943,
+    "kodCastiObce": 490148,
+    "cisloOrientacni": 6,
+    "nazevCastiObce": "Nové Město",
+    "kodAdresnihoMista": 21707553,
+    "psc": 11000,
+    "textovaAdresa": "Růžová 943/6, Nové Město, 11000 Praha 1",
+    "standardizaceAdresy": true,
+    "typCisloDomovni": 1
+   },
+   "pravniForma": "301",
+   "pravniFormaRos": "301",
+   "financniUrad": "001",
+   "datumVzniku": "1989-06-30",
+   "datumAktualizace": "2026-08-11",
+   "dic": "CZ00001279",
+   "icoId": "00001279",
+   "adresaDorucovaci": {
+    "radekAdresy1": "Růžová 943/6",
+    "radekAdresy2": "Nové Město",
+    "radekAdresy3": "11000 Praha 1"
+   },
+   "czNace2008": [
+    "80100",
+    "821",
+    "8559",
+    "00",
+    "1812",
+    "18130",
+    "221",
+    "222",
+    "461",
+    "471",
+    "49410",
+    "55",
+    "56100",
+    "581",
+    "620",
+    "6820",
+    "70220",
+    "772"
+   ],
+   "seznamRegistraci": {
+    "stavZdrojeRos": "AKTIVNI",
+    "stavZdrojeVr": "AKTIVNI",
+    "stavZdrojeRes": "AKTIVNI",
+    "stavZdrojeRzp": "AKTIVNI",
+    "stavZdrojeNrpzs": "NEEXISTUJICI",
+    "stavZdrojeRpsh": "NEEXISTUJICI",
+    "stavZdrojeRcns": "NEEXISTUJICI",
+    "stavZdrojeSzr": "NEEXISTUJICI",
+    "stavZdrojeDph": "AKTIVNI",
+    "stavZdrojeSkDph": "NEEXISTUJICI",
+    "stavZdrojeSd": "NEEXISTUJICI",
+    "stavZdrojeIr": "NEEXISTUJICI",
+    "stavZdrojeCeu": "NEEXISTUJICI",
+    "stavZdrojeRs": "NEEXISTUJICI",
+    "stavZdrojeRed": "AKTIVNI",
+    "stavZdrojeMonitor": "NEEXISTUJICI"
+   },
+   "primarniZdroj": "ros",
+   "dalsiUdaje": [
+    {
+     "obchodniJmeno": [
+      {
+       "obchodniJmeno": "Státní tiskárna cenin, s. p.",
+       "primarniZaznam": true
+      }
+     ],
+     "sidlo": [
+      {
+       "sidlo": {
+        "kodStatu": "CZ",
+        "nazevStatu": "Česká republika",
+        "kodObce": 554782,
+        "nazevObce": "Praha",
+        "kodSpravnihoObvodu": 19,
+        "nazevSpravnihoObvodu": "Praha 1",
+        "kodMestskehoObvodu": 19,
+        "nazevMestskehoObvodu": "Praha 1",
+        "kodMestskeCastiObvodu": 500054,
+        "kodUlice": 468177,
+        "nazevMestskeCastiObvodu": "Praha 1",
+        "nazevUlice": "Růžová",
+        "cisloDomovni": 943,
+        "kodCastiObce": 490148,
+        "cisloOrientacni": 6,
+        "nazevCastiObce": "Nové Město",
+        "kodAdresnihoMista": 21707553,
+        "psc": 11000,
+        "textovaAdresa": "Růžová 943/6, Nové Město, 11000 Praha 1",
+        "standardizaceAdresy": true,
+        "typCisloDomovni": 1
+       },
+       "primarniZaznam": true
+      }
+     ],
+     "pravniForma": "301",
+     "pravniFormaRos": "301",
+     "datovyZdroj": "res"
+    },
+    {
+     "obchodniJmeno": [
+      {
+       "obchodniJmeno": "Státní tiskárna cenin, s. p.",
+       "primarniZaznam": true
+      }
+     ],
+     "sidlo": [
+      {
+       "sidlo": {
+        "kodStatu": "CZ",
+        "nazevStatu": "Česká republika",
+        "kodKraje": 19,
+        "nazevKraje": "Hlavní město Praha",
+        "kodObce": 554782,
+        "nazevObce": "Praha",
+        "kodSpravnihoObvodu": 19,
+        "nazevSpravnihoObvodu": "Praha 1",
+        "kodMestskehoObvodu": 19,
+        "nazevMestskehoObvodu": "Praha 1",
+        "kodMestskeCastiObvodu": 500054,
+        "kodUlice": 468177,
+        "nazevMestskeCastiObvodu": "Praha 1",
+        "nazevUlice": "Růžová",
+        "cisloDomovni": 943,
+        "kodCastiObce": 490148,
+        "cisloOrientacni": 6,
+        "nazevCastiObce": "Nové Město",
+        "kodAdresnihoMista": 21707553,
+        "psc": 11000,
+        "textovaAdresa": "Růžová 943/6, Nové Město, 11000 Praha 1",
+        "standardizaceAdresy": true,
+        "typCisloDomovni": 1
+       },
+       "primarniZaznam": true
+      }
+     ],
+     "pravniFormaRos": "301",
+     "datovyZdroj": "ros"
+    },
+    {
+     "obchodniJmeno": [
+      {
+       "obchodniJmeno": "Státní tiskárna cenin, s. p.",
+       "primarniZaznam": true
+      }
+     ],
+     "sidlo": [
+      {
+       "sidlo": {
+        "kodStatu": "CZ",
+        "nazevStatu": "Česká republika",
+        "kodKraje": 19,
+        "nazevKraje": "Hlavní město Praha",
+        "kodObce": 554782,
+        "nazevObce": "Praha",
+        "kodSpravnihoObvodu": 19,
+        "nazevSpravnihoObvodu": "Praha 1",
+        "kodMestskehoObvodu": 19,
+        "nazevMestskehoObvodu": "Praha 1",
+        "kodMestskeCastiObvodu": 500054,
+        "kodUlice": 468177,
+        "nazevMestskeCastiObvodu": "Praha 1",
+        "nazevUlice": "Růžová",
+        "cisloDomovni": 943,
+        "kodCastiObce": 490148,
+        "cisloOrientacni": 6,
+        "nazevCastiObce": "Nové Město",
+        "kodAdresnihoMista": 21707553,
+        "psc": 11000,
+        "textovaAdresa": "Růžová 943/6, Nové Město, 11000 Praha 1",
+        "standardizaceAdresy": true,
+        "typCisloDomovni": 1
+       },
+       "primarniZaznam": true
+      }
+     ],
+     "pravniForma": "301",
+     "datovyZdroj": "rzp"
+    },
+    {
+     "obchodniJmeno": [
+      {
+       "obchodniJmeno": "Státní tiskárna cenin, s. p.",
+       "primarniZaznam": true
+      }
+     ],
+     "sidlo": [
+      {
+       "sidlo": {
+        "kodStatu": "CZ",
+        "nazevStatu": "Česká republika",
+        "kodKraje": 19,
+        "nazevKraje": "Hlavní město Praha",
+        "kodObce": 554782,
+        "nazevObce": "Praha",
+        "kodSpravnihoObvodu": 19,
+        "nazevSpravnihoObvodu": "Praha 1",
+        "kodMestskehoObvodu": 19,
+        "nazevMestskehoObvodu": "Praha 1",
+        "kodMestskeCastiObvodu": 500054,
+        "kodUlice": 468177,
+        "nazevMestskeCastiObvodu": "Praha 1",
+        "nazevUlice": "Růžová",
+        "cisloDomovni": 943,
+        "kodCastiObce": 490148,
+        "cisloOrientacni": 6,
+        "nazevCastiObce": "Nové Město",
+        "kodAdresnihoMista": 21707553,
+        "psc": 11000,
+        "textovaAdresa": "Růžová 943/6, Nové Město, 11000 Praha 1",
+        "standardizaceAdresy": true,
+        "typCisloDomovni": 1
+       },
+       "primarniZaznam": true
+      }
+     ],
+     "pravniForma": "301",
+     "spisovaZnacka": "ALX 296/MSPH",
+     "datovyZdroj": "vr"
+    }
+   ],
+   "czNace": [
+    "461",
+    "49410",
+    "70200",
+    "82100",
+    "18130",
+    "772",
+    "68200",
+    "00",
+    "221",
+    "18120",
+    "8559",
+    "80010",
+    "222",
+    "581",
+    "62",
+    "471",
+    "55",
+    "56110"
+   ],
+   "subRegistrSzr": "szr"
+  },
+  {
+   "ico": "42196451",
+   "obchodniJmeno": "Lesy České republiky, s.p.",
+   "sidlo": {
+    "kodStatu": "CZ",
+    "nazevStatu": "Česká republika",
+    "kodKraje": 86,
+    "nazevKraje": "Královéhradecký kraj",
+    "kodOkresu": 3602,
+    "nazevOkresu": "Hradec Králové",
+    "kodObce": 569810,
+    "nazevObce": "Hradec Králové",
+    "kodUlice": 130168,
+    "nazevUlice": "Přemyslova",
+    "cisloDomovni": 1106,
+    "kodCastiObce": 47180,
+    "cisloOrientacni": 19,
+    "nazevCastiObce": "Nový Hradec Králové",
+    "kodAdresnihoMista": 23814004,
+    "psc": 50008,
+    "textovaAdresa": "Přemyslova 1106/19, Nový Hradec Králové, 50008 Hradec Králové",
+    "standardizaceAdresy": true,
+    "typCisloDomovni": 1
+   },
+   "pravniForma": "301",
+   "pravniFormaRos": "301",
+   "financniUrad": "013",
+   "datumVzniku": "1992-01-01",
+   "datumAktualizace": "2026-10-03",
+   "dic": "CZ42196451",
+   "icoId": "42196451",
+   "adresaDorucovaci": {
+    "radekAdresy1": "Přemyslova 1106/19",
+    "radekAdresy2": "Nový Hradec Králové",
+    "radekAdresy3": "50008 Hradec Králové"
+   },
+   "czNace2008": [
+    "011",
+    "016",
+    "02",
+    "02100",
+    "022",
+    "02400",
+    "03220",
+    "08",
+    "101",
+    "16",
+    "25620",
+    "257",
+    "28",
+    "3317",
+    "35110",
+    "36000",
+    "38110",
+    "4120",
+    "431",
+    "43320",
+    "45200",
+    "46900",
+    "471",
+    "47250",
+    "492",
+    "4939",
+    "49410",
+    "55",
+    "56100",
+    "58",
+    "620",
+    "701",
+    "7112",
+    "82110",
+    "82990",
+    "855",
+    "93110"
+   ],
+   "seznamRegistraci": {
+    "stavZdrojeRos": "AKTIVNI",
+    "stavZdrojeVr": "AKTIVNI",
+    "stavZdrojeRes": "AKTIVNI",
+    "stavZdrojeRzp": "AKTIVNI",
+    "stavZdrojeNrpzs": "NEEXISTUJICI",
+    "stavZdrojeRpsh": "NEEXISTUJICI",
+    "stavZdrojeRcns": "NEEXISTUJICI",
+    "stavZdrojeSzr": "AKTIVNI",
+    "stavZdrojeDph": "AKTIVNI",
+    "stavZdrojeSkDph": "NEEXISTUJICI",
+    "stavZdrojeSd": "NEEXISTUJICI",
+    "stavZdrojeIr": "NEEXISTUJICI",
+    "stavZdrojeCeu": "NEEXISTUJICI",
+    "stavZdrojeRs": "NEEXISTUJICI",
+    "stavZdrojeRed": "AKTIVNI",
+    "stavZdrojeMonitor": "NEEXISTUJICI"
+   },
+   "primarniZdroj": "ros",
+   "dalsiUdaje": [
+    {
+     "obchodniJmeno": [
+      {
+       "obchodniJmeno": "Lesy České republiky, s.p.",
+       "primarniZaznam": true
+      }
+     ],
+     "sidlo": [
+      {
+       "sidlo": {
+        "kodStatu": "CZ",
+        "nazevStatu": "Česká republika",
+        "kodKraje": 86,
+        "nazevKraje": "Královéhradecký kraj",
+        "kodOkresu": 3602,
+        "nazevOkresu": "Hradec Králové",
+        "kodObce": 569810,
+        "nazevObce": "Hradec Králové",
+        "kodUlice": 130168,
+        "nazevUlice": "Přemyslova",
+        "cisloDomovni": 1106,
+        "kodCastiObce": 47180,
+        "cisloOrientacni": 19,
+        "nazevCastiObce": "Nový Hradec Králové",
+        "kodAdresnihoMista": 23814004,
+        "psc": 50008,
+        "textovaAdresa": "Přemyslova 1106/19, Nový Hradec Králové, 50008 Hradec Králové",
+        "standardizaceAdresy": true,
+        "typCisloDomovni": 1
+       },
+       "primarniZaznam": true
+      }
+     ],
+     "pravniForma": "301",
+     "pravniFormaRos": "301",
+     "datovyZdroj": "res"
+    },
+    {
+     "obchodniJmeno": [
+      {
+       "obchodniJmeno": "Lesy České republiky, s.p.",
+       "primarniZaznam": true
+      }
+     ],
+     "sidlo": [
+      {
+       "sidlo": {
+        "kodStatu": "CZ",
+        "nazevStatu": "Česká republika",
+        "kodKraje": 86,
+        "nazevKraje": "Královéhradecký kraj",
+        "kodOkresu": 3602,
+        "nazevOkresu": "Hradec Králové",
+        "kodObce": 569810,
+        "nazevObce": "Hradec Králové",
+        "kodUlice": 130168,
+        "nazevUlice": "Přemyslova",
+        "cisloDomovni": 1106,
+        "kodCastiObce": 47180,
+        "cisloOrientacni": 19,
+        "nazevCastiObce": "Nový Hradec Králové",
+        "kodAdresnihoMista": 23814004,
+        "psc": 50008,
+        "textovaAdresa": "Přemyslova 1106/19, Nový Hradec Králové, 50008 Hradec Králové",
+        "standardizaceAdresy": true,
+        "typCisloDomovni": 1
+       },
+       "primarniZaznam": true
+      }
+     ],
+     "pravniFormaRos": "301",
+     "datovyZdroj": "ros"
+    },
+    {
+     "obchodniJmeno": [
+      {
+       "obchodniJmeno": "Lesy České republiky, s.p.",
+       "primarniZaznam": true
+      }
+     ],
+     "sidlo": [
+      {
+       "sidlo": {
+        "kodStatu": "CZ",
+        "nazevStatu": "Česká republika",
+        "kodKraje": 86,
+        "nazevKraje": "Královéhradecký kraj",
+        "kodOkresu": 3602,
+        "nazevOkresu": "Hradec Králové",
+        "kodObce": 569810,
+        "nazevObce": "Hradec Králové",
+        "kodUlice": 130168,
+        "nazevUlice": "Přemyslova",
+        "cisloDomovni": 1106,
+        "kodCastiObce": 47180,
+        "cisloOrientacni": 19,
+        "nazevCastiObce": "Nový Hradec Králové",
+        "kodAdresnihoMista": 23814004,
+        "psc": 50008,
+        "textovaAdresa": "Přemyslova 1106/19, Nový Hradec Králové, 50008 Hradec Králové",
+        "standardizaceAdresy": true,
+        "typCisloDomovni": 1
+       },
+       "primarniZaznam": true
+      }
+     ],
+     "pravniForma": "301",
+     "datovyZdroj": "rzp"
+    },
+    {
+     "obchodniJmeno": [
+      {
+       "obchodniJmeno": "Lesy České republiky, s.p.",
+       "primarniZaznam": true
+      }
+     ],
+     "sidlo": [
+      {
+       "sidlo": {
+        "kodStatu": "CZ",
+        "nazevStatu": "Česká republika",
+        "kodKraje": 86,
+        "nazevKraje": "Královéhradecký kraj",
+        "kodOkresu": 3602,
+        "nazevOkresu": "Hradec Králové",
+        "kodObce": 569810,
+        "nazevObce": "Hradec Králové",
+        "kodUlice": 130168,
+        "nazevUlice": "Přemyslova",
+        "cisloDomovni": 1106,
+        "kodCastiObce": 47180,
+        "cisloOrientacni": 19,
+        "nazevCastiObce": "Nový Hradec Králové",
+        "kodAdresnihoMista": 23814004,
+        "psc": 50008,
+        "textovaAdresa": "Přemyslova 1106/19, Nový Hradec Králové, 50008 Hradec Králové",
+        "standardizaceAdresy": true,
+        "typCisloDomovni": 1
+       },
+       "primarniZaznam": true
+      }
+     ],
+     "pravniForma": "301",
+     "datovyZdroj": "szr"
+    },
+    {
+     "obchodniJmeno": [
+      {
+       "obchodniJmeno": "Lesy České republiky, s.p.",
+       "primarniZaznam": true
+      }
+     ],
+     "sidlo": [
+      {
+       "sidlo": {
+        "kodStatu": "CZ",
+        "nazevStatu": "Česká republika",
+        "kodKraje": 86,
+        "nazevKraje": "Královéhradecký kraj",
+        "kodOkresu": 3602,
+        "nazevOkresu": "Hradec Králové",
+        "kodObce": 569810,
+        "nazevObce": "Hradec Králové",
+        "kodUlice": 130168,
+        "nazevUlice": "Přemyslova",
+        "cisloDomovni": 1106,
+        "kodCastiObce": 47180,
+        "cisloOrientacni": 19,
+        "nazevCastiObce": "Nový Hradec Králové",
+        "kodAdresnihoMista": 23814004,
+        "psc": 50008,
+        "textovaAdresa": "Přemyslova 1106/19, Nový Hradec Králové, 50008 Hradec Králové",
+        "standardizaceAdresy": true,
+        "typCisloDomovni": 1
+       },
+       "primarniZaznam": true
+      }
+     ],
+     "pravniForma": "301",
+     "spisovaZnacka": "AXII 540/KSHK",
+     "datovyZdroj": "vr"
+    }
+   ],
+   "czNace": [
+    "95310",
+    "02200",
+    "25530",
+    "02",
+    "03220",
+    "16",
+    "38110",
+    "431",
+    "58",
+    "71120",
+    "82100",
+    "101",
+    "28",
+    "35120",
+    "02100",
+    "08",
+    "47250",
+    "49410",
+    "41000",
+    "46900",
+    "70100",
+    "82990",
+    "93110",
+    "02400",
+    "49320",
+    "62",
+    "855",
+    "011",
+    "36000",
+    "256",
+    "471",
+    "55",
+    "56110",
+    "49200",
+    "016",
+    "3317",
+    "43320"
+   ],
+   "subRegistrSzr": "ezp"
+  },
+  {
+   "ico": "47114983",
+   "obchodniJmeno": "Česká pošta, s.p.",
+   "sidlo": {
+    "kodStatu": "CZ",
+    "nazevStatu": "Česká republika",
+    "kodKraje": 19,
+    "nazevKraje": "Hlavní město Praha",
+    "kodObce": 554782,
+    "nazevObce": "Praha",
+    "kodSpravnihoObvodu": 19,
+    "nazevSpravnihoObvodu": "Praha 1",
+    "kodMestskehoObvodu": 19,
+    "nazevMestskehoObvodu": "Praha 1",
+    "kodMestskeCastiObvodu": 500054,
+    "kodUlice": 466115,
+    "nazevMestskeCastiObvodu": "Praha 1",
+    "nazevUlice": "Politických vězňů",
+    "cisloDomovni": 909,
+    "kodCastiObce": 490148,
+    "cisloOrientacni": 4,
+    "nazevCastiObce": "Nové Město",
+    "kodAdresnihoMista": 21707154,
+    "psc": 11000,
+    "textovaAdresa": "Politických vězňů 909/4, Nové Město, 11000 Praha 1",
+    "standardizaceAdresy": true,
+    "typCisloDomovni": 1
+   },
+   "pravniForma": "301",
+   "pravniFormaRos": "301",
+   "financniUrad": "013",
+   "datumVzniku": "1993-01-01",
+   "datumAktualizace": "2026-10-05",
+   "dic": "CZ47114983",
+   "icoId": "47114983",
+   "adresaDorucovaci": {
+    "radekAdresy1": "Politických vězňů 909/4",
+    "radekAdresy2": "Nové Město",
+    "radekAdresy3": "11000 Praha 1"
+   },
+   "czNace2008": [
+    "181",
+    "18130",
+    "43220",
+    "45200",
+    "46190",
+    "4725",
+    "49393",
+    "49410",
+    "52100",
+    "52210",
+    "53100",
+    "53200",
+    "5590",
+    "56100",
+    "61",
+    "6120",
+    "63",
+    "64929",
+    "66",
+    "66190",
+    "6920",
+    "702",
+    "711",
+    "772",
+    "82920",
+    "8553",
+    "92000",
+    "95110",
+    "653"
+   ],
+   "seznamRegistraci": {
+    "stavZdrojeRos": "AKTIVNI",
+    "stavZdrojeVr": "AKTIVNI",
+    "stavZdrojeRes": "AKTIVNI",
+    "stavZdrojeRzp": "AKTIVNI",
+    "stavZdrojeNrpzs": "NEEXISTUJICI",
+    "stavZdrojeRpsh": "NEEXISTUJICI",
+    "stavZdrojeRcns": "NEEXISTUJICI",
+    "stavZdrojeSzr": "NEEXISTUJICI",
+    "stavZdrojeDph": "AKTIVNI",
+    "stavZdrojeSkDph": "NEEXISTUJICI",
+    "stavZdrojeSd": "NEEXISTUJICI",
+    "stavZdrojeIr": "NEEXISTUJICI",
+    "stavZdrojeCeu": "NEEXISTUJICI",
+    "stavZdrojeRs": "NEEXISTUJICI",
+    "stavZdrojeRed": "AKTIVNI",
+    "stavZdrojeMonitor": "NEEXISTUJICI"
+   },
+   "primarniZdroj": "ros",
+   "dalsiUdaje": [
+    {
+     "obchodniJmeno": [
+      {
+       "obchodniJmeno": "Česká pošta, s.p.",
+       "primarniZaznam": true
+      }
+     ],
+     "sidlo": [
+      {
+       "sidlo": {
+        "kodStatu": "CZ",
+        "nazevStatu": "Česká republika",
+        "kodKraje": 19,
+        "nazevKraje": "Hlavní město Praha",
+        "kodObce": 554782,
+        "nazevObce": "Praha",
+        "kodSpravnihoObvodu": 19,
+        "nazevSpravnihoObvodu": "Praha 1",
+        "kodMestskehoObvodu": 19,
+        "nazevMestskehoObvodu": "Praha 1",
+        "kodMestskeCastiObvodu": 500054,
+        "kodUlice": 466115,
+        "nazevMestskeCastiObvodu": "Praha 1",
+        "nazevUlice": "Politických vězňů",
+        "cisloDomovni": 909,
+        "kodCastiObce": 490148,
+        "cisloOrientacni": 4,
+        "nazevCastiObce": "Nové Město",
+        "kodAdresnihoMista": 21707154,
+        "psc": 11000,
+        "textovaAdresa": "Politických vězňů 909/4, Nové Město, 11000 Praha 1",
+        "standardizaceAdresy": true,
+        "typCisloDomovni": 1
+       },
+       "primarniZaznam": true
+      }
+     ],
+     "pravniForma": "301",
+     "pravniFormaRos": "301",
+     "datovyZdroj": "res"
+    },
+    {
+     "obchodniJmeno": [
+      {
+       "obchodniJmeno": "Česká pošta, s.p.",
+       "primarniZaznam": true
+      }
+     ],
+     "sidlo": [
+      {
+       "sidlo": {
+        "kodStatu": "CZ",
+        "nazevStatu": "Česká republika",
+        "kodKraje": 19,
+        "nazevKraje": "Hlavní město Praha",
+        "kodObce": 554782,
+        "nazevObce": "Praha",
+        "kodSpravnihoObvodu": 19,
+        "nazevSpravnihoObvodu": "Praha 1",
+        "kodMestskehoObvodu": 19,
+        "nazevMestskehoObvodu": "Praha 1",
+        "kodMestskeCastiObvodu": 500054,
+        "kodUlice": 466115,
+        "nazevMestskeCastiObvodu": "Praha 1",
+        "nazevUlice": "Politických vězňů",
+        "cisloDomovni": 909,
+        "kodCastiObce": 490148,
+        "cisloOrientacni": 4,
+        "nazevCastiObce": "Nové Město",
+        "kodAdresnihoMista": 21707154,
+        "psc": 11000,
+        "textovaAdresa": "Politických vězňů 909/4, Nové Město, 11000 Praha 1",
+        "standardizaceAdresy": true,
+        "typCisloDomovni": 1
+       },
+       "primarniZaznam": true
+      }
+     ],
+     "pravniFormaRos": "301",
+     "datovyZdroj": "ros"
+    },
+    {
+     "obchodniJmeno": [
+      {
+       "obchodniJmeno": "Česká pošta, s.p.",
+       "primarniZaznam": true
+      }
+     ],
+     "sidlo": [
+      {
+       "sidlo": {
+        "kodStatu": "CZ",
+        "nazevStatu": "Česká republika",
+        "kodKraje": 19,
+        "nazevKraje": "Hlavní město Praha",
+        "kodObce": 554782,
+        "nazevObce": "Praha",
+        "kodSpravnihoObvodu": 19,
+        "nazevSpravnihoObvodu": "Praha 1",
+        "kodMestskehoObvodu": 19,
+        "nazevMestskehoObvodu": "Praha 1",
+        "kodMestskeCastiObvodu": 500054,
+        "kodUlice": 466115,
+        "nazevMestskeCastiObvodu": "Praha 1",
+        "nazevUlice": "Politických vězňů",
+        "cisloDomovni": 909,
+        "kodCastiObce": 490148,
+        "cisloOrientacni": 4,
+        "nazevCastiObce": "Nové Město",
+        "kodAdresnihoMista": 21707154,
+        "psc": 11000,
+        "textovaAdresa": "Politických vězňů 909/4, Nové Město, 11000 Praha 1",
+        "standardizaceAdresy": true,
+        "typCisloDomovni": 1
+       },
+       "primarniZaznam": true
+      }
+     ],
+     "pravniForma": "301",
+     "datovyZdroj": "rzp"
+    },
+    {
+     "obchodniJmeno": [
+      {
+       "obchodniJmeno": "Česká pošta, s.p.",
+       "primarniZaznam": true
+      }
+     ],
+     "sidlo": [
+      {
+       "sidlo": {
+        "kodStatu": "CZ",
+        "nazevStatu": "Česká republika",
+        "kodKraje": 19,
+        "nazevKraje": "Hlavní město Praha",
+        "kodObce": 554782,
+        "nazevObce": "Praha",
+        "kodSpravnihoObvodu": 19,
+        "nazevSpravnihoObvodu": "Praha 1",
+        "kodMestskehoObvodu": 19,
+        "nazevMestskehoObvodu": "Praha 1",
+        "kodMestskeCastiObvodu": 500054,
+        "kodUlice": 466115,
+        "nazevMestskeCastiObvodu": "Praha 1",
+        "nazevUlice": "Politických vězňů",
+        "cisloDomovni": 909,
+        "kodCastiObce": 490148,
+        "cisloOrientacni": 4,
+        "nazevCastiObce": "Nové Město",
+        "kodAdresnihoMista": 21707154,
+        "psc": 11000,
+        "textovaAdresa": "Politických vězňů 909/4, Nové Město, 11000 Praha 1",
+        "standardizaceAdresy": true,
+        "typCisloDomovni": 1
+       },
+       "primarniZaznam": true
+      }
+     ],
+     "pravniForma": "301",
+     "spisovaZnacka": "A 7565/MSPH",
+     "datovyZdroj": "vr"
+    }
+   ],
+   "czNace": [
+    "92000",
+    "95100",
+    "61",
+    "46190",
+    "61100",
+    "66190",
+    "82920",
+    "95310",
+    "63",
+    "85530",
+    "65300",
+    "4322",
+    "52210",
+    "55900",
+    "56110",
+    "53200",
+    "47250",
+    "49410",
+    "66",
+    "70200",
+    "711",
+    "53100",
+    "64929",
+    "69200",
+    "772",
+    "181",
+    "49320",
+    "18130",
+    "52100"
+   ],
+   "subRegistrSzr": "szr"
+  },
+  {
+   "obchodniJmeno": "KOMEX, Praha, státní podnik",
+   "sidlo": {
+    "kodStatu": "CZ",
+    "nazevStatu": "Česká republika",
+    "kodKraje": 19,
+    "nazevKraje": "Hlavní město Praha",
+    "kodOkresu": 3100,
+    "kodObce": 554782,
+    "nazevObce": "Praha",
+    "kodMestskehoObvodu": 19,
+    "nazevMestskehoObvodu": "Praha 1",
+    "kodMestskeCastiObvodu": 500054,
+    "kodUlice": 468801,
+    "nazevMestskeCastiObvodu": "Praha 1",
+    "nazevUlice": "Senovážná",
+    "cisloDomovni": 1254,
+    "kodCastiObce": 490148,
+    "cisloOrientacni": 4,
+    "nazevCastiObce": "Nové Město",
+    "kodAdresnihoMista": 21710902,
+    "psc": 11000,
+    "textovaAdresa": "Senovážná 1254/4, Nové Město, 11000 Praha 1",
+    "standardizaceAdresy": true,
+    "typCisloDomovni": 1
+   },
+   "pravniForma": "301",
+   "financniUrad": "001",
+   "datumVzniku": "1989-03-31",
+   "datumAktualizace": "2023-08-10",
+   "icoId": "ARES_00369479",
+   "adresaDorucovaci": {
+    "radekAdresy1": "Senovážná 1254/4",
+    "radekAdresy2": "Nové Město",
+    "radekAdresy3": "11000 Praha 1"
+   },
+   "czNace2008": [],
+   "seznamRegistraci": {
+    "stavZdrojeRos": "NEEXISTUJICI",
+    "stavZdrojeVr": "AKTIVNI",
+    "stavZdrojeRes": "NEEXISTUJICI",
+    "stavZdrojeRzp": "NEEXISTUJICI",
+    "stavZdrojeNrpzs": "NEEXISTUJICI",
+    "stavZdrojeRpsh": "NEEXISTUJICI",
+    "stavZdrojeRcns": "NEEXISTUJICI",
+    "stavZdrojeSzr": "NEEXISTUJICI",
+    "stavZdrojeDph": "NEEXISTUJICI",
+    "stavZdrojeSkDph": "NEEXISTUJICI",
+    "stavZdrojeSd": "NEEXISTUJICI",
+    "stavZdrojeIr": "NEEXISTUJICI",
+    "stavZdrojeCeu": "NEEXISTUJICI",
+    "stavZdrojeRs": "NEEXISTUJICI",
+    "stavZdrojeRed": "NEEXISTUJICI",
+    "stavZdrojeMonitor": "NEEXISTUJICI"
+   },
+   "primarniZdroj": "vr",
+   "dalsiUdaje": [
+    {
+     "obchodniJmeno": [
+      {
+       "obchodniJmeno": "KOMEX, Praha, státní podnik",
+       "primarniZaznam": true
+      }
+     ],
+     "sidlo": [
+      {
+       "sidlo": {
+        "kodStatu": "CZ",
+        "nazevStatu": "Česká republika",
+        "kodKraje": 19,
+        "nazevKraje": "Hlavní město Praha",
+        "kodOkresu": 3100,
+        "kodObce": 554782,
+        "nazevObce": "Praha",
+        "kodMestskehoObvodu": 19,
+        "nazevMestskehoObvodu": "Praha 1",
+        "kodMestskeCastiObvodu": 500054,
+        "kodUlice": 468801,
+        "nazevMestskeCastiObvodu": "Praha 1",
+        "nazevUlice": "Senovážná",
+        "cisloDomovni": 1254,
+        "kodCastiObce": 490148,
+        "cisloOrientacni": 4,
+        "nazevCastiObce": "Nové Město",
+        "kodAdresnihoMista": 21710902,
+        "psc": 11000,
+        "textovaAdresa": "Senovážná 1254/4, Nové Město, 11000 Praha 1",
+        "standardizaceAdresy": true,
+        "typCisloDomovni": 1
+       },
+       "primarniZaznam": true
+      }
+     ],
+     "pravniForma": "301",
+     "spisovaZnacka": "ALXI 98/MSPH",
+     "datovyZdroj": "vr"
+    }
+   ],
+   "czNace": []
+  },
+  {
+   "obchodniJmeno": "KIWANIS KLUB Brno I,hospodářské zařízení - v likvidaci",
+   "sidlo": {
+    "kodStatu": "CZ",
+    "nazevStatu": "Česká republika",
+    "kodKraje": 116,
+    "nazevKraje": "Jihomoravský kraj",
+    "kodOkresu": 3702,
+    "nazevOkresu": "Brno-město",
+    "kodObce": 582786,
+    "nazevObce": "Brno",
+    "kodMestskeCastiObvodu": 551244,
+    "kodUlice": 23612,
+    "nazevMestskeCastiObvodu": "Brno-Řečkovice a Mokrá Hora",
+    "nazevUlice": "Gromešova",
+    "cisloDomovni": 193,
+    "kodCastiObce": 411876,
+    "cisloOrientacni": 10,
+    "nazevCastiObce": "Řečkovice",
+    "kodAdresnihoMista": 19494076,
+    "psc": 62100,
+    "textovaAdresa": "Gromešova 193/10, Řečkovice, 62100 Brno",
+    "standardizaceAdresy": true,
+    "typCisloDomovni": 1
+   },
+   "pravniForma": "301",
+   "financniUrad": "290",
+   "datumVzniku": "1990-11-07",
+   "datumAktualizace": "2023-08-10",
+   "icoId": "ARES_00370304",
+   "adresaDorucovaci": {
+    "radekAdresy1": "Gromešova 193/10",
+    "radekAdresy2": "Řečkovice",
+    "radekAdresy3": "62100 Brno"
+   },
+   "czNace2008": [],
+   "seznamRegistraci": {
+    "stavZdrojeRos": "NEEXISTUJICI",
+    "stavZdrojeVr": "AKTIVNI",
+    "stavZdrojeRes": "NEEXISTUJICI",
+    "stavZdrojeRzp": "NEEXISTUJICI",
+    "stavZdrojeNrpzs": "NEEXISTUJICI",
+    "stavZdrojeRpsh": "NEEXISTUJICI",
+    "stavZdrojeRcns": "NEEXISTUJICI",
+    "stavZdrojeSzr": "NEEXISTUJICI",
+    "stavZdrojeDph": "NEEXISTUJICI",
+    "stavZdrojeSkDph": "NEEXISTUJICI",
+    "stavZdrojeSd": "NEEXISTUJICI",
+    "stavZdrojeIr": "NEEXISTUJICI",
+    "stavZdrojeCeu": "NEEXISTUJICI",
+    "stavZdrojeRs": "NEEXISTUJICI",
+    "stavZdrojeRed": "NEEXISTUJICI",
+    "stavZdrojeMonitor": "NEEXISTUJICI"
+   },
+   "primarniZdroj": "vr",
+   "dalsiUdaje": [
+    {
+     "obchodniJmeno": [
+      {
+       "obchodniJmeno": "KIWANIS KLUB Brno I,hospodářské zařízení - v likvidaci",
+       "primarniZaznam": true
+      }
+     ],
+     "sidlo": [
+      {
+       "sidlo": {
+        "kodStatu": "CZ",
+        "nazevStatu": "Česká republika",
+        "kodKraje": 116,
+        "nazevKraje": "Jihomoravský kraj",
+        "kodOkresu": 3702,
+        "nazevOkresu": "Brno-město",
+        "kodObce": 582786,
+        "nazevObce": "Brno",
+        "kodMestskeCastiObvodu": 551244,
+        "kodUlice": 23612,
+        "nazevMestskeCastiObvodu": "Brno-Řečkovice a Mokrá Hora",
+        "nazevUlice": "Gromešova",
+        "cisloDomovni": 193,
+        "kodCastiObce": 411876,
+        "cisloOrientacni": 10,
+        "nazevCastiObce": "Řečkovice",
+        "kodAdresnihoMista": 19494076,
+        "psc": 62100,
+        "textovaAdresa": "Gromešova 193/10, Řečkovice, 62100 Brno",
+        "standardizaceAdresy": true,
+        "typCisloDomovni": 1
+       },
+       "primarniZaznam": true
+      }
+     ],
+     "pravniForma": "301",
+     "spisovaZnacka": "AXXVIII 34/KSBR",
+     "datovyZdroj": "vr"
+    }
+   ],
+   "czNace": []
+  }
+ ]
+}
