@@ -86,10 +86,12 @@ runs one by hand.
 
 nrsr.sk has no robots.txt and no API. On 2026-10-20 four parallel lanes against the
 declaration pages drew a 429 after some 600 pages and then a 403 for the whole site, every
-page and every client, from that address. Keep the defaults (one lane, a second between
-requests, a month's cache) and run the first fill once, preferably on the server that will
-keep importing; a blocked address stays blocked for hours. The person to ask for a
-machine-readable export is the Kancelária NR SR, which the User-Agent names.
+page and every client, from that address. Later the same day the site answered every
+request from every address with a redirect to `/challenge`, a bot check a plain HTTP
+client cannot pass, so both Slovak connectors fail until it is lifted; the deputies on
+the server were copied from a development database that had read the site before. Keep
+the defaults (one lane, a second between requests, a month's cache). The person to ask for
+a machine-readable export is the Kancelária NR SR, which the User-Agent names.
 
 ## Tests
 
