@@ -50,9 +50,12 @@ Replace `{NAME}`, `{DATE_OF_BIRTH}`, `{COUNTRY}`, `{FUNCTIONS}` and `{OUTPUT_PAT
 >
 > PEP: {NAME}, born {DATE_OF_BIRTH}, {COUNTRY}. Functions: {FUNCTIONS}.
 >
-> Relations to look for: spouse or partner (current; a former spouse is not a family member,
-> record only with status "former"); children and the spouses of children ("ChildInLaw");
-> parents; siblings.
+> Relations to look for, the same for Slovak and Czech PEPs (the wider Czech "osoba blízká"):
+> spouse or partner, including a person living with them (current; a former spouse is not a
+> family member, record only with status "former"); children and the spouses of children
+> ("ChildInLaw"); parents; siblings; grandparents ("Grandparent") and grandchildren
+> ("Grandchild"); the spouse's parents ("ParentInLaw"); the spouse's siblings and the
+> siblings' spouses ("SiblingInLaw").
 >
 > Rules:
 > 1. Only claims verified on a page you opened with WebFetch. Every relative needs at least
@@ -81,7 +84,7 @@ Replace `{NAME}`, `{DATE_OF_BIRTH}`, `{COUNTRY}`, `{FUNCTIONS}` and `{OUTPUT_PAT
 >   "agent": { "startedAt": "ISO", "finishedAt": "ISO", "searches": 0, "pagesOpened": 0 },
 >   "relatives": [
 >     {
->       "relation": "Spouse | Partner | Child | ChildInLaw | Parent | Sibling",
+>       "relation": "Spouse | Partner | Child | ChildInLaw | Parent | Sibling | Grandparent | Grandchild | ParentInLaw | SiblingInLaw",
 >       "name": "Full Name",
 >       "dateOfBirth": "YYYY-MM-DD or null",
 >       "birthYear": null,
@@ -96,6 +99,14 @@ Replace `{NAME}`, `{DATE_OF_BIRTH}`, `{COUNTRY}`, `{FUNCTIONS}` and `{OUTPUT_PAT
 >   "notes": "one or two sentences in Slovak"
 > }
 > ```
+
+## Which ties count
+
+One circle for Slovak and Czech PEPs alike, the wider of the two laws (decided 2026-10-20):
+the Czech "osoba blízká" of § 4 odst. 5 písm. b) bod 1 zák. 253/2008 Sb. with § 22 of the
+Civil Code. The Slovak § 6 ods. 3 zák. 297/2008 Z. z. names only spouse or partner, child,
+child's spouse and parent; for siblings, grandparents, grandchildren and in-laws the answer
+says that it goes beyond the Slovak law.
 
 ## What the import does with it
 

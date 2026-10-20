@@ -21,13 +21,24 @@ public class FamilyRulesTests
         EvidenceJson = "[]",
     };
 
+    /// <summary>One circle for both countries, the wider Czech one: every tie counts, a sibling of a Slovak PEP too.</summary>
     [Theory]
-    [InlineData(Country.SK, FamilyRelation.Spouse, true)]
-    [InlineData(Country.SK, FamilyRelation.ChildInLaw, true)]
-    [InlineData(Country.SK, FamilyRelation.Sibling, false)]
-    [InlineData(Country.CZ, FamilyRelation.Sibling, true)]
-    public void TheLawOfThePepsCountryDecidesWhetherATieCounts(Country country, FamilyRelation relation, bool relevant)
-        => Assert.Equal(relevant, FamilyStage.Relevance(Link(country, relation)).Relevant);
+    [InlineData(Country.SK, FamilyRelation.Spouse)]
+    [InlineData(Country.SK, FamilyRelation.Sibling)]
+    [InlineData(Country.SK, FamilyRelation.Grandchild)]
+    [InlineData(Country.SK, FamilyRelation.ParentInLaw)]
+    [InlineData(Country.CZ, FamilyRelation.SiblingInLaw)]
+    [InlineData(Country.CZ, FamilyRelation.Grandparent)]
+    public void EveryTieCountsInBothCountries(Country country, FamilyRelation relation)
+        => Assert.True(FamilyStage.Relevance(Link(country, relation)).Relevant);
+
+    [Fact]
+    public void TheTextSaysWhereTheTieGoesBeyondTheSlovakLaw()
+    {
+        Assert.Contains("§ 6 ods. 3", FamilyStage.Relevance(Link(Country.SK, FamilyRelation.Child)).Law, StringComparison.Ordinal);
+        Assert.Contains("nemenuje", FamilyStage.Relevance(Link(Country.SK, FamilyRelation.Sibling)).Law, StringComparison.Ordinal);
+        Assert.Contains("nemenuje", FamilyStage.Relevance(Link(Country.CZ, FamilyRelation.ParentInLaw)).Law, StringComparison.Ordinal);
+    }
 
     [Fact]
     public void ARecordedBirthdayDecides()

@@ -168,14 +168,38 @@ public enum EvidenceLevel
     D,
 }
 
+/// <summary>
+/// The family ties PepMeld looks for: one circle for both countries, the wider of the two
+/// laws. The Czech "osoba blízká" (§ 4 odst. 5 písm. b) bod 1 zák. 253/2008 Sb. with § 22
+/// of the Civil Code) covers relatives in the direct line, siblings, spouse and partner,
+/// persons living together and in-laws; the Slovak § 6 ods. 3 zák. 297/2008 Z. z. only
+/// spouse or partner, child and child's spouse, and parent. Decided 2026-10-20: the Czech
+/// circle is applied to Slovak and Czech PEPs alike.
+/// </summary>
 public enum FamilyRelation
 {
     Spouse,
+
+    /// <summary>A partner in a relationship like marriage, or a person living with the PEP.</summary>
     Partner,
     Child,
     Parent,
     Sibling,
+
+    /// <summary>A child's spouse or partner: son-in-law, daughter-in-law.</summary>
     ChildInLaw,
+
+    /// <summary>Grandparent, and further up the direct line.</summary>
+    Grandparent,
+
+    /// <summary>Grandchild, and further down the direct line.</summary>
+    Grandchild,
+
+    /// <summary>The spouse's parent: father-in-law, mother-in-law.</summary>
+    ParentInLaw,
+
+    /// <summary>The spouse's sibling, or a sibling's spouse: brother-in-law, sister-in-law.</summary>
+    SiblingInLaw,
 }
 
 public enum ImportStatus

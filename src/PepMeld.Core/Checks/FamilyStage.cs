@@ -19,8 +19,8 @@ namespace PepMeld.Core.Checks;
 /// A tie found by an agent is level D and says so: it is a lead with a quote and a URL,
 /// not a register entry. A relative with a recorded date of birth is matched on it, as a
 /// PEP is; one without needs the whole name. A former spouse and a deceased relative are
-/// no family members in law and are not reported; a sibling of a Slovak PEP is, but the
-/// finding says the Slovak law does not count siblings before 10 July 2027.
+/// no family members in law and are not reported. The circle is the wider Czech one for
+/// Slovak and Czech PEPs alike; the finding says where it goes beyond the Slovak law.
 /// </summary>
 public sealed class FamilyStage(PepMeldDbContext db, IOptions<PepMeldOptions> options) : ICheckStage
 {
@@ -165,17 +165,18 @@ public sealed class FamilyStage(PepMeldDbContext db, IOptions<PepMeldOptions> op
     }
 
     /// <summary>
-    /// Whether the law of the PEP's country counts this tie. Slovakia (§ 6 ods. 3 zák.
-    /// 297/2008): spouse or partner, child and child's spouse, parent; not a sibling.
-    /// Czechia (§ 4 odst. 5 písm. b) bod 1 zák. 253/2008 with § 22 OZ, "osoba blízká"):
-    /// all of these, siblings included.
+    /// Every tie counts, for Slovak and Czech PEPs alike: PepMeld applies the wider circle of
+    /// the two laws, the Czech "osoba blízká", to both (decided 2026-10-20). The text says
+    /// which law names the tie, so a Slovak obliged entity sees where it goes beyond its own.
     /// </summary>
-    internal static (bool Relevant, string Law) Relevance(FamilyLink link) => (link.PepCountry, link.Relation) switch
+    internal static (bool Relevant, string Law) Relevance(FamilyLink link) => link.Relation switch
     {
-        (Country.SK, FamilyRelation.Sibling) => (false, "Súrodenec nie je rodinným príslušníkom podľa § 6 ods. 3 zákona č. 297/2008 Z. z.; pri najvyšších funkciách ním bude od 10. 7. 2027 (nariadenie (EÚ) 2024/1624)."),
-        (Country.SK, _) => (true, "Rodinný príslušník podľa § 6 ods. 3 zákona č. 297/2008 Z. z."),
-        (Country.CZ, _) => (true, "Osoba blízká podle § 4 odst. 5 písm. b) bodu 1 zákona č. 253/2008 Sb."),
-        _ => (true, string.Empty),
+        FamilyRelation.Spouse or FamilyRelation.Partner or FamilyRelation.Child or FamilyRelation.ChildInLaw or FamilyRelation.Parent =>
+            (true, "Rodinný príslušník podľa § 6 ods. 3 zákona č. 297/2008 Z. z. aj osoba blízká podľa § 4 ods. 5 písm. b) bodu 1 zákona č. 253/2008 Sb."),
+        FamilyRelation.Sibling =>
+            (true, "Osoba blízká podľa § 4 ods. 5 písm. b) bodu 1 zákona č. 253/2008 Sb.; slovenský § 6 ods. 3 súrodenca nemenuje (od 10. 7. 2027 ho pri najvyšších funkciách menuje nariadenie (EÚ) 2024/1624). PepMeld uplatňuje širší český okruh pre obe krajiny."),
+        _ =>
+            (true, "Osoba blízká podľa § 4 ods. 5 písm. b) bodu 1 zákona č. 253/2008 Sb. v spojení s § 22 občianskeho zákonníka; slovenský § 6 ods. 3 túto väzbu nemenuje. PepMeld uplatňuje širší český okruh pre obe krajiny."),
     };
 
     private static string RelationLabel(FamilyRelation relation) => relation switch
@@ -186,6 +187,10 @@ public sealed class FamilyStage(PepMeldDbContext db, IOptions<PepMeldOptions> op
         FamilyRelation.ChildInLaw => "Zať/nevesta",
         FamilyRelation.Parent => "Rodič",
         FamilyRelation.Sibling => "Súrodenec",
+        FamilyRelation.Grandparent => "Starý rodič",
+        FamilyRelation.Grandchild => "Vnuk/vnučka",
+        FamilyRelation.ParentInLaw => "Svokor/svokra",
+        FamilyRelation.SiblingInLaw => "Švagor/švagriná",
         _ => relation.ToString(),
     };
 
