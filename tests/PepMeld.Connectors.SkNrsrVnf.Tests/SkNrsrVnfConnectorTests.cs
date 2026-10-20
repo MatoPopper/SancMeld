@@ -20,6 +20,9 @@ public class SkNrsrVnfConnectorTests
 
         public List<(string Method, string Url, string? Body)> Requests { get; } = [];
 
+        /// <summary>Answer 429 (with Retry-After: 0) to this many declaration requests before serving them.</summary>
+        public int RefuseFirst { get; set; }
+
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             var url = request.RequestUri!.ToString();
@@ -29,6 +32,14 @@ public class SkNrsrVnfConnectorTests
             lock (gate)
             {
                 Requests.Add((request.Method.Method, url, body));
+
+                if (RefuseFirst > 0 && url.Contains("UserId=", StringComparison.Ordinal))
+                {
+                    RefuseFirst--;
+                    var refused = new HttpResponseMessage(HttpStatusCode.TooManyRequests);
+                    refused.Headers.RetryAfter = new System.Net.Http.Headers.RetryConditionHeaderValue(TimeSpan.Zero);
+                    return refused;
+                }
             }
 
             string? file = null;
@@ -132,6 +143,33 @@ public class SkNrsrVnfConnectorTests
         Assert.Equal("primátor mesta", office.Role);
         Assert.Equal("JUDr.", mayor.TitleBefore);
         Assert.Equal("PhD.", mayor.TitleAfter);
+    }
+
+    [Fact]
+    public async Task ARefusalIsRetriedAfterThePauseTheSiteAsksFor()
+    {
+        var (connector, handler) = Connector();
+        handler.RefuseFirst = 2;
+
+        var persons = await CrawlAndParseAsync(connector);
+
+        Assert.Equal(3, persons.Count);
+        Assert.Equal(5 + 2, handler.Requests.Count);
+    }
+
+    [Fact]
+    public async Task TooManyRefusalsFailTheImportRatherThanLoopForever()
+    {
+        var handler = new FixtureHandler { RefuseFirst = 100 };
+        var snapshots = Path.Combine(Path.GetTempPath(), "pepmeld-vnf-tests", Guid.NewGuid().ToString("N"));
+        var connector = new SkNrsrVnfConnector(
+            new Factory(handler),
+            Options.Create(new SkNrsrVnfOptions { DelayMilliseconds = 0, DeclarationCacheDays = 0, MaxRetries = 2 }),
+            Options.Create(new PepMeldOptions { Ingest = new IngestOptions { SnapshotStoragePath = snapshots } }),
+            TimeProvider.System,
+            NullLogger<SkNrsrVnfConnector>.Instance);
+
+        await Assert.ThrowsAsync<HttpRequestException>(() => connector.DownloadAsync(CancellationToken.None));
     }
 
     [Fact]

@@ -43,6 +43,7 @@ public sealed class SkNrsrVnfConnector(
         var client = httpClients.CreateClient(HttpClientName);
         var delay = TimeSpan.FromMilliseconds(settings.DelayMilliseconds);
         var listUrl = ListUrl();
+        var gate = new RateLimitGate(clock, logger);
 
         var temp = Path.GetTempFileName();
 
@@ -53,7 +54,7 @@ public sealed class SkNrsrVnfConnector(
             {
                 // The alphabetical view is the answer to the page's own form: the hidden
                 // fields of a fresh GET, the view selector, and the button that shows it.
-                var page = await GetAsync(client, listUrl, ct).ConfigureAwait(false);
+                var page = await GetAsync(client, listUrl, gate, ct).ConfigureAwait(false);
                 var form = new Dictionary<string, string>(VnfHtmlParser.HiddenFields(page), StringComparer.Ordinal)
                 {
                     ["_sectionLayoutContainer$ctl01$ViewsList"] = "1",
@@ -97,7 +98,7 @@ public sealed class SkNrsrVnfConnector(
                             return;
                         }
 
-                        var html = await GetAsync(client, DeclarationUrl(official.UserId), ct).ConfigureAwait(false);
+                        var html = await GetAsync(client, DeclarationUrl(official.UserId), gate, ct).ConfigureAwait(false);
                         await File.WriteAllTextAsync(cached, html, ct).ConfigureAwait(false);
                         pages[index] = html;
                         Interlocked.Increment(ref fetched);
@@ -200,11 +201,24 @@ public sealed class SkNrsrVnfConnector(
     /// <summary>The site's identifiers are ASCII logins ("Tomas.Abel", "BALOBORI"); anything else is escaped so it is a file name.</summary>
     private static string CacheName(string userId) => Uri.EscapeDataString(userId).Replace('%', '_') + ".html";
 
-    private static async Task<string> GetAsync(HttpClient client, string url, CancellationToken ct)
+    private async Task<string> GetAsync(HttpClient client, string url, RateLimitGate gate, CancellationToken ct)
     {
-        using var response = await client.GetAsync(url, ct).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
-        return await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+        for (var attempt = 0; ; attempt++)
+        {
+            await gate.WaitAsync(ct).ConfigureAwait(false);
+
+            using var response = await client.GetAsync(url, ct).ConfigureAwait(false);
+
+            if (RateLimitGate.IsRefusal(response.StatusCode) && attempt < options.Value.MaxRetries)
+            {
+                gate.Refused(response, url);
+                continue;
+            }
+
+            response.EnsureSuccessStatusCode();
+            gate.Succeeded();
+            return await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+        }
     }
 
     private static async Task WriteAsync(ZipArchive archive, string name, string html, CancellationToken ct)
