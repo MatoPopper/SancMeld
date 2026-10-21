@@ -64,6 +64,7 @@ public static class HybridMeldExtensions
         services.AddScoped<RegimeSeeder>();
         services.AddScoped<SourceSeeder>();
         services.AddScoped<MispAliasSync>();
+        services.AddScoped<CaseImportService>();
 
         services.AddScoped<CampaignService>();
         services.AddScoped<ActorService>();

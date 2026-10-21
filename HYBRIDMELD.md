@@ -79,7 +79,11 @@ EEAS; the Council's press site refuses programs and is Manual), `hybrid sources 
 is already on an actor, as the EU list's "Sandworm Team" is on GRU unit 74455, lends it
 its other names, "Seashell Blizzard", "APT44"; only names not from the galaxy count as
 the anchor, so shared terms like "Grizzly Steppe" never chain APT29 onto a GRU unit),
-`hybrid links verify [--all]`, `hybrid actors forget <id>` (the one deletion: a person asks
+`hybrid import-case <file.json> [--by email]` (a curated case from a file: actors matched
+to existing ones by exact name or alias, so a sanctioned subject keeps its link; claims
+matched by case, subject, predicate, object and statement, so a re-import adds only what
+is new; each claim goes through the same rule and the same page snapshot as one typed in
+the screen), `hybrid links verify [--all]`, `hybrid actors forget <id>` (the one deletion: a person asks
 to be removed; their claims go, the decisions stay without the name), `apikey …`, `users …`.
 
 The scheduler fetches due sources every fifteen minutes (a Telegram channel defaults to
