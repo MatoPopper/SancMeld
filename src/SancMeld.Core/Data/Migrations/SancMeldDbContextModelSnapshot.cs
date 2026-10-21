@@ -437,6 +437,10 @@ namespace SancMeld.Core.Data.Migrations
                         .HasColumnType("date")
                         .HasColumnName("delisted_at");
 
+                    b.Property<bool>("DelistedByAbsence")
+                        .HasColumnType("boolean")
+                        .HasColumnName("delisted_by_absence");
+
                     b.Property<string>("ExternalId")
                         .HasColumnType("text")
                         .HasColumnName("external_id");

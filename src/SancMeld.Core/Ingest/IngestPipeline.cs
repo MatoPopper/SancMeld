@@ -58,10 +58,4 @@ public sealed record IngestGuards
 
     /// <summary>Reject if more than this fraction of records failed to parse.</summary>
     public double MaxParseErrorFraction { get; init; } = 0.05;
-
-    /// <summary>
-    /// Absence from one successful import marks a designation PossiblyMissing,
-    /// never Delisted. Mass delisting requires an explicit, reviewed decision.
-    /// </summary>
-    public bool AllowAutomaticDelisting { get; init; } = false;
 }

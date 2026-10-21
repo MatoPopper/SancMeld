@@ -176,6 +176,13 @@ public class Designation
 
     public DateOnly? ListedAt { get; set; }
     public DateOnly? DelistedAt { get; set; }
+
+    /// <summary>
+    /// True when the delisting is ours, not the publisher's: the subject was absent from
+    /// several releases in a row. <see cref="DelistedAt"/> is then the first release
+    /// without it, so the delisting happened on or before that day.
+    /// </summary>
+    public bool DelistedByAbsence { get; set; }
     public DateTimeOffset? UpdatedAtSource { get; set; }
 
     /// <summary>Stated role or position — the export's closest field to "why listed".</summary>

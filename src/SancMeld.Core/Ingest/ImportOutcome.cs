@@ -15,6 +15,9 @@ public sealed record ImportOutcome
     /// <summary>Records the publisher stopped sending. Marked, never deleted.</summary>
     public int MarkedPossiblyMissing { get; init; }
 
+    /// <summary>Records absent from several releases in a row, now delisted with the date of the first one without them.</summary>
+    public int Delisted { get; init; }
+
     public int Reappeared { get; init; }
     public string? Reason { get; init; }
     public TimeSpan Duration { get; init; }

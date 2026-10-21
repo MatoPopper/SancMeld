@@ -160,7 +160,7 @@ if (args is ["import", var sourceCode, ..])
 
     Console.WriteLine($"{outcome.SourceCode}: {outcome.Status} in {outcome.Duration.TotalSeconds:N1}s");
     Console.WriteLine($"  seen {outcome.RecordsSeen}, new {outcome.Inserted}, changed {outcome.Updated}, " +
-                      $"unchanged {outcome.Unchanged}, possibly missing {outcome.MarkedPossiblyMissing}, " +
+                      $"unchanged {outcome.Unchanged}, possibly missing {outcome.MarkedPossiblyMissing}, delisted {outcome.Delisted}, " +
                       $"reappeared {outcome.Reappeared}");
 
     if (outcome.Reason is not null)

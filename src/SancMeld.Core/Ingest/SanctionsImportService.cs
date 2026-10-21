@@ -29,6 +29,9 @@ public sealed class SanctionsImportService(
     private const int StagingBatchSize = 500;
     private const int CommitBatchSize = 250;
 
+    /// <summary>Different releases a subject must be absent from before it counts as delisted.</summary>
+    internal const int AbsentReleasesBeforeDelisting = 3;
+
     public Task<ImportOutcome> RunAsync(string sourceCode, CancellationToken ct) =>
         RunAsync(sourceCode, force: false, ct);
 
@@ -223,14 +226,14 @@ public sealed class SanctionsImportService(
             run.RecordsInserted = committed.Inserted;
             run.RecordsUpdated = committed.Updated;
             run.RecordsUnchanged = committed.Unchanged;
-            run.RecordsDelisted = committed.MarkedPossiblyMissing;
+            run.RecordsDelisted = committed.Delisted;
             run.WarningsCount = staged.Rejected;
             await FinishAsync(run, "SUCCESS", null, ct).ConfigureAwait(false);
 
             logger.LogInformation(
-                "{SourceCode}: {Seen} records — {Inserted} new, {Updated} changed, {Unchanged} unchanged, {Missing} now possibly missing.",
+                "{SourceCode}: {Seen} records — {Inserted} new, {Updated} changed, {Unchanged} unchanged, {Missing} now possibly missing, {Delisted} delisted.",
                 source.Code, staged.Accepted, committed.Inserted, committed.Updated,
-                committed.Unchanged, committed.MarkedPossiblyMissing);
+                committed.Unchanged, committed.MarkedPossiblyMissing, committed.Delisted);
 
             // After the import is final, and outside it: the list is the thing this run
             // exists to deliver, and a vector is derived from it. A model that is down must
@@ -415,7 +418,7 @@ public sealed class SanctionsImportService(
 
         var current = await db.Designations
             .Where(d => d.SourceId == source.Id && d.ValidTo == null)
-            .Select(d => new CurrentRevision(d.Id, d.SourceRecordKey, d.ContentSha256, d.Status, d.FirstSeenRunId))
+            .Select(d => new CurrentRevision(d.Id, d.SourceRecordKey, d.ContentSha256, d.Status, d.DelistedByAbsence, d.FirstSeenRunId, d.LastSeenRunId))
             .ToDictionaryAsync(d => d.SourceRecordKey, StringComparer.Ordinal, ct)
             .ConfigureAwait(false);
 
@@ -459,9 +462,11 @@ public sealed class SanctionsImportService(
                         unchangedIds.Add(existing.Id);
 
                         // It was absent from an earlier release and is back. The content
-                        // hash cannot notice, because our own PossiblyMissing marking is
-                        // not part of the publisher's content.
-                        if (existing.Status == DesignationStatus.PossiblyMissing)
+                        // hash cannot notice, because our own PossiblyMissing marking (and
+                        // a delisting we inferred from absence) is not part of the
+                        // publisher's content.
+                        if (existing.Status == DesignationStatus.PossiblyMissing
+                            || (existing.Status == DesignationStatus.Delisted && existing.DelistedByAbsence))
                         {
                             reappeared.Add(existing.Id);
                         }
@@ -511,6 +516,7 @@ public sealed class SanctionsImportService(
 
         var missing = current.Values.Where(c => !seen.Contains(c.SourceRecordKey)).ToList();
         var markedMissing = await MarkPossiblyMissingAsync(missing, run.Id, ct).ConfigureAwait(false);
+        var delisted = await DelistLongAbsentAsync(source, run, missing, ct).ConfigureAwait(false);
 
         await TouchAsync(unchangedIds, run.Id, ct).ConfigureAwait(false);
         await RestoreAsync(reappeared, ct).ConfigureAwait(false);
@@ -526,6 +532,7 @@ public sealed class SanctionsImportService(
             Updated = updated,
             Unchanged = unchangedIds.Count,
             MarkedPossiblyMissing = markedMissing,
+            Delisted = delisted,
             Reappeared = reappeared.Count,
         };
     }
@@ -571,6 +578,81 @@ public sealed class SanctionsImportService(
         return marked;
     }
 
+    /// <summary>
+    /// The EU, the UN and France never say that a subject was delisted: the subject is
+    /// simply not in the next consolidated file. One absence is a doubt (see above); the
+    /// same absence in <see cref="AbsentReleasesBeforeDelisting"/> different releases, each
+    /// of which passed the dataset guards, is the delisting. A truncated file does not
+    /// repeat itself across releases with different content, and a mass disappearance never
+    /// gets this far, because the shrink guard refuses the release.
+    ///
+    /// The date is the first release without the subject: the delisting happened on or
+    /// before it. The row says the date is ours, and a subject that comes back is active
+    /// again, as one that was only possibly missing is.
+    /// </summary>
+    private async Task<int> DelistLongAbsentAsync(SanctionsSource source, ImportRun run, List<CurrentRevision> missing, CancellationToken ct)
+    {
+        var candidates = missing.Where(m => m.Status is DesignationStatus.Active or DesignationStatus.PossiblyMissing).ToList();
+        if (candidates.Count == 0)
+        {
+            return 0;
+        }
+
+        // Every release this source has published, the one being committed included.
+        var releases = await db.ImportRuns
+            .AsNoTracking()
+            .Where(r => r.SourceId == source.Id && r.Status == "SUCCESS" && r.DownloadSha256 != null)
+            .Select(r => new { r.Id, r.StartedAt, Sha256 = r.DownloadSha256! })
+            .ToListAsync(ct)
+            .ConfigureAwait(false);
+        releases.Add(new { run.Id, run.StartedAt, Sha256 = run.DownloadSha256 ?? run.Id.ToString() });
+
+        var startedAt = releases.ToDictionary(r => r.Id, r => r.StartedAt);
+        var delisted = 0;
+
+        foreach (var group in candidates.GroupBy(c => c.LastSeenRunId))
+        {
+            if (!startedAt.TryGetValue(group.Key, out var lastSeenAt))
+            {
+                continue;
+            }
+
+            // Distinct files, not runs: a forced re-import of the same file is no new release.
+            var without = releases
+                .Where(r => r.StartedAt > lastSeenAt)
+                .GroupBy(r => r.Sha256, StringComparer.OrdinalIgnoreCase)
+                .Select(g => g.Min(r => r.StartedAt))
+                .Order()
+                .ToList();
+
+            if (without.Count < AbsentReleasesBeforeDelisting)
+            {
+                continue;
+            }
+
+            var on = DateOnly.FromDateTime(without[0].UtcDateTime);
+            foreach (var chunk in group.Select(c => c.Id).Chunk(1000))
+            {
+                delisted += await db.Designations
+                    .Where(d => chunk.Contains(d.Id))
+                    .ExecuteUpdateAsync(s => s
+                        .SetProperty(d => d.Status, DesignationStatus.Delisted)
+                        .SetProperty(d => d.DelistedAt, on)
+                        .SetProperty(d => d.DelistedByAbsence, true), ct)
+                    .ConfigureAwait(false);
+            }
+        }
+
+        if (delisted > 0)
+        {
+            logger.LogWarning(
+                "{SourceCode}: {Count} designations absent from {Releases} releases in a row are now delisted.",
+                source.Code, delisted, AbsentReleasesBeforeDelisting);
+        }
+
+        return delisted;
+    }
+
     /// <summary>Records that the current run saw these, which is how "last confirmed" is answered.</summary>
     private async Task TouchAsync(List<Guid> ids, Guid runId, CancellationToken ct)
     {
@@ -589,7 +671,10 @@ public sealed class SanctionsImportService(
         {
             await db.Designations
                 .Where(d => chunk.Contains(d.Id))
-                .ExecuteUpdateAsync(s => s.SetProperty(d => d.Status, DesignationStatus.Active), ct)
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(d => d.Status, DesignationStatus.Active)
+                    .SetProperty(d => d.DelistedAt, d => d.DelistedByAbsence ? null : d.DelistedAt)
+                    .SetProperty(d => d.DelistedByAbsence, false), ct)
                 .ConfigureAwait(false);
         }
     }
@@ -714,5 +799,5 @@ public sealed class SanctionsImportService(
         value is null || value.Length <= max ? value : value[..max];
 
     private sealed record CurrentRevision(
-        Guid Id, string SourceRecordKey, string ContentSha256, DesignationStatus Status, Guid FirstSeenRunId);
+        Guid Id, string SourceRecordKey, string ContentSha256, DesignationStatus Status, bool DelistedByAbsence, Guid FirstSeenRunId, Guid LastSeenRunId);
 }

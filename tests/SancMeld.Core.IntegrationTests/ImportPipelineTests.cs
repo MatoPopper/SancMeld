@@ -176,6 +176,81 @@ public sealed class ImportPipelineTests(DatabaseFixture fixture) : IAsyncLifetim
         Assert.Equal(DesignationStatus.Active, b.Status);
     }
 
+    /// <summary>
+    /// The EU and the UN never say "delisted": the subject is just not in the next file.
+    /// Absent from three different releases, it is delisted, with the date of the first.
+    /// </summary>
+    [Fact]
+    public async Task RecordAbsentFromThreeReleasesIsDelistedWithTheFirstOnesDate()
+    {
+        var connector = Connector(Subject("A", "Ivan Petrov"), Subject("B", "Maria Gonzalez"));
+        await RunAsync(connector);
+
+        connector.Records = [Subject("A", "Ivan Petrov", remarks: "release 2")];
+        var second = await RunAsync(connector);
+        connector.Records = [Subject("A", "Ivan Petrov", remarks: "release 3")];
+        var third = await RunAsync(connector);
+
+        Assert.Equal(0, third.Delisted);
+        await using (var db = fixture.CreateContext())
+        {
+            Assert.Equal(DesignationStatus.PossiblyMissing, (await OpenRevisions(db).SingleAsync(d => d.SourceRecordKey == "B")).Status);
+        }
+
+        connector.Records = [Subject("A", "Ivan Petrov", remarks: "release 4")];
+        var fourth = await RunAsync(connector);
+
+        Assert.Equal(1, fourth.Delisted);
+
+        await using var read = fixture.CreateContext();
+        var b = await OpenRevisions(read).SingleAsync(d => d.SourceRecordKey == "B");
+        var firstWithout = await read.ImportRuns.Where(r => r.Id == second.ImportRunId).Select(r => r.StartedAt).SingleAsync();
+        Assert.Equal(DesignationStatus.Delisted, b.Status);
+        Assert.True(b.DelistedByAbsence);
+        Assert.Equal(DateOnly.FromDateTime(firstWithout.UtcDateTime), b.DelistedAt);
+        Assert.Equal(1, (await read.ImportRuns.SingleAsync(r => r.Id == fourth.ImportRunId)).RecordsDelisted);
+    }
+
+    /// <summary>The same file forced in again is no new release and delists nothing.</summary>
+    [Fact]
+    public async Task ForcedReimportsOfOneFileAreOneRelease()
+    {
+        var connector = Connector(Subject("A", "Ivan Petrov"), Subject("B", "Maria Gonzalez"));
+        await RunAsync(connector);
+
+        connector.Records = [Subject("A", "Ivan Petrov")];
+        await RunAsync(connector);
+        await RunAsync(connector, force: true);
+        var last = await RunAsync(connector, force: true);
+
+        Assert.Equal(0, last.Delisted);
+        await using var db = fixture.CreateContext();
+        Assert.Equal(DesignationStatus.PossiblyMissing, (await OpenRevisions(db).SingleAsync(d => d.SourceRecordKey == "B")).Status);
+    }
+
+    [Fact]
+    public async Task ADelistedRecordThatComesBackIsActiveAgain()
+    {
+        var connector = Connector(Subject("A", "Ivan Petrov"), Subject("B", "Maria Gonzalez"));
+        await RunAsync(connector);
+
+        foreach (var release in new[] { "2", "3", "4" })
+        {
+            connector.Records = [Subject("A", "Ivan Petrov", remarks: release)];
+            await RunAsync(connector);
+        }
+
+        connector.Records = [Subject("A", "Ivan Petrov", remarks: "5"), Subject("B", "Maria Gonzalez")];
+        var back = await RunAsync(connector);
+
+        Assert.Equal(1, back.Reappeared);
+        await using var db = fixture.CreateContext();
+        var b = await OpenRevisions(db).SingleAsync(d => d.SourceRecordKey == "B");
+        Assert.Equal(DesignationStatus.Active, b.Status);
+        Assert.False(b.DelistedByAbsence);
+        Assert.Null(b.DelistedAt);
+    }
+
     [Fact]
     public async Task RejectedDatasetPublishesNothingAndLeavesTheListAlone()
     {
@@ -244,7 +319,7 @@ public sealed class ImportPipelineTests(DatabaseFixture fixture) : IAsyncLifetim
     private FakeConnector Connector(params ParsedDesignation[] records) =>
         new(_sourceCode) { Records = [.. records] };
 
-    private async Task<ImportOutcome> RunAsync(FakeConnector connector)
+    private async Task<ImportOutcome> RunAsync(FakeConnector connector, bool force = false)
     {
         await using var db = fixture.CreateContext();
 
@@ -261,7 +336,7 @@ public sealed class ImportPipelineTests(DatabaseFixture fixture) : IAsyncLifetim
             TimeProvider.System,
             NullLogger<SanctionsImportService>.Instance);
 
-        return await service.RunAsync(_sourceCode, CancellationToken.None);
+        return await service.RunAsync(_sourceCode, force, CancellationToken.None);
     }
 
     private static ParsedDesignation Subject(
