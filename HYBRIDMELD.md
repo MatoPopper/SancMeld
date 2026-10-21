@@ -88,7 +88,10 @@ it off.
 
 ## API
 
-`/campaigns` (list, create, `{slug}`, `{slug}/graph`, `{slug}/editorial`), `/actors`
+`/campaigns` (list through the filter bar: since, countries, kinds, touchesSanctions,
+touchesPep, minLevel, confirmedOnly, includeSeed, includeDrafts, includeClosed, q;
+`/facets` with the counts each chip would show; create, `{slug}`, `{slug}/graph`,
+`{slug}/editorial`), `/actors`
 (`?q=` search over names and aliases, `{id}`, `{id}/graph`, `{id}/links`), `/claims`
 (`{id}`, `{id}/evidence`, `{id}/decision`), `/feed?since=`, `/sources`
 (`{code}`, `{code}/fetch`), `/inbox` (`{id}`, `{id}/triage`). The graph endpoints answer
