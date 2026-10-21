@@ -141,7 +141,8 @@ public sealed class DesignationQueryService(SancMeldDbContext db, IOptions<SancM
             .ExecuteSqlAsync($"SELECT set_config('pg_trgm.similarity_threshold', {threshold}, true)", ct)
             .ConfigureAwait(false);
 
-        var byWord = normalized.Length >= matching.MinWordSimilarityQueryLength;
+        var core = await NameCoreAsync(db, normalized, ct).ConfigureAwait(false);
+        var byWord = core.Length >= matching.MinWordSimilarityQueryLength;
 
         if (byWord)
         {
@@ -151,7 +152,7 @@ public sealed class DesignationQueryService(SancMeldDbContext db, IOptions<SancM
                 .ConfigureAwait(false);
         }
 
-        var candidateNames = MatchingNames(normalized, matching.ScoreWeakAliases, byWord);
+        var candidateNames = MatchingNames(normalized, core, matching.ScoreWeakAliases, byWord);
 
         if (sourceCode is not null)
         {
@@ -174,9 +175,9 @@ public sealed class DesignationQueryService(SancMeldDbContext db, IOptions<SancM
                 DesignationId = g.Key,
                 Score = g.Max(n =>
                     EF.Functions.TrigramsSimilarity(n.NameNormalized!, normalized)
-                        > EF.Functions.TrigramsWordSimilarity(normalized, n.NameNormalized!)
+                        > EF.Functions.TrigramsWordSimilarity(core, n.NameCore!)
                         ? EF.Functions.TrigramsSimilarity(n.NameNormalized!, normalized)
-                        : EF.Functions.TrigramsWordSimilarity(normalized, n.NameNormalized!)),
+                        : EF.Functions.TrigramsWordSimilarity(core, n.NameCore!)),
             })
             : grouped.Select(g => new
             {
@@ -198,7 +199,7 @@ public sealed class DesignationQueryService(SancMeldDbContext db, IOptions<SancM
 
         var ids = best.Select(b => b.DesignationId).ToList();
 
-        var matchedNames = await Scored(candidateNames.Where(n => ids.Contains(n.DesignationId)), normalized, byWord)
+        var matchedNames = await Scored(candidateNames.Where(n => ids.Contains(n.DesignationId)), normalized, core, byWord)
             .ToListAsync(ct)
             .ConfigureAwait(false);
 
@@ -253,7 +254,8 @@ public sealed class DesignationQueryService(SancMeldDbContext db, IOptions<SancM
 
         var matching = options.Value.Matching;
         var includeWeak = matching.ScoreWeakAliases;
-        var byWord = normalized.Length >= matching.MinWordSimilarityQueryLength;
+        var core = await NameCoreAsync(db, normalized, ct).ConfigureAwait(false);
+        var byWord = core.Length >= matching.MinWordSimilarityQueryLength;
 
         var names = db.Names
             .Where(n => n.DesignationId == designationId)
@@ -262,7 +264,7 @@ public sealed class DesignationQueryService(SancMeldDbContext db, IOptions<SancM
 
         // Ordered in memory: one subject carries at most a few dozen spellings, and an
         // OrderBy over a projected type is another thing EF cannot translate.
-        var scored = await Scored(names, normalized, byWord).ToListAsync(ct).ConfigureAwait(false);
+        var scored = await Scored(names, normalized, core, byWord).ToListAsync(ct).ConfigureAwait(false);
         var best = scored.Count == 0 ? null : scored.MaxBy(n => n.Score);
 
         return best is null ? null : (best.NameOriginal, best.Score);
@@ -280,8 +282,13 @@ public sealed class DesignationQueryService(SancMeldDbContext db, IOptions<SancM
     /// word, so a partial name survives. Each reaches subjects the other does not, and
     /// dropping either loses recall — which in screening is a legal breach, not a
     /// tuning question.
+    ///
+    /// %&gt; runs on the core of both sides, the name without its legal form: it measures
+    /// the best-matching word, and a legal form is a word every company has. % stays on
+    /// the whole name, where a legal form is a small share of the trigrams and the
+    /// query's own "Ltd" still counts for something.
     /// </summary>
-    private IQueryable<DesignationName> MatchingNames(string normalizedQuery, bool includeWeak, bool byWord) =>
+    private IQueryable<DesignationName> MatchingNames(string normalizedQuery, string queryCore, bool includeWeak, bool byWord) =>
         db.Names
             .Where(n => n.Designation!.ValidTo == null)
 
@@ -291,7 +298,7 @@ public sealed class DesignationQueryService(SancMeldDbContext db, IOptions<SancM
             .Where(n => n.Designation!.Status != DesignationStatus.Delisted)
             .Where(n => includeWeak || !n.IsWeak)
             .Where(n => EF.Functions.TrigramsAreSimilar(n.NameNormalized!, normalizedQuery)
-                || (byWord && EF.Functions.TrigramsAreWordSimilar(normalizedQuery, n.NameNormalized!)));
+                || (byWord && EF.Functions.TrigramsAreWordSimilar(queryCore, n.NameCore!)));
 
     /// <summary>
     /// Names scored by the better of the two measures, as a query the database can run.
@@ -304,19 +311,33 @@ public sealed class DesignationQueryService(SancMeldDbContext db, IOptions<SancM
     /// call inside a LINQ projection is not something EF can translate. It compiles, and
     /// then throws on the first query.
     /// </summary>
-    private static IQueryable<ScoredName> Scored(IQueryable<DesignationName> names, string normalizedQuery, bool byWord) =>
+    private static IQueryable<ScoredName> Scored(IQueryable<DesignationName> names, string normalizedQuery, string queryCore, bool byWord) =>
         byWord
             ? names.Select(n => new ScoredName(
                 n.DesignationId,
                 n.NameOriginal,
                 EF.Functions.TrigramsSimilarity(n.NameNormalized!, normalizedQuery)
-                    > EF.Functions.TrigramsWordSimilarity(normalizedQuery, n.NameNormalized!)
+                    > EF.Functions.TrigramsWordSimilarity(queryCore, n.NameCore!)
                     ? EF.Functions.TrigramsSimilarity(n.NameNormalized!, normalizedQuery)
-                    : EF.Functions.TrigramsWordSimilarity(normalizedQuery, n.NameNormalized!)))
+                    : EF.Functions.TrigramsWordSimilarity(queryCore, n.NameCore!)))
             : names.Select(n => new ScoredName(
                 n.DesignationId,
                 n.NameOriginal,
                 EF.Functions.TrigramsSimilarity(n.NameNormalized!, normalizedQuery)));
+
+    /// <summary>
+    /// The query's core, by the same sm_name_core() that generates name_core.
+    ///
+    /// Asked of the database rather than repeated in C#: the word list lives in one
+    /// function, and a second copy would be a second thing to keep equal, with nothing
+    /// to notice when it drifts but a quietly worse search. One round trip per search,
+    /// beside the two set_config calls it already makes.
+    /// </summary>
+    internal static async Task<string> NameCoreAsync(SancMeldDbContext db, string normalized, CancellationToken ct) =>
+        (await db.Database
+            .SqlQuery<string>($"SELECT sm_name_core({normalized}) AS \"Value\"")
+            .SingleAsync(ct)
+            .ConfigureAwait(false)).Trim();
 
     /// <summary>
     /// Listings whose free text — reason, function, title, remarks — contains every word

@@ -246,6 +246,15 @@ public class SancMeldDbContext(DbContextOptions<SancMeldDbContext> options) : Db
              .HasOperators("gin_trgm_ops")
              .HasDatabaseName("designation_name_trgm_ix");
 
+            // The word measure's index. sm_name_core() is created by raw SQL in the
+            // NameCoreForWordSimilarity migration, before this column.
+            e.Property(x => x.NameCore)
+             .HasComputedColumnSql("sm_name_core(sm_normalize_name(name_original))", stored: true);
+            e.HasIndex(x => x.NameCore)
+             .HasMethod("gin")
+             .HasOperators("gin_trgm_ops")
+             .HasDatabaseName("designation_name_core_trgm_ix");
+
             e.HasIndex(x => x.NameDmetaphone).HasFilter("name_dmetaphone IS NOT NULL");
             e.HasIndex(x => x.DesignationId);
             e.ToTable(t => t.HasCheckConstraint(
@@ -531,6 +540,12 @@ public class SancMeldDbContext(DbContextOptions<SancMeldDbContext> options) : Db
              .HasMethod("gin")
              .HasOperators("gin_trgm_ops")
              .HasDatabaseName("related_party_name_trgm_ix");
+            e.Property(x => x.NameCore)
+             .HasComputedColumnSql("sm_name_core(sm_normalize_name(name_original))", stored: true);
+            e.HasIndex(x => x.NameCore)
+             .HasMethod("gin")
+             .HasOperators("gin_trgm_ops")
+             .HasDatabaseName("related_party_name_core_trgm_ix");
             e.HasIndex(x => x.RelatedPartyId);
         });
 

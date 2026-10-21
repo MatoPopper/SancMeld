@@ -882,6 +882,12 @@ namespace SancMeld.Core.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("middle_name");
 
+                    b.Property<string>("NameCore")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("text")
+                        .HasColumnName("name_core")
+                        .HasComputedColumnSql("sm_name_core(sm_normalize_name(name_original))", true);
+
                     b.Property<string>("NameDmetaphone")
                         .HasColumnType("text")
                         .HasColumnName("name_dmetaphone");
@@ -915,6 +921,12 @@ namespace SancMeld.Core.Data.Migrations
 
                     b.HasIndex("DesignationId")
                         .HasDatabaseName("ix_designation_name_designation_id");
+
+                    b.HasIndex("NameCore")
+                        .HasDatabaseName("designation_name_core_trgm_ix");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("NameCore"), "gin");
+                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("NameCore"), new[] { "gin_trgm_ops" });
 
                     b.HasIndex("NameDmetaphone")
                         .HasDatabaseName("ix_designation_name_name_dmetaphone")
@@ -1869,6 +1881,12 @@ namespace SancMeld.Core.Data.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
+                    b.Property<string>("NameCore")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("text")
+                        .HasColumnName("name_core")
+                        .HasComputedColumnSql("sm_name_core(sm_normalize_name(name_original))", true);
+
                     b.Property<string>("NameNormalized")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("text")
@@ -1886,6 +1904,12 @@ namespace SancMeld.Core.Data.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_related_party_name");
+
+                    b.HasIndex("NameCore")
+                        .HasDatabaseName("related_party_name_core_trgm_ix");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("NameCore"), "gin");
+                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("NameCore"), new[] { "gin_trgm_ops" });
 
                     b.HasIndex("NameNormalized")
                         .HasDatabaseName("related_party_name_trgm_ix");

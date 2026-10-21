@@ -155,6 +155,54 @@ public sealed class CandidateGenerationTests(DatabaseFixture fixture) : IAsyncLi
         Assert.Equal($"andrei {surname}", hit.MatchedName);
     }
 
+    [Fact]
+    public async Task ALegalFormDoesNotReachACompany()
+    {
+        // "limo" shares "  l", " li" and "lim" with LIMITED, a word similarity of exactly
+        // the threshold: before the word measure ran on the core it reached 768 companies
+        // on a copy of the lists through their legal form alone.
+        await ImportAsync(
+            Organisation("a", Named("nordic") + " limited"),
+            Organisation("b", Named("nordic") + " limousine service"));
+
+        var hit = Assert.Single(await SearchAsync("limo"));
+
+        Assert.Equal(Named("nordic") + " limousine service", hit.MatchedName);
+    }
+
+    [Fact]
+    public async Task ALegalFormInAnotherEuLanguageDoesNotReachACompanyEither()
+    {
+        // The EU writes the same company in every official language; "limitata" is
+        // LIMITED in Romanian and reaches "limo" the same way.
+        await ImportAsync(Organisation("a", Named("gumich") + " societatea cu raspundere limitata"));
+
+        Assert.Empty(await SearchAsync("limo"));
+    }
+
+    [Fact]
+    public async Task TheQuerysOwnLegalFormDoesNotDecideTheMatch()
+    {
+        // The officer types "Ltd" or not, as the contract happens to say; the listing has
+        // its own legal form or none. Neither may decide whether the company is found.
+        var name = Named("burzynski");
+        await ImportAsync(Organisation("a", $"{name} trading"));
+
+        var hit = Assert.Single(await SearchAsync($"{name} limited liability company"));
+
+        Assert.True(hit.NameScore > 0.6, $"expected the core to carry it, got {hit.NameScore}");
+    }
+
+    [Fact]
+    public async Task ANameMadeOnlyOfLegalFormsStaysReachable()
+    {
+        // With nothing left after the legal form, the core is the whole name: otherwise
+        // the word measure could not reach it at all.
+        await ImportAsync(Organisation("a", "Limited Liability Company"));
+
+        Assert.Single(await SearchAsync("limited"));
+    }
+
     private async Task<IReadOnlyList<SearchHit>> SearchAsync(string query)
     {
         await using var db = fixture.CreateContext();
@@ -193,4 +241,7 @@ public sealed class CandidateGenerationTests(DatabaseFixture fixture) : IAsyncLi
         Names = [new ParsedName { Value = name, Kind = NameType.Primary }],
         RawRecordJson = $$"""{"key":"{{key}}"}""",
     };
+
+    private static ParsedDesignation Organisation(string key, string name) =>
+        Subject(key, name) with { SubjectType = SubjectType.Organisation };
 }

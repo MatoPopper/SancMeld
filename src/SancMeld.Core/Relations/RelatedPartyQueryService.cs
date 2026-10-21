@@ -62,7 +62,8 @@ public sealed class RelatedPartyQueryService(
             .ExecuteSqlAsync($"SELECT set_config('pg_trgm.similarity_threshold', {threshold}, true)", ct)
             .ConfigureAwait(false);
 
-        var byWord = normalized.Length >= matching.MinWordSimilarityQueryLength;
+        var core = await DesignationQueryService.NameCoreAsync(db, normalized, ct).ConfigureAwait(false);
+        var byWord = core.Length >= matching.MinWordSimilarityQueryLength;
         if (byWord)
         {
             var wordThreshold = matching.WordSimilarityThreshold.ToString(CultureInfo.InvariantCulture);
@@ -81,7 +82,7 @@ public sealed class RelatedPartyQueryService(
                 || db.PartyRelations.Any(pr => pr.IsCurrent && pr.Status != LinkStatus.Rejected && !hidden.Contains(pr.System)
                     && (pr.FromPartyId == n.RelatedPartyId || pr.ToPartyId == n.RelatedPartyId)))
             .Where(n => EF.Functions.TrigramsAreSimilar(n.NameNormalized!, normalized)
-                || (byWord && EF.Functions.TrigramsAreWordSimilar(normalized, n.NameNormalized!)));
+                || (byWord && EF.Functions.TrigramsAreWordSimilar(core, n.NameCore!)));
 
         // Written out twice rather than through a helper, for the reason given in
         // DesignationQueryService: EF translates the expression, not a method call.
@@ -91,9 +92,9 @@ public sealed class RelatedPartyQueryService(
                 n.RelatedPartyId,
                 n.NameOriginal,
                 Score = EF.Functions.TrigramsSimilarity(n.NameNormalized!, normalized)
-                        > EF.Functions.TrigramsWordSimilarity(normalized, n.NameNormalized!)
+                        > EF.Functions.TrigramsWordSimilarity(core, n.NameCore!)
                     ? EF.Functions.TrigramsSimilarity(n.NameNormalized!, normalized)
-                    : EF.Functions.TrigramsWordSimilarity(normalized, n.NameNormalized!),
+                    : EF.Functions.TrigramsWordSimilarity(core, n.NameCore!),
             })
             : names.Select(n => new
             {
