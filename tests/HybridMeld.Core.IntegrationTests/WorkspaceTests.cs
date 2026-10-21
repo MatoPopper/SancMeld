@@ -239,13 +239,13 @@ public class WorkspaceTests(DatabaseFixture fixture)
         var (campaign, politician, website) = await SeedCaseAsync(s);
         await CreateClaimAsync(s, campaign, politician, website);
 
-        var before = await s.Feed.SinceAsync(DateTimeOffset.UtcNow.AddMinutes(-5), 500, CancellationToken.None);
+        var before = await s.Feed.SinceAsync(new CampaignFilter { Since = DateTimeOffset.UtcNow.AddMinutes(-5) }, 500, CancellationToken.None);
         Assert.DoesNotContain(before.Campaigns, c => c.Id == campaign.Id);
         Assert.DoesNotContain(before.Claims, c => c.CampaignId == campaign.Id);
 
         await s.Campaigns.SetEditorialAsync(campaign.Slug, new EditorialInput(EditorialStatus.Published, null), CancellationToken.None);
 
-        var after = await s.Feed.SinceAsync(DateTimeOffset.UtcNow.AddMinutes(-5), 500, CancellationToken.None);
+        var after = await s.Feed.SinceAsync(new CampaignFilter { Since = DateTimeOffset.UtcNow.AddMinutes(-5) }, 500, CancellationToken.None);
         Assert.Contains(after.Campaigns, c => c.Id == campaign.Id);
         Assert.Contains(after.Claims, c => c.CampaignId == campaign.Id);
     }

@@ -27,10 +27,26 @@ internal static class WorkspaceEndpoints
     {
         var campaigns = endpoints.MapGroup("/campaigns").WithTags("Cases").RequireAuthorization(HybridMeldPolicies.User).AddEndpointFilter<WorkspaceErrorFilter>();
 
-        campaigns.MapGet("/", async (CampaignService service, CampaignKind? kind, CampaignStatus? status, string? country, EditorialStatus? editorial, string? q, int? limit, int? offset, CancellationToken ct) =>
-            TypedResults.Ok(await service.ListAsync(kind, status, country, editorial, q, limit ?? 50, offset ?? 0, ct)))
+        campaigns.MapGet("/", async (CampaignService service,
+            DateTimeOffset? since, string? countries, string? kinds, bool? touchesSanctions, bool? touchesPep, EvidenceLevel? minLevel, bool? confirmedOnly,
+            bool? includeSeed, bool? includeDrafts, bool? includeClosed, string? q, int? limit, int? offset, CancellationToken ct) =>
+            TypedResults.Ok(await service.ListAsync(
+                CampaignFilter.Parse(since, countries, kinds, touchesSanctions, touchesPep, minLevel, confirmedOnly, includeSeed, includeDrafts, includeClosed, q),
+                limit ?? 50, offset ?? 0, ct)))
         .WithName("ListCampaigns")
-        .WithSummary("Cases, most recently changed first, with counts of claims and actors and whether any actor reaches a sanctions or a PEP record.");
+        .WithSummary("Cases through the filter bar, most recently changed first.")
+        .WithDescription(
+            "countries and kinds are comma-separated lists; touchesSanctions/touchesPep keep only cases whose actor is linked to a " +
+            "sanctions record / a PEP person; minLevel keeps cases with a live claim at that level or stronger; confirmedOnly makes " +
+            "only confirmed claims count. Defaults: published cases, closed included, the regime lists seeded from the sanctions data excluded.");
+
+        campaigns.MapGet("/facets", async (CampaignService service,
+            DateTimeOffset? since, string? countries, string? kinds, bool? touchesSanctions, bool? touchesPep, EvidenceLevel? minLevel, bool? confirmedOnly,
+            bool? includeSeed, bool? includeDrafts, bool? includeClosed, string? q, CancellationToken ct) =>
+            TypedResults.Ok(await service.FacetsAsync(
+                CampaignFilter.Parse(since, countries, kinds, touchesSanctions, touchesPep, minLevel, confirmedOnly, includeSeed, includeDrafts, includeClosed, q), ct)))
+        .WithName("GetCampaignFacets")
+        .WithSummary("How many cases each kind, country and overlap chip would show under the other filters.");
 
         campaigns.MapGet("/{slug}", async Task<Results<Ok<CampaignView>, NotFound>> (CampaignService service, string slug, CancellationToken ct) =>
             await service.GetAsync(slug, ct) is { } view ? TypedResults.Ok(view) : TypedResults.NotFound())
@@ -122,12 +138,16 @@ internal static class WorkspaceEndpoints
         .WithName("DecideClaim")
         .WithSummary("Confirmed (the quote is in the source and the sentence does not exceed it), Rejected, Withdrawn (with a note), or Candidate to take it back.");
 
-        endpoints.MapGet("/feed", async (FeedService feed, DateTimeOffset? since, int? limit, CancellationToken ct) =>
-            TypedResults.Ok(await feed.SinceAsync(since, limit ?? 50, ct)))
+        endpoints.MapGet("/feed", async (FeedService feed,
+            DateTimeOffset? since, string? countries, string? kinds, bool? touchesSanctions, bool? touchesPep, EvidenceLevel? minLevel, bool? confirmedOnly,
+            bool? includeSeed, bool? includeDrafts, int? limit, CancellationToken ct) =>
+            TypedResults.Ok(await feed.SinceAsync(
+                CampaignFilter.Parse(since, countries, kinds, touchesSanctions, touchesPep, minLevel, confirmedOnly, includeSeed, includeDrafts, true, null),
+                limit ?? 50, ct)))
         .WithTags("Feed")
         .RequireAuthorization(HybridMeldPolicies.User)
         .WithName("GetFeed")
-        .WithSummary("Published cases and live claims changed since a moment (default: the last 30 days), newest first.");
+        .WithSummary("Cases and live claims changed since a moment (default: the last 30 days) through the same filter bar as /campaigns, newest first.");
 
         return endpoints;
     }

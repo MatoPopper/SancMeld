@@ -14,47 +14,71 @@ namespace HybridMeld.Core.Workspace;
 /// </summary>
 public sealed partial class CampaignService(HybridMeldDbContext db, TimeProvider clock)
 {
-    public async Task<Page<CampaignSummary>> ListAsync(
-        CampaignKind? kind, CampaignStatus? status, string? country, EditorialStatus? editorial, string? q, int limit, int offset, CancellationToken ct)
+    /// <summary>
+    /// Cases through the filter bar. The database answers the column conditions; the
+    /// overlap and the evidence level come from the loaded claims, so the page is cut in
+    /// memory. A few hundred cases at most, and the claims are loaded for the summary anyway.
+    /// </summary>
+    public async Task<Page<CampaignSummary>> ListAsync(CampaignFilter filter, int limit, int offset, CancellationToken ct)
     {
-        var query = Loaded().AsNoTracking();
-
-        if (kind is { } k)
-        {
-            query = query.Where(c => c.Kind == k);
-        }
-
-        if (status is { } s)
-        {
-            query = query.Where(c => c.Status == s);
-        }
-
-        if (editorial is { } e)
-        {
-            query = query.Where(c => c.Editorial == e);
-        }
-
-        if (!string.IsNullOrWhiteSpace(country))
-        {
-            var iso = country.Trim().ToUpperInvariant();
-            query = query.Where(c => c.Countries.Contains(iso));
-        }
-
-        if (!string.IsNullOrWhiteSpace(q))
-        {
-            var pattern = $"%{q.Trim()}%";
-            query = query.Where(c => EF.Functions.ILike(c.Title, pattern) || EF.Functions.ILike(c.Summary, pattern));
-        }
-
-        var total = await query.CountAsync(ct).ConfigureAwait(false);
-        var items = await query
+        var loaded = await CampaignFilters.Apply(Loaded().AsNoTracking(), filter)
             .OrderByDescending(c => c.UpdatedAt)
-            .Skip(offset)
-            .Take(Math.Clamp(limit, 1, 200))
+            .AsSplitQuery()
             .ToListAsync(ct)
             .ConfigureAwait(false);
 
-        return new Page<CampaignSummary>(items.Select(Mapping.ToSummary).ToList(), total);
+        var matching = loaded.Where(c => CampaignFilters.Matches(c, filter)).ToList();
+        var items = matching.Skip(Math.Max(0, offset)).Take(Math.Clamp(limit, 1, 200)).Select(Mapping.ToSummary).ToList();
+        return new Page<CampaignSummary>(items, matching.Count);
+    }
+
+    /// <summary>
+    /// What each chip would show. A dimension is counted with every other filter applied
+    /// but its own, so a chip's number is what clicking it gives, and a chip at zero can be
+    /// hidden instead of offered.
+    /// </summary>
+    public async Task<CampaignFacets> FacetsAsync(CampaignFilter filter, CancellationToken ct)
+    {
+        // One load without kinds and countries; the three cuts are done in memory.
+        var open = (await CampaignFilters.Apply(Loaded().AsNoTracking(), filter, withKinds: false, withCountries: false)
+            .AsSplitQuery()
+            .ToListAsync(ct)
+            .ConfigureAwait(false))
+            .Where(c => CampaignFilters.Matches(c, filter))
+            .ToList();
+
+        bool KindOk(Campaign c) => filter.Kinds.Count == 0 || filter.Kinds.Contains(c.Kind);
+        bool CountryOk(Campaign c) => filter.Countries.Count == 0 || c.Countries.Any(filter.Countries.Contains);
+
+        var kinds = open.Where(CountryOk)
+            .GroupBy(c => c.Kind)
+            .Select(g => new FacetCount<CampaignKind>(g.Key, g.Count()))
+            .OrderByDescending(x => x.Count).ThenBy(x => x.Value)
+            .ToList();
+
+        var countries = open.Where(KindOk)
+            .SelectMany(c => c.Countries)
+            .GroupBy(x => x)
+            .Select(g => new FacetCount<string>(g.Key, g.Count()))
+            .OrderByDescending(x => x.Count).ThenBy(x => x.Value)
+            .ToList();
+
+        // The overlap chips are counted without the overlap filters, so "with sanctions"
+        // still shows its number while "with PEP" is on.
+        var noTouch = filter with { TouchesSanctions = false, TouchesPep = false };
+        var touchable = (await CampaignFilters.Apply(Loaded().AsNoTracking(), noTouch)
+            .AsSplitQuery()
+            .ToListAsync(ct)
+            .ConfigureAwait(false))
+            .Where(c => CampaignFilters.Matches(c, noTouch))
+            .ToList();
+
+        return new CampaignFacets(
+            kinds,
+            countries,
+            touchable.Count(c => CampaignFilters.Matches(c, noTouch with { TouchesSanctions = true })),
+            touchable.Count(c => CampaignFilters.Matches(c, noTouch with { TouchesPep = true })),
+            open.Count(c => KindOk(c) && CountryOk(c)));
     }
 
     public async Task<CampaignView?> GetAsync(string slug, CancellationToken ct)
