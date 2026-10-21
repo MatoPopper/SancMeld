@@ -1,4 +1,5 @@
 using HybridMeld.Core.Links;
+using HybridMeld.Core.Seed;
 using HybridMeld.Core.Sources;
 
 namespace HybridMeld.Server;
@@ -6,9 +7,9 @@ namespace HybridMeld.Server;
 /// <summary>
 /// Keeps watched sources fresh and links checked. Every fifteen minutes it fetches the
 /// sources whose last successful run is older than their refresh interval (a Telegram
-/// channel defaults to hourly, a feed to daily) and, once a day, verifies the links to
-/// sanctions and PEP records that have not been looked at for a week. Nothing runs at
-/// startup for its own sake.
+/// channel defaults to hourly, a feed to daily), once a day verifies the links to
+/// sanctions and PEP records that have not been looked at for a week, and once a week
+/// reads the MISP galaxy for aliases. Nothing runs at startup for its own sake.
 ///
 /// Turn it off with HybridMeld:Jobs:Enabled=false. The CLI ("hybrid sources fetch") remains.
 /// </summary>
@@ -16,6 +17,7 @@ internal sealed class WatchScheduler(IServiceScopeFactory scopes, TimeProvider c
 {
     private static readonly TimeSpan Interval = TimeSpan.FromMinutes(15);
     private DateTimeOffset? linksCheckedAt;
+    private DateTimeOffset? aliasesSyncedAt;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -57,6 +59,14 @@ internal sealed class WatchScheduler(IServiceScopeFactory scopes, TimeProvider c
         {
             await scope.ServiceProvider.GetRequiredService<LinkVerifier>().VerifyAsync(1000, all: false, ct);
             linksCheckedAt = now;
+        }
+
+        // The MISP galaxy changes a few times a month; weekly is plenty, and a failed
+        // download (GitHub down) is logged by the tick's catch and tried again next week.
+        if (aliasesSyncedAt is null || now - aliasesSyncedAt >= TimeSpan.FromDays(7))
+        {
+            aliasesSyncedAt = now;
+            await scope.ServiceProvider.GetRequiredService<MispAliasSync>().SyncAsync(ct);
         }
     }
 }

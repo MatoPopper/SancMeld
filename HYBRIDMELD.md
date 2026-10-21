@@ -72,12 +72,18 @@ dotnet run --project src/HybridMeld.Server -- hybrid seed-regimes        # RUSDA
 dotnet run --project src/HybridMeld.Server                                # Swagger at /swagger
 ```
 
-CLI: `hybrid seed-regimes [RUSDA CYB]`, `hybrid sources fetch <CODE>|--due`,
+CLI: `hybrid seed-regimes [RUSDA CYB]`, `hybrid sources seed` (the official feeds and
+pages checked on 2026-10-21: EUvsDisinfo, UK FCDO, UK NCSC, NÚKIB, SK-CERT, MV ČR CTHH,
+EEAS; the Council's press site refuses programs and is Manual), `hybrid sources fetch
+<CODE>|--due`, `hybrid aliases sync` (the MISP threat-actor galaxy: a cluster whose name
+is already on an actor, as the EU list's "Sandworm Team" is on GRU unit 74455, lends it
+its other names, "Seashell Blizzard", "APT44"; only names not from the galaxy count as
+the anchor, so shared terms like "Grizzly Steppe" never chain APT29 onto a GRU unit),
 `hybrid links verify [--all]`, `hybrid actors forget <id>` (the one deletion: a person asks
 to be removed; their claims go, the decisions stay without the name), `apikey …`, `users …`.
 
 The scheduler fetches due sources every fifteen minutes (a Telegram channel defaults to
-hourly, a feed to daily) and verifies links daily. `HybridMeld__Jobs__Enabled=false` turns
+hourly, a feed to daily), verifies links daily and reads the galaxy weekly. `HybridMeld__Jobs__Enabled=false` turns
 it off.
 
 ## API

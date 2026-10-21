@@ -79,7 +79,9 @@ var app = builder.Build();
 // The day-one content from the sanctions database:
 //
 //   dotnet run --project src/HybridMeld.Server -- hybrid seed-regimes [RUSDA CYB]
+//   dotnet run --project src/HybridMeld.Server -- hybrid sources seed
 //   dotnet run --project src/HybridMeld.Server -- hybrid sources fetch [CODE|--due]
+//   dotnet run --project src/HybridMeld.Server -- hybrid aliases sync
 //   dotnet run --project src/HybridMeld.Server -- hybrid links verify [--all] [--limit n]
 //   dotnet run --project src/HybridMeld.Server -- hybrid actors forget <id>
 if (args is ["hybrid", var hybridAction, ..])
@@ -98,6 +100,20 @@ if (args is ["hybrid", var hybridAction, ..])
                     Console.WriteLine($"{o.Programme,-6} {o.SourceCode,-8} listings {o.Designations,4}  new actors {o.ActorsNew,4}  new claims {o.ClaimsNew,4}  stale {o.Stale,3}");
                 }
 
+                return 0;
+            }
+
+        case "sources" when args.Length > 2 && args[2] == "seed":
+            {
+                var (added, existing) = await services.GetRequiredService<SourceSeeder>().SeedAsync(CancellationToken.None);
+                Console.WriteLine($"official sources: {added} added, {existing} already there.");
+                return 0;
+            }
+
+        case "aliases" when args.Length > 2 && args[2] == "sync":
+            {
+                var o = await services.GetRequiredService<MispAliasSync>().SyncAsync(CancellationToken.None);
+                Console.WriteLine($"MISP galaxy: {o.Clusters} clusters, {o.ActorsMatched} actors matched, {o.AliasesAdded} aliases added.");
                 return 0;
             }
 
@@ -132,7 +148,7 @@ if (args is ["hybrid", var hybridAction, ..])
             }
 
         default:
-            Console.Error.WriteLine("Usage: hybrid seed-regimes [RUSDA CYB] | hybrid sources fetch <CODE>|--due | hybrid links verify [--all] [--limit n] | hybrid actors forget <id>");
+            Console.Error.WriteLine("Usage: hybrid seed-regimes [RUSDA CYB] | hybrid sources seed | hybrid sources fetch <CODE>|--due | hybrid aliases sync | hybrid links verify [--all] [--limit n] | hybrid actors forget <id>");
             return 1;
     }
 }

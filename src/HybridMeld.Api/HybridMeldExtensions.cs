@@ -62,6 +62,8 @@ public static class HybridMeldExtensions
         services.AddSingleton<LinkResolver>();
         services.AddScoped<LinkVerifier>();
         services.AddScoped<RegimeSeeder>();
+        services.AddScoped<SourceSeeder>();
+        services.AddScoped<MispAliasSync>();
 
         services.AddScoped<CampaignService>();
         services.AddScoped<ActorService>();
