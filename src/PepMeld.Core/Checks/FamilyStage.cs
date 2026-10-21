@@ -21,8 +21,12 @@ namespace PepMeld.Core.Checks;
 /// PEP is; one without needs the whole name. A former spouse and a deceased relative are
 /// no family members in law and are not reported. The circle is the wider Czech one for
 /// Slovak and Czech PEPs alike; the finding says where it goes beyond the Slovak law.
+///
+/// A family member is one of a PEP: the tie is the outcome only while its PEP holds a
+/// function in the lists or ended it less than the former-PEP period ago. A tie of a PEP
+/// who left office longer ago, or whom the lists do not name, is shown for information.
 /// </summary>
-public sealed class FamilyStage(PepMeldDbContext db, IOptions<PepMeldOptions> options) : ICheckStage
+public sealed class FamilyStage(PepMeldDbContext db, IOptions<PepMeldOptions> options, TimeProvider clock) : ICheckStage
 {
     public CheckStage Stage => CheckStage.Family;
 
@@ -45,11 +49,15 @@ public sealed class FamilyStage(PepMeldDbContext db, IOptions<PepMeldOptions> op
                 .ToListAsync(ct)
                 .ConfigureAwait(false);
 
+            var holders = await HoldersAsync(links, ct).ConfigureAwait(false);
+            var today = DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
+            var formerMonths = options.Value.Matching.FormerPepMonths;
+
             foreach (var link in links.Where(l => !IsFormerPartner(l)))
             {
                 if (IsThisPerson(query, check.BirthDate, link.RelativeNameNormalized, link.RelativeBirthDate, link.RelativeBirthYear, threshold, out var dateMatched))
                 {
-                    findings.Add(AsFamilyMember(link, dateMatched));
+                    findings.Add(AsFamilyMember(link, dateMatched, Standing(link, holders, today, formerMonths)));
                 }
 
                 if (link.PepBirthDate == check.BirthDate
@@ -119,9 +127,68 @@ public sealed class FamilyStage(PepMeldDbContext db, IOptions<PepMeldOptions> op
     private static bool IsFormerPartner(FamilyLink link) =>
         link.Status == "former" && link.Relation is FamilyRelation.Spouse or FamilyRelation.Partner;
 
-    private static FindingView AsFamilyMember(FamilyLink link, bool dateMatched)
+    /// <summary>A person in the lists who may be a tie's PEP: name, date of birth, page, and the end of each function (null while it lasts).</summary>
+    internal sealed record PepHolder(string NameNormalized, DateOnly BirthDate, string SourceUrl, IReadOnlyList<DateOnly?> Ends);
+
+    /// <summary>Everyone in the lists born on a day one of the ties' PEPs was born; few, since a date of birth is rarely shared.</summary>
+    private async Task<IReadOnlyList<PepHolder>> HoldersAsync(IReadOnlyList<FamilyLink> links, CancellationToken ct)
     {
-        var (relevant, law) = Relevance(link);
+        if (links.Count == 0)
+        {
+            return [];
+        }
+
+        var dates = links.Select(l => (DateOnly?)l.PepBirthDate).Distinct().ToList();
+        var rows = await db.Persons.AsNoTracking()
+            .Where(p => dates.Contains(p.BirthDate))
+            .Select(p => new { p.NameNormalized, BirthDate = p.BirthDate!.Value, p.SourceUrl, Ends = p.Functions.Select(f => f.ValidTo).ToList() })
+            .ToListAsync(ct)
+            .ConfigureAwait(false);
+
+        return rows.Select(r => new PepHolder(r.NameNormalized, r.BirthDate, r.SourceUrl, r.Ends)).ToList();
+    }
+
+    /// <summary>
+    /// Whether the tie's PEP makes the relative a family member today. The PEP is found in
+    /// the lists by date of birth and either the name (one containing the other: Wikidata
+    /// and a register spell the same person with and without a middle name) or the
+    /// Wikidata page the tie cites. A function that lasts, or one that ended within the
+    /// former-PEP period, counts; the tie of a PEP who left longer ago is information, as
+    /// is one whose PEP the lists do not name (Wikidata knows MPs since 1993, the
+    /// Slovak parliament's list only the recent terms).
+    /// </summary>
+    internal static (bool Counts, string Text) Standing(FamilyLink link, IEnumerable<PepHolder> holders, DateOnly today, int formerMonths)
+    {
+        var urls = Evidence(link).Select(e => e.Url).ToHashSet(StringComparer.Ordinal);
+        var ends = holders
+            .Where(h => h.BirthDate == link.PepBirthDate
+                     && (urls.Contains(h.SourceUrl)
+                         || PepListMatcher.Contains(link.PepNameNormalized, h.NameNormalized)
+                         || PepListMatcher.Contains(h.NameNormalized, link.PepNameNormalized)))
+            .SelectMany(h => h.Ends)
+            .ToList();
+
+        if (ends.Count == 0)
+        {
+            return (false, "PEP sa v importovaných zoznamoch nenašla, preto nemožno overiť, či funkciu zastáva; väzba sa uvádza len na informáciu.");
+        }
+
+        if (ends.Any(e => e is null || e >= today))
+        {
+            return (true, string.Empty);
+        }
+
+        var ended = ends.Max()!.Value;
+        return ListsStage.MonthsBetween(ended, today) < formerMonths
+            ? (true, $"Funkcia PEP skončila {ended:d. M. yyyy}; do {formerMonths} mesiacov od jej skončenia sa väzba posudzuje ako väzba na PEP.")
+            : (false, $"Funkcia PEP skončila {ended:d. M. yyyy}, lehota {formerMonths} mesiacov uplynula; väzba sa uvádza len na informáciu, ďalší postup podľa hodnotenia rizík.");
+    }
+
+    private static FindingView AsFamilyMember(FamilyLink link, bool dateMatched, (bool Counts, string Text) standing)
+    {
+        var (lawCounts, law) = Relevance(link);
+        var relevant = lawCounts && standing.Counts;
+        var pep = standing.Text.Length > 0 ? $" {standing.Text}" : string.Empty;
         var who = $"{RelationLabel(link.Relation)} osoby {link.PepName} (nar. {link.PepBirthDate:d. M. yyyy})";
         var origin = link.Level == EvidenceLevel.B ? "Väzbu uvádza Wikidata (neúradný zdroj)" : "Väzbu dohľadal agent vo verejných zdrojoch";
         var toVerify = dateMatched
@@ -137,7 +204,7 @@ public sealed class FamilyStage(PepMeldDbContext db, IOptions<PepMeldOptions> op
             link.PepName,
             null,
             Evidence(link),
-            $"Preverovaná osoba je podľa verejných zdrojov {who}. {law} Väzba naposledy dohľadaná {link.LastFoundAt:d. M. yyyy}.",
+            $"Preverovaná osoba je podľa verejných zdrojov {who}. {law}{pep} Väzba naposledy dohľadaná {link.LastFoundAt:d. M. yyyy}.",
             toVerify,
             Sources(link),
             relevant);

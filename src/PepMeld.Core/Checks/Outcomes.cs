@@ -43,8 +43,8 @@ public static class Outcomes
                 $"Bývalá politicky exponovaná osoba: {former.Function!.Role}, {former.Function.Institution}, skončila {Date(former.Function.To)} ({care}).");
         }
 
-        // A tie the law of the PEP's country does not count (a sibling under Slovak law
-        // until 2027) is shown, never the outcome.
+        // A tie that does not count is shown, never the outcome: one of a PEP who left
+        // office more than the former-PEP period ago, or whom the lists do not name.
         var family = findings.FirstOrDefault(f => f.Kind == FindingKind.FamilyMember && f.LegallyRelevant != false);
         if (family is not null)
         {

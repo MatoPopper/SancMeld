@@ -84,7 +84,7 @@ public sealed class FamilyTests(DatabaseFixture fixture) : IAsyncLifetime
         await using var runnerDb = fixture.CreateContext();
         var options = TestServices.Options(snapshots);
         await new CheckRunner(runnerDb,
-            [new ListsStage(new PepListMatcher(runnerDb, options), new SourceQueryService(runnerDb), options, TimeProvider.System), new FamilyStage(runnerDb, options)],
+            [new ListsStage(new PepListMatcher(runnerDb, options), new SourceQueryService(runnerDb), options, TimeProvider.System), new FamilyStage(runnerDb, options, TimeProvider.System)],
             options, TimeProvider.System, NullLogger<CheckRunner>.Instance).RunAsync(created.Check!.CheckId, CancellationToken.None);
 
         await using var readDb = fixture.CreateContext();
@@ -205,6 +205,36 @@ public sealed class FamilyTests(DatabaseFixture fixture) : IAsyncLifetime
 
         Assert.Equal(CheckOutcome.NoMatch, check.Outcome);
         Assert.Empty(check.Stages.Single(s => s.Stage == CheckStage.Family).Findings);
+    }
+
+    /// <summary>A tie of someone the lists do not name as a PEP is shown, but the relative is no family member of a PEP.</summary>
+    [Fact]
+    public async Task ATieOfSomeoneTheListsDoNotNameIsShownButNotTheOutcome()
+    {
+        var relative = $"Olga Neznama{tag}";
+        var file = $$"""
+            {
+              "pep": { "name": "Karel Neznamy{{tag}}", "dateOfBirth": "1950-02-02", "country": "CZ" },
+              "agent": { "startedAt": "2026-10-20T12:00:00Z", "finishedAt": "2026-10-20T12:01:00Z", "searches": 1, "pagesOpened": 1 },
+              "relatives": [
+                { "relation": "Spouse", "name": "{{relative}}", "status": "current", "confidence": "high",
+                  "evidence": [ { "url": "https://example.org/z", "quote": "manželka Olga" } ] }
+              ]
+            }
+            """;
+        await using (var db = fixture.CreateContext())
+        {
+            await new FamilyImportService(db, new FixedVerifier(QuoteCheck.Exact), TimeProvider.System, NullLogger<FamilyImportService>.Instance)
+                .ImportAsync(file, "test-agent", CancellationToken.None);
+        }
+
+        var check = await CheckAsync(relative, new DateOnly(1952, 3, 3));
+
+        Assert.Equal(CheckOutcome.NoMatch, check.Outcome);
+        var finding = Assert.Single(check.Stages.Single(s => s.Stage == CheckStage.Family).Findings);
+        Assert.Equal(FindingKind.FamilyMember, finding.Kind);
+        Assert.False(finding.LegallyRelevant);
+        Assert.Contains("nenašla", finding.Explanation, StringComparison.Ordinal);
     }
 
     [Fact]

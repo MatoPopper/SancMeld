@@ -21,6 +21,66 @@ public class FamilyRulesTests
         EvidenceJson = "[]",
     };
 
+    private static readonly DateOnly Today = new(2026, 10, 21);
+    private static readonly DateOnly Born = new(1960, 1, 1);
+
+    private static FamilyLink TieOf(string pep, string evidenceUrl = "https://example.org/a") => new()
+    {
+        PepName = pep,
+        PepNameNormalized = pep,
+        PepBirthDate = Born,
+        Relation = FamilyRelation.Spouse,
+        RelativeName = "y",
+        RelativeNameNormalized = "y",
+        Status = "current",
+        Confidence = "high",
+        EvidenceJson = $$"""[ { "url": "{{evidenceUrl}}" } ]""",
+    };
+
+    private static readonly DateOnly? Lasts = null;
+
+    private static FamilyStage.PepHolder Holder(string name, params DateOnly?[] ends) => new(name, Born, "https://www.wikidata.org/wiki/Q7", ends);
+
+    [Fact]
+    public void ATieOfACurrentPepCounts()
+        => Assert.True(FamilyStage.Standing(TieOf("jan novak"), [Holder("novak jan", new DateOnly(2010, 1, 1), null)], Today, 12).Counts);
+
+    [Fact]
+    public void ATieOfAPepWhoLeftWithinAYearCountsAndSaysWhen()
+    {
+        var (counts, text) = FamilyStage.Standing(TieOf("jan novak"), [Holder("jan novak", new DateOnly(2026, 3, 1))], Today, 12);
+
+        Assert.True(counts);
+        Assert.Contains("1. 3. 2026", text, StringComparison.Ordinal);
+    }
+
+    /// <summary>A deputy of 1996 is no PEP today, and their relatives no family members of one.</summary>
+    [Fact]
+    public void ATieOfAPepWhoLeftLongAgoIsInformationOnly()
+    {
+        var (counts, text) = FamilyStage.Standing(TieOf("jan novak"), [Holder("jan novak", new DateOnly(1998, 6, 30))], Today, 12);
+
+        Assert.False(counts);
+        Assert.Contains("uplynula", text, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ATieOfAPepTheListsDoNotNameIsInformationOnly()
+    {
+        Assert.False(FamilyStage.Standing(TieOf("jan novak"), [Holder("petr svoboda", Lasts)], Today, 12).Counts);
+        Assert.False(FamilyStage.Standing(TieOf("jan novak"), [Holder("jan novak", Lasts) with { BirthDate = Born.AddDays(1) }], Today, 12).Counts);
+    }
+
+    /// <summary>Wikidata's label and the register's name may differ; the Wikidata page the tie cites finds the PEP anyway.</summary>
+    [Fact]
+    public void ThePepIsFoundByTheWikidataPageTheTieCites()
+    {
+        var tie = TieOf("john novak", "https://www.wikidata.org/wiki/Q7");
+
+        Assert.True(FamilyStage.Standing(tie, [Holder("jan novak", Lasts)], Today, 12).Counts);
+        Assert.True(FamilyStage.Standing(TieOf("jan novak"), [Holder("jan maria novak", Lasts)], Today, 12).Counts);
+    }
+
     /// <summary>One circle for both countries, the wider Czech one: every tie counts, a sibling of a Slovak PEP too.</summary>
     [Theory]
     [InlineData(Country.SK, FamilyRelation.Spouse)]
