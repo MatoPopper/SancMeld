@@ -88,6 +88,8 @@ public class FilterTests(DatabaseFixture fixture)
         Assert.Equal(2, open.Total);
         Assert.Equal(1, open.TouchingSanctions);
         Assert.Equal(["CZ", "SK"], open.Countries.Select(c => c.Value).Order());
+        Assert.Equal(1, open.HiddenSeed);
+        Assert.Equal(0, (await s.Campaigns.FacetsAsync(filterAll with { IncludeSeed = true }, CancellationToken.None)).HiddenSeed);
 
         // The feed applies the same bar to its claims: with minLevel B only the A claim shows.
         var feed = await s.Feed.SinceAsync(filterAll with { MinLevel = EvidenceLevel.B, Since = DateTimeOffset.UtcNow.AddMinutes(-5) }, 50, CancellationToken.None);

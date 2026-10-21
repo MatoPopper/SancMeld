@@ -73,12 +73,23 @@ public sealed partial class CampaignService(HybridMeldDbContext db, TimeProvider
             .Where(c => CampaignFilters.Matches(c, noTouch))
             .ToList();
 
+        // What the seed toggle hides: on a fresh instance the four regime lists are all
+        // there is, and an empty screen with no word about them reads as broken.
+        var hiddenSeed = filter.IncludeSeed ? 0
+            : (await CampaignFilters.Apply(Loaded().AsNoTracking(), filter with { IncludeSeed = true })
+                .Where(c => c.CreatedBy == CampaignFilters.SeedAuthor)
+                .AsSplitQuery()
+                .ToListAsync(ct)
+                .ConfigureAwait(false))
+                .Count(c => CampaignFilters.Matches(c, filter));
+
         return new CampaignFacets(
             kinds,
             countries,
             touchable.Count(c => CampaignFilters.Matches(c, noTouch with { TouchesSanctions = true })),
             touchable.Count(c => CampaignFilters.Matches(c, noTouch with { TouchesPep = true })),
-            open.Count(c => KindOk(c) && CountryOk(c)));
+            open.Count(c => KindOk(c) && CountryOk(c)),
+            hiddenSeed);
     }
 
     public async Task<CampaignView?> GetAsync(string slug, CancellationToken ct)

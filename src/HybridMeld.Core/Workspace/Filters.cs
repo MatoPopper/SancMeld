@@ -73,7 +73,9 @@ public sealed record CampaignFacets(
     IReadOnlyList<FacetCount<string>> Countries,
     int TouchingSanctions,
     int TouchingPep,
-    int Total);
+    int Total,
+    // Regime cases seeded from the sanctions lists that the other filters would show but IncludeSeed hides; the screen says so instead of being empty.
+    int HiddenSeed);
 
 public sealed record FacetCount<T>(T Value, int Count);
 
