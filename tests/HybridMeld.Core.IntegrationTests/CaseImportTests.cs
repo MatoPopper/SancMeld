@@ -14,7 +14,7 @@ public class CaseImportTests(DatabaseFixture fixture)
     {
         await using var s = fixture.CreateServices();
         var tag = Guid.NewGuid().ToString("N")[..8];
-        var importer = new CaseImportService(s.Db, s.Campaigns, s.Actors, s.Claims, NullLogger<CaseImportService>.Instance);
+        var importer = new CaseImportService(s.Db, s.Campaigns, s.Actors, s.Claims, NoLinks(), NullLogger<CaseImportService>.Instance);
 
         // An actor the regime seed would have made, with its sanctions link, found by alias.
         var listed = await s.Actors.CreateAsync(new ActorInput(ActorKind.Website, $"Site {tag}", "CZ", null, null, true, null, [$"Site {tag} s.r.o."]), "seed", CancellationToken.None);
@@ -60,12 +60,15 @@ public class CaseImportTests(DatabaseFixture fixture)
         Assert.Equal("Owner " + tag, view.Campaign.AttributedTo!.Name);
     }
 
+    private static HybridMeld.Core.Links.LinkResolver NoLinks() =>
+        new(new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build(), NullLogger<HybridMeld.Core.Links.LinkResolver>.Instance);
+
     [Fact]
     public async Task A_claim_naming_an_unknown_key_is_refused_before_anything_is_written()
     {
         await using var s = fixture.CreateServices();
         var tag = Guid.NewGuid().ToString("N")[..8];
-        var importer = new CaseImportService(s.Db, s.Campaigns, s.Actors, s.Claims, NullLogger<CaseImportService>.Instance);
+        var importer = new CaseImportService(s.Db, s.Campaigns, s.Actors, s.Claims, NoLinks(), NullLogger<CaseImportService>.Instance);
         var json = $$"""
             { "campaign": { "slug": "bad-{{tag}}", "title": "Bad", "summary": "s", "kind": "Cyber", "status": "Active" },
               "actors": [ { "key": "a", "name": "A {{tag}}", "kind": "Person", "isPublicFigure": true } ],

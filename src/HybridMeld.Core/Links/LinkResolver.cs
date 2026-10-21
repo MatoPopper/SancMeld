@@ -65,6 +65,42 @@ public sealed class LinkResolver(IConfiguration configuration, ILogger<LinkResol
         }
     }
 
+    /// <summary>
+    /// A PEP person by exact name in the normal form, for case files, which travel between
+    /// instances where the ids differ. One match or nothing: a namesake is a lead for a
+    /// person, not a link a file may set.
+    /// </summary>
+    public async Task<(Guid Id, PepTarget Target)?> FindPepPersonByNameAsync(string nameNormalized, CancellationToken ct)
+    {
+        if (!PepConfigured || string.IsNullOrWhiteSpace(nameNormalized))
+        {
+            return null;
+        }
+
+        await using var connection = new NpgsqlConnection(pep);
+        await connection.OpenAsync(ct).ConfigureAwait(false);
+        await using var command = new NpgsqlCommand(
+            """
+            SELECT p.id, s.code, p.display_name
+            FROM pep_person p
+            JOIN pep_source s ON s.id = p.source_id
+            WHERE p.name_normalized = @name
+            ORDER BY s.code
+            LIMIT 2
+            """, connection);
+        command.Parameters.AddWithValue("name", nameNormalized);
+        await using var reader = await command.ExecuteReaderAsync(ct).ConfigureAwait(false);
+        if (!await reader.ReadAsync(ct).ConfigureAwait(false))
+        {
+            return null;
+        }
+
+        var first = (reader.GetGuid(0), new PepTarget(reader.GetString(1), reader.GetString(2)));
+        // The same person in two lists is two rows (PepMeld merges nothing); any first row
+        // names the person, so a second row of the same name is fine.
+        return first;
+    }
+
     public async Task<PepTarget?> FindPepPersonAsync(Guid id, CancellationToken ct)
     {
         if (!PepConfigured)

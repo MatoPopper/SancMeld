@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using HybridMeld.Core.Data;
 using HybridMeld.Core.Domain;
+using HybridMeld.Core.Links;
 using HybridMeld.Core.Workspace;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -19,7 +20,7 @@ namespace HybridMeld.Core.Seed;
 /// what is new and changes nothing else. Claims go through ClaimService: the same rule
 /// (no claim without a quote) and the same page snapshot as a claim typed in the screen.
 /// </summary>
-public sealed class CaseImportService(HybridMeldDbContext db, CampaignService campaigns, ActorService actors, ClaimService claims, ILogger<CaseImportService> logger)
+public sealed class CaseImportService(HybridMeldDbContext db, CampaignService campaigns, ActorService actors, ClaimService claims, LinkResolver links, ILogger<CaseImportService> logger)
 {
     public static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web)
     {
@@ -36,7 +37,9 @@ public sealed class CaseImportService(HybridMeldDbContext db, CampaignService ca
 
     public sealed record CaseActor(
         string Key, string Name, ActorKind Kind, string? Country, string? Description, bool IsPublicFigure,
-        string? PublicRoleJustification, IReadOnlyList<string>? Aliases, JsonElement? Identifiers);
+        string? PublicRoleJustification, IReadOnlyList<string>? Aliases, JsonElement? Identifiers,
+        // The person's name as the PEP lists write it; resolved to a PepMeld id on this instance, since ids differ between instances.
+        string? PepPersonName = null);
 
     public sealed record CaseClaim(
         string Subject, Predicate Predicate, string? Object, string Statement, EvidenceLevel Level,
@@ -66,6 +69,11 @@ public sealed class CaseImportService(HybridMeldDbContext db, CampaignService ca
                 }
 
                 notes.Add($"actor {a.Key} = existing {existing.Name}" + (existing.SanctionDesignationId is not null ? $" (sanctions {existing.SanctionSourceCode})" : string.Empty));
+                if (existing.PepPersonId is null)
+                {
+                    await LinkPepAsync(a, existing.Id, notes, ct).ConfigureAwait(false);
+                }
+
                 continue;
             }
 
@@ -73,6 +81,7 @@ public sealed class CaseImportService(HybridMeldDbContext db, CampaignService ca
             byKey[a.Key] = view.Actor.Id;
             created++;
             notes.Add($"actor {a.Key} created: {a.Name}");
+            await LinkPepAsync(a, view.Actor.Id, notes, ct).ConfigureAwait(false);
         }
 
         // 2. campaign, by slug
@@ -141,6 +150,32 @@ public sealed class CaseImportService(HybridMeldDbContext db, CampaignService ca
 
         logger.LogInformation("Case {Slug}: campaign {Created}, actors {Matched} matched / {New} new, claims {Claims} new / {Existing} existing.", c.Slug, campaignCreated ? "created" : "updated", matched, created, claimsCreated, claimsExisting);
         return new ImportOutcome(c.Slug, campaignCreated, matched, created, claimsCreated, claimsExisting, notes);
+    }
+
+    /// <summary>The PEP link by name, when the file names one and this instance has the PEP database: the overlap a case is here for.</summary>
+    private async Task LinkPepAsync(CaseActor a, Guid actorId, List<string> notes, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(a.PepPersonName))
+        {
+            return;
+        }
+
+        if (!links.PepConfigured)
+        {
+            notes.Add($"actor {a.Key}: PEP database not configured, link to '{a.PepPersonName}' not set");
+            return;
+        }
+
+        var found = await links.FindPepPersonByNameAsync(NameNormalizer.Normalize(a.PepPersonName), ct).ConfigureAwait(false);
+        if (found is null)
+        {
+            notes.Add($"actor {a.Key}: no PEP person named '{a.PepPersonName}'");
+            return;
+        }
+
+        var actor = await db.Actors.FirstAsync(x => x.Id == actorId, ct).ConfigureAwait(false);
+        await actors.SetLinksAsync(actorId, new ActorLinkInput(actor.SanctionDesignationId, found.Value.Id), ct).ConfigureAwait(false);
+        notes.Add($"actor {a.Key}: PEP {found.Value.Target.SourceCode} {found.Value.Target.Name}");
     }
 
     private async Task<Actor?> FindActorAsync(CaseActor a, CancellationToken ct)
