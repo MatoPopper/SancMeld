@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>HybridMeld.Core</RootNamespace>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="HybridMeld.Core.Tests" />
+    <InternalsVisibleTo Include="HybridMeld.Core.IntegrationTests" />
+  </ItemGroup>
+
+  <!-- The same data stack and versions as SancMeld.Core and PepMeld.Core: the three
+       schemas are meant to run on one PostgreSQL server by one operator. -->
+  <ItemGroup>
+    <PackageReference Include="EFCore.NamingConventions" Version="10.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.3">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.4" />
+    <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="10.0.4" />
+    <PackageReference Include="AngleSharp" Version="1.8.5" />
+  </ItemGroup>
+
+  <!-- SancMeld.Core by reference, as PepMeld does: the name normalisation, the enum
+       converter, the graph records the front end draws, and, for the one-off seed of the
+       EU hybrid-threats and cyber regimes, the sanctions schema itself. Nothing here
+       writes to a SancMeld table. -->
+  <ItemGroup>
+    <ProjectReference Include="../SancMeld.Core/SancMeld.Core.csproj" />
+  </ItemGroup>
+
+</Project>

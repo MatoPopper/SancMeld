@@ -301,6 +301,46 @@ public sealed class ApiUserDirectory(SancMeldDbContext db, TimeProvider clock)
     }
 
     /// <summary>Whether the address may screen for PEPs. False for an address never seen or blocked.</summary>
+    /// <summary>Grants or withdraws the hybrid-threats workspace, from the users screen.</summary>
+    public async Task<(UserChangeOutcome Outcome, UserView? User)> SetHybridAsync(Guid id, bool allowed, string by, CancellationToken ct = default)
+    {
+        var user = await db.ApiUsers.FirstOrDefaultAsync(u => u.Id == id, ct).ConfigureAwait(false);
+        if (user is null)
+        {
+            return (UserChangeOutcome.NotFound, null);
+        }
+
+        if (user.IsAllowedForHybrid != allowed)
+        {
+            user.IsAllowedForHybrid = allowed;
+            user.HybridChangedBy = by;
+            user.HybridChangedAt = clock.GetUtcNow();
+            await db.SaveChangesAsync(ct).ConfigureAwait(false);
+        }
+
+        var onAllowList = await db.Admins.AnyAsync(a => a.Email == user.Email && a.IsActive, ct).ConfigureAwait(false);
+        return (UserChangeOutcome.Changed, ToView(user, 0, false, onAllowList));
+    }
+
+    /// <summary>Grants or withdraws the hybrid-threats workspace by address, from the CLI; an unseen address gets its row now.</summary>
+    public async Task<ApiUser> SetHybridAsync(string email, bool allowed, int defaultLimit, CancellationToken ct = default, string changedBy = "cli")
+    {
+        var key = Normalise(email);
+        var user = await db.ApiUsers.FirstOrDefaultAsync(u => u.Email == key, ct).ConfigureAwait(false);
+
+        if (user is null)
+        {
+            user = new ApiUser { Id = Guid.CreateVersion7(), Email = key, RequestLimit = defaultLimit, CreatedAt = clock.GetUtcNow() };
+            db.ApiUsers.Add(user);
+        }
+
+        user.IsAllowedForHybrid = allowed;
+        user.HybridChangedBy = changedBy;
+        user.HybridChangedAt = clock.GetUtcNow();
+        await db.SaveChangesAsync(ct).ConfigureAwait(false);
+        return user;
+    }
+
     public async Task<bool> IsAllowedForPepAsync(string email, CancellationToken ct = default)
     {
         var key = Normalise(email);
@@ -326,6 +366,9 @@ public sealed class ApiUserDirectory(SancMeldDbContext db, TimeProvider clock)
         IsAllowedForPep = u.IsAllowedForPep,
         PepChangedBy = u.PepChangedBy,
         PepChangedAt = u.PepChangedAt,
+        IsAllowedForHybrid = u.IsAllowedForHybrid,
+        HybridChangedBy = u.HybridChangedBy,
+        HybridChangedAt = u.HybridChangedAt,
         IsUserAdmin = u.IsUserAdmin,
         IsSystemAdmin = u.IsSystemAdmin,
         IsOnAdminAllowList = onAllowList,
@@ -373,6 +416,11 @@ public sealed record UserView
     public bool IsAllowedForPep { get; init; }
     public string? PepChangedBy { get; init; }
     public DateTimeOffset? PepChangedAt { get; init; }
+
+    /// <summary>May open HybridMeld, the hybrid-threats workspace.</summary>
+    public bool IsAllowedForHybrid { get; init; }
+    public string? HybridChangedBy { get; init; }
+    public DateTimeOffset? HybridChangedAt { get; init; }
     public bool IsUserAdmin { get; init; }
     public bool IsSystemAdmin { get; init; }
     public bool IsOnAdminAllowList { get; init; }

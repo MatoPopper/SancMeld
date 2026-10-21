@@ -1,5 +1,8 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/HybridMeld.Api/HybridMeld.Api.csproj" />
+    <Project Path="src/HybridMeld.Core/HybridMeld.Core.csproj" />
+    <Project Path="src/HybridMeld.Server/HybridMeld.Server.csproj" />
     <Project Path="src/PepMeld.Api/PepMeld.Api.csproj" />
     <Project Path="src/PepMeld.Connectors.CzAres/PepMeld.Connectors.CzAres.csproj" />
     <Project Path="src/PepMeld.Connectors.CzPsp/PepMeld.Connectors.CzPsp.csproj" />
@@ -28,6 +31,8 @@
     <Project Path="tools/SancMeld.Experiments.NameEmbeddings/SancMeld.Experiments.NameEmbeddings.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/HybridMeld.Core.IntegrationTests/HybridMeld.Core.IntegrationTests.csproj" />
+    <Project Path="tests/HybridMeld.Core.Tests/HybridMeld.Core.Tests.csproj" />
     <Project Path="tests/PepMeld.Connectors.CzAres.Tests/PepMeld.Connectors.CzAres.Tests.csproj" />
     <Project Path="tests/PepMeld.Connectors.CzPsp.Tests/PepMeld.Connectors.CzPsp.Tests.csproj" />
     <Project Path="tests/PepMeld.Connectors.SkNrsr.Tests/PepMeld.Connectors.SkNrsr.Tests.csproj" />

@@ -1,0 +1,41 @@
+# The hybrid-threats workspace as its own container, next to the sanctions and PEP ones.
+#
+#   docker build -f Dockerfile.hybridmeld -t hybridmeld-api .
+#
+# Build context is the repository root; the layout and the reasons are those of the
+# sanctions Dockerfile (no per-project restore layer, a non-root user, libgssapi-krb5-2
+# for Npgsql's probe, no HEALTHCHECK). The three services share nothing at runtime but a
+# PostgreSQL server, each with its own database; this one reads the sanctions database
+# for the grant, the regimes and the link targets.
+
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+
+COPY Directory.Build.props ./
+COPY src/ src/
+RUN dotnet publish src/HybridMeld.Server/HybridMeld.Server.csproj -c Release -o /app
+
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+WORKDIR /app
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libgssapi-krb5-2 \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN useradd --create-home --shell /usr/sbin/nologin hybridmeld \
+    && mkdir -p /var/lib/hybridmeld/snapshots \
+    && chown -R hybridmeld:hybridmeld /var/lib/hybridmeld
+USER hybridmeld
+
+COPY --from=build --chown=hybridmeld:hybridmeld /app ./
+
+# Fetched posts and quoted pages are kept as snapshots: they are the evidence once the
+# original is gone. Mount a volume here or they vanish with the container.
+ENV HybridMeld__Ingest__SnapshotStoragePath=/var/lib/hybridmeld/snapshots \
+    HybridMeld__Database__AutoMigrate=true \
+    ASPNETCORE_URLS=http://+:8080 \
+    DOTNET_gcServer=1
+
+EXPOSE 8080
+
+ENTRYPOINT ["dotnet", "HybridMeld.Server.dll"]

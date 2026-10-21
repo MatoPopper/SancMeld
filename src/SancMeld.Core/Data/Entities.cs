@@ -750,6 +750,17 @@ public class ApiUser
     public DateTimeOffset? PepChangedAt { get; set; }
 
     /// <summary>
+    /// May open HybridMeld, the hybrid-threats workspace beside this one, read in the
+    /// same way PepMeld reads <see cref="IsAllowedForPep"/>. One grant covers reading,
+    /// adding watched sources and recording claims: the workspace is for a small circle
+    /// of analysts and journalists, not for compliance users, who never see it.
+    /// </summary>
+    public bool IsAllowedForHybrid { get; set; }
+
+    public string? HybridChangedBy { get; set; }
+    public DateTimeOffset? HybridChangedAt { get; set; }
+
+    /// <summary>
     /// May manage users: see them and their request counts, block and unblock them, grant
     /// the additional information. Set in the database or with the CLI, never from the UI,
     /// so that nobody makes themselves one.

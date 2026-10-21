@@ -268,6 +268,7 @@ if (args is ["users", "user-admin" or "system-admin" or "list", ..])
                     u.IsSystemAdmin ? "system-admin" : null,
                     u.IsAllowedForAdditionalInfo ? "additional-info" : null,
                     u.IsAllowedForPep ? "pep" : null,
+                    u.IsAllowedForHybrid ? "hybrid" : null,
                     u.IsBlocked ? $"BLOCKED by {u.BlockedBy}" : null,
                 }.Where(x => x is not null)));
         }
@@ -304,6 +305,25 @@ if (args is ["users", "pep", var pepWho, ..])
     var limit = scope.ServiceProvider.GetRequiredService<IOptions<SancMeld.Api.SancMeldAuthOptions>>().Value.DefaultRequestLimit;
     var user = await users.SetPepAsync(pepWho, args[3] == "on", limit, CancellationToken.None);
     Console.WriteLine($"{user.Email}: PEP screening {(user.IsAllowedForPep ? "ON" : "off")}.");
+    return 0;
+}
+
+// Who may open HybridMeld, the hybrid-threats workspace, which reads this flag from this table:
+//
+//   dotnet run --project src/SancMeld.Server -- users hybrid you@example.com on|off
+if (args is ["users", "hybrid", var hybridWho, ..])
+{
+    if (args.Length < 4 || args[3] is not ("on" or "off"))
+    {
+        Console.Error.WriteLine("Usage: users hybrid <email> on|off");
+        return 1;
+    }
+
+    using var scope = app.Services.CreateScope();
+    var users = scope.ServiceProvider.GetRequiredService<SancMeld.Core.Access.ApiUserDirectory>();
+    var limit = scope.ServiceProvider.GetRequiredService<IOptions<SancMeld.Api.SancMeldAuthOptions>>().Value.DefaultRequestLimit;
+    var user = await users.SetHybridAsync(hybridWho, args[3] == "on", limit, CancellationToken.None);
+    Console.WriteLine($"{user.Email}: hybrid-threats workspace {(user.IsAllowedForHybrid ? "ON" : "off")}.");
     return 0;
 }
 

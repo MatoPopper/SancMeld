@@ -83,7 +83,8 @@ public sealed class RelationDecisionService(SancMeldDbContext db, TimeProvider c
                 }
 
             default:
-                throw new InvalidOperationException($"Unknown target {request.Target}.");
+                // Claim belongs to HybridMeld, which has its own decision endpoint.
+                throw new InvalidOperationException($"Target {request.Target} is not decided here.");
         }
 
         db.RelationDecisions.Add(new RelationDecision

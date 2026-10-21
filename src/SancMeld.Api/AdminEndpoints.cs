@@ -35,6 +35,9 @@ public sealed record SignedInUser(string Email, string? Name, string? Subject, b
     /// <summary>May screen for politically exposed persons in PepMeld; the front end shows the PEP mode only then.</summary>
     public bool CanUsePep { get; init; }
 
+    /// <summary>May open HybridMeld, the hybrid-threats workspace; the front end shows the hybrid mode only then.</summary>
+    public bool CanUseHybrid { get; init; }
+
     /// <summary>May open the users screen.</summary>
     public bool IsUserAdmin { get; init; }
 
@@ -116,6 +119,7 @@ internal static class AdminEndpoints
                 PendingQuotaRequestAt = verified ? await users.PendingRequestAtAsync(email, ct) : null,
                 CanSeeAdditionalInfo = account is { IsAllowedForAdditionalInfo: true, IsBlocked: false },
                 CanUsePep = account is { IsAllowedForPep: true, IsBlocked: false },
+                CanUseHybrid = account is { IsAllowedForHybrid: true, IsBlocked: false },
                 IsUserAdmin = account is { IsUserAdmin: true, IsBlocked: false } && !SancMeldClaims.IsApiKey(user),
                 IsSystemAdmin = account?.IsSystemAdmin ?? false,
                 IsBlocked = account?.IsBlocked ?? false,
@@ -246,6 +250,21 @@ internal static class AdminEndpoints
         .WithDescription(
             "PepMeld, the PEP-screening service beside this one, reads this flag on every request and refuses " +
             "an address without it, its API keys included. Who changed it last and when is kept on the user.");
+
+        group.MapPost("/{id:guid}/hybrid", async Task<Results<Ok<UserView>, NotFound>> (
+            ApiUserDirectory users, Guid id, UserFlagRequest request, ClaimsPrincipal user, ILoggerFactory logs, CancellationToken ct) =>
+        {
+            var by = SancMeldClaims.EmailOf(user) ?? "unknown";
+            var (outcome, view) = await users.SetHybridAsync(id, request.Value, by, ct);
+            logs.CreateLogger("SancMeld.Users").LogInformation("{By} set hybrid={Value} on {Email}.", by, request.Value, view?.Email);
+
+            return outcome == UserChangeOutcome.NotFound ? TypedResults.NotFound() : TypedResults.Ok(view!);
+        })
+        .WithName("SetUserHybrid")
+        .WithSummary("Grant or withdraw the hybrid-threats workspace — writes.")
+        .WithDescription(
+            "HybridMeld, the workspace for analysts and journalists beside this one, reads this flag on every " +
+            "request and refuses an address without it. Compliance users never need it.");
 
         return endpoints;
     }

@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <RootNamespace>HybridMeld.Server</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <!-- Enables: dotnet user-secrets set "ConnectionStrings:HybridMeld" "..." -->
+    <UserSecretsId>hybridmeld-server-4f2a9c61</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../HybridMeld.Api/HybridMeld.Api.csproj" />
+  </ItemGroup>
+
+  <!-- Swashbuckle, no Hangfire: the only scheduled work is fetching watched sources and
+       checking links, and a hosted service with a timer does that without a second
+       schema in the database (PepMeld's reasoning). -->
+  <ItemGroup>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
+  </ItemGroup>
+
+</Project>

@@ -331,9 +331,21 @@ namespace SancMeld.Core.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("google_subject");
 
+                    b.Property<DateTimeOffset?>("HybridChangedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("hybrid_changed_at");
+
+                    b.Property<string>("HybridChangedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("hybrid_changed_by");
+
                     b.Property<bool>("IsAllowedForAdditionalInfo")
                         .HasColumnType("boolean")
                         .HasColumnName("is_allowed_for_additional_info");
+
+                    b.Property<bool>("IsAllowedForHybrid")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_allowed_for_hybrid");
 
                     b.Property<bool>("IsAllowedForPep")
                         .HasColumnType("boolean")

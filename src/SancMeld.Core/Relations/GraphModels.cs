@@ -13,7 +13,12 @@ namespace SancMeld.Core.Relations;
 /// </summary>
 public enum GraphStatus { Subject, Confirmed, Candidate, Review, Rejected }
 
-public enum GraphNodeKind { Listing, Party }
+/// <summary>
+/// Listing and Party are the sanctions graph. Actor is HybridMeld's: a person, an
+/// organisation, a website or a channel in a hybrid-threats case, drawn by the same
+/// component with the same legend, which is why the shape is shared and not copied.
+/// </summary>
+public enum GraphNodeKind { Listing, Party, Actor }
 
 public sealed record GraphNode
 {
@@ -40,6 +45,13 @@ public sealed record GraphNode
 
     /// <summary>One line for a tooltip: the role, the description, the listing date.</summary>
     public string? Detail { get; init; }
+
+    /// <summary>
+    /// Where the front end goes when the node is clicked, as a path on the front end
+    /// ("/designations/…", "/hybrid/actors/…"). Set by the service that knows its own
+    /// screens; null means the node has no page of its own and <see cref="Url"/> is all.
+    /// </summary>
+    public string? Route { get; init; }
 }
 
 public sealed record GraphEdge
@@ -79,6 +91,9 @@ public enum DecisionTarget
 
     /// <summary>The claim that a register's record is the listed subject (external_identity).</summary>
     Identity,
+
+    /// <summary>A claim in a hybrid-threats case (HybridMeld's claim table); decided there, never here.</summary>
+    Claim,
 }
 
 public sealed record RelationDecisionRequest
