@@ -39,7 +39,9 @@ public sealed class CaseImportService(HybridMeldDbContext db, CampaignService ca
         string Key, string Name, ActorKind Kind, string? Country, string? Description, bool IsPublicFigure,
         string? PublicRoleJustification, IReadOnlyList<string>? Aliases, JsonElement? Identifiers,
         // The person's name as the PEP lists write it; resolved to a PepMeld id on this instance, since ids differ between instances.
-        string? PepPersonName = null);
+        string? PepPersonName = null,
+        // A name or alias as a sanctions list writes it; resolved the same way, an active listing first, then a delisted one.
+        string? SanctionName = null);
 
     public sealed record CaseClaim(
         string Subject, Predicate Predicate, string? Object, string Statement, EvidenceLevel Level,
@@ -69,6 +71,11 @@ public sealed class CaseImportService(HybridMeldDbContext db, CampaignService ca
                 }
 
                 notes.Add($"actor {a.Key} = existing {existing.Name}" + (existing.SanctionDesignationId is not null ? $" (sanctions {existing.SanctionSourceCode})" : string.Empty));
+                if (existing.SanctionDesignationId is null)
+                {
+                    await LinkSanctionAsync(a, existing.Id, notes, ct).ConfigureAwait(false);
+                }
+
                 if (existing.PepPersonId is null)
                 {
                     await LinkPepAsync(a, existing.Id, notes, ct).ConfigureAwait(false);
@@ -81,6 +88,7 @@ public sealed class CaseImportService(HybridMeldDbContext db, CampaignService ca
             byKey[a.Key] = view.Actor.Id;
             created++;
             notes.Add($"actor {a.Key} created: {a.Name}");
+            await LinkSanctionAsync(a, view.Actor.Id, notes, ct).ConfigureAwait(false);
             await LinkPepAsync(a, view.Actor.Id, notes, ct).ConfigureAwait(false);
         }
 
@@ -150,6 +158,32 @@ public sealed class CaseImportService(HybridMeldDbContext db, CampaignService ca
 
         logger.LogInformation("Case {Slug}: campaign {Created}, actors {Matched} matched / {New} new, claims {Claims} new / {Existing} existing.", c.Slug, campaignCreated ? "created" : "updated", matched, created, claimsCreated, claimsExisting);
         return new ImportOutcome(c.Slug, campaignCreated, matched, created, claimsCreated, claimsExisting, notes);
+    }
+
+    /// <summary>The sanctions link by name; a delisted subject links too and shows as stale.</summary>
+    private async Task LinkSanctionAsync(CaseActor a, Guid actorId, List<string> notes, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(a.SanctionName))
+        {
+            return;
+        }
+
+        if (!links.SanctionsConfigured)
+        {
+            notes.Add($"actor {a.Key}: sanctions database not configured, link to '{a.SanctionName}' not set");
+            return;
+        }
+
+        var found = await links.FindDesignationByNameAsync(NameNormalizer.Normalize(a.SanctionName), ct).ConfigureAwait(false);
+        if (found is null)
+        {
+            notes.Add($"actor {a.Key}: no sanctions record named '{a.SanctionName}'");
+            return;
+        }
+
+        var actor = await db.Actors.FirstAsync(x => x.Id == actorId, ct).ConfigureAwait(false);
+        await actors.SetLinksAsync(actorId, new ActorLinkInput(found.Value.Id, actor.PepPersonId), ct).ConfigureAwait(false);
+        notes.Add($"actor {a.Key}: sanctions {found.Value.Target.SourceCode} {found.Value.Target.Name}" + (found.Value.Target.IsCurrent ? string.Empty : " (delisted)"));
     }
 
     /// <summary>The PEP link by name, when the file names one and this instance has the PEP database: the overlap a case is here for.</summary>

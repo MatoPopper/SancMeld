@@ -101,6 +101,41 @@ public sealed class LinkResolver(IConfiguration configuration, ILogger<LinkResol
         return first;
     }
 
+    /// <summary>
+    /// A sanctions record by exact name or alias in the normal form, for case files. An
+    /// active listing first, then the latest delisted one, so a case can name a subject
+    /// the list dropped and the link shows as stale rather than missing. One name, or
+    /// nothing: a namesake on a list is a lead, not a link a file may set.
+    /// </summary>
+    public async Task<(Guid Id, SanctionTarget Target)?> FindDesignationByNameAsync(string nameNormalized, CancellationToken ct)
+    {
+        if (!SanctionsConfigured || string.IsNullOrWhiteSpace(nameNormalized))
+        {
+            return null;
+        }
+
+        await using var connection = new NpgsqlConnection(sanctions);
+        await connection.OpenAsync(ct).ConfigureAwait(false);
+        await using var command = new NpgsqlCommand(
+            """
+            SELECT d.id, s.code, n.name_original, d.status = 'active'
+            FROM designation d
+            JOIN sanctions_source s ON s.id = d.source_id
+            JOIN designation_name n ON n.designation_id = d.id
+            WHERE d.valid_to IS NULL AND n.name_normalized = @name
+            ORDER BY (d.status = 'active') DESC, (s.code = 'EU_FSF') DESC, d.listed_at DESC NULLS LAST
+            LIMIT 1
+            """, connection);
+        command.Parameters.AddWithValue("name", nameNormalized);
+        await using var reader = await command.ExecuteReaderAsync(ct).ConfigureAwait(false);
+        if (!await reader.ReadAsync(ct).ConfigureAwait(false))
+        {
+            return null;
+        }
+
+        return (reader.GetGuid(0), new SanctionTarget(reader.GetString(1), reader.GetString(2), reader.GetBoolean(3)));
+    }
+
     public async Task<PepTarget?> FindPepPersonAsync(Guid id, CancellationToken ct)
     {
         if (!PepConfigured)
