@@ -66,6 +66,7 @@ public sealed class FamilyImportService(PepMeldDbContext db, IQuoteVerifier quot
         }
 
         var now = clock.GetUtcNow();
+        var today = DateOnly.FromDateTime(now.UtcDateTime);
         var pepNormalized = PersonNames.Normalize(file.Pep.Name);
 
         var known = await db.Persons.AsNoTracking()
@@ -102,7 +103,7 @@ public sealed class FamilyImportService(PepMeldDbContext db, IQuoteVerifier quot
 
         foreach (var relative in file.Relatives ?? [])
         {
-            var refusal = Validate(relative, out var relation, out var evidence);
+            var refusal = Validate(relative, today, out var relation, out var evidence);
             if (refusal is not null)
             {
                 refusals.Add($"{relative.Name ?? "?"}: {refusal}");
@@ -130,7 +131,6 @@ public sealed class FamilyImportService(PepMeldDbContext db, IQuoteVerifier quot
 
             var name = relative.Name!.Trim();
             var nameNormalized = PersonNames.Normalize(name);
-            var minor = relative.IsMinor == true;
 
             // The same tie may already be there, from an earlier run or from Wikidata, under
             // a name written a little differently.
@@ -170,7 +170,6 @@ public sealed class FamilyImportService(PepMeldDbContext db, IQuoteVerifier quot
             }
 
             link.RunId = run.Id;
-            link.IsMinor = minor;
 
             // A name Wikidata gave is kept: it is the form the register of record uses.
             if (!link.EvidenceJson.Contains("wikidata.org/", StringComparison.OrdinalIgnoreCase))
@@ -178,10 +177,9 @@ public sealed class FamilyImportService(PepMeldDbContext db, IQuoteVerifier quot
                 link.RelativeName = name;
             }
 
-            // Nothing of a minor's birth is kept, whatever the file says; otherwise a date the
-            // file lacks does not erase one another source gave.
-            link.RelativeBirthDate = minor ? null : ParseDate(relative.DateOfBirth) ?? link.RelativeBirthDate;
-            link.RelativeBirthYear = minor ? null : relative.BirthYear ?? link.RelativeBirthDate?.Year ?? link.RelativeBirthYear;
+            // A date the file lacks does not erase one another source gave.
+            link.RelativeBirthDate = ParseDate(relative.DateOfBirth) ?? link.RelativeBirthDate;
+            link.RelativeBirthYear = relative.BirthYear ?? link.RelativeBirthDate?.Year ?? link.RelativeBirthYear;
             link.Status = Clean(relative.Status, ["current", "former", "deceased", "unknown"], "unknown");
             link.Confidence = Clean(relative.Confidence, ["high", "medium", "low"], "low");
             link.EvidenceJson = FamilyLinkMerge.MergeEvidence(link.EvidenceJson, evidence, incomingIsWikidata: false);
@@ -218,10 +216,17 @@ public sealed class FamilyImportService(PepMeldDbContext db, IQuoteVerifier quot
             [.. notNamed.Select(g => $"{g.Relation} {g.RelativeName} (last found {g.LastFoundAt:yyyy-MM-dd})")]);
     }
 
-    private static string? Validate(FamilyResearchRelative relative, out FamilyRelation relation, out List<Evidence> evidence)
+    private static string? Validate(FamilyResearchRelative relative, DateOnly today, out FamilyRelation relation, out List<Evidence> evidence)
     {
         relation = default;
         evidence = [];
+
+        // A minor is not kept (see FamilyLink), whether the agent said so or the birth shows it.
+        var born = ParseDate(relative.DateOfBirth);
+        if (relative.IsMinor == true || born > today.AddYears(-18) || relative.BirthYear > today.Year - 18)
+        {
+            return "a minor, not kept";
+        }
 
         if (string.IsNullOrWhiteSpace(relative.Name) || PersonNames.Normalize(relative.Name).Length == 0)
         {

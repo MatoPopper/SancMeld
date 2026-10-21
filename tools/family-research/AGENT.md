@@ -67,8 +67,11 @@ Replace `{NAME}`, `{DATE_OF_BIRTH}`, `{COUNTRY}`, `{FUNCTIONS}` and `{OUTPUT_PAT
 > 3. A date of birth only if a source states it exactly; otherwise birthYear if stated;
 >    never compute one from an age.
 > 4. Privacy: name, relation, status, published date or year of birth and evidence only. No
->    addresses, phone numbers, social media, photos. A minor: isMinor true and no birth date
->    or year at all.
+>    addresses, phone numbers, social media, photos. Minors (under 18) are not recorded at
+>    all, not even under "unverified". Record a child or grandchild only when a source shows
+>    they are an adult (a date or year of birth 18+ years ago, a stated age of 18 or more, or
+>    an adult role such as a job, an office or their own marriage); otherwise leave them out
+>    and say in "notes" how many were left out. "isMinor" is always false.
 > 5. No rumours, alleged partners or speculation; leads you could not confirm go under
 >    "unverified".
 > 6. At most ~15 searches and ~20 page fetches.
@@ -115,7 +118,9 @@ says that it goes beyond the Slovak law.
   result is kept on the evidence (`quoteCheck`). A relative is kept if one quote is found,
   or if none of its pages could be read at all.
 - Every tie is level **D** and a candidate until a register or a person confirms it.
-- A minor's date and year of birth are dropped whatever the file says.
+- A minor is refused, whether the file says `isMinor: true` or the date or year of birth
+  shows it; Wikidata sync skips minors the same way. Decided by the user 2026-10-21: a child
+  under 18 cannot be a client or a counterparty on their own, so the tie adds nothing.
 - The file itself is kept verbatim on the run (`family_research_run.raw_json`).
 - A second run for the same PEP updates the ties it names again and keeps the decisions made on them.
 

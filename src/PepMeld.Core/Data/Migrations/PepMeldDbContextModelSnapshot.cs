@@ -179,10 +179,6 @@ namespace PepMeld.Core.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("found_by");
 
-                    b.Property<bool>("IsMinor")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_minor");
-
                     b.Property<DateTimeOffset>("LastFoundAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("last_found_at");

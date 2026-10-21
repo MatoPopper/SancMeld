@@ -92,21 +92,19 @@ public sealed class FamilyTests(DatabaseFixture fixture) : IAsyncLifetime
     }
 
     [Fact]
-    public async Task TheImportKeepsWhatHasEvidenceAndStripsAMinorsBirth()
+    public async Task TheImportKeepsWhatHasEvidenceAndRefusesAMinor()
     {
         var outcome = await ImportAsync();
 
-        Assert.Equal(5, outcome.Imported);
-        Assert.Equal(2, outcome.Refused);
+        Assert.Equal(4, outcome.Imported);
+        Assert.Equal(3, outcome.Refused);
         Assert.Contains(outcome.Refusals, r => r.Contains("no evidence", StringComparison.Ordinal));
         Assert.Contains(outcome.Refusals, r => r.Contains("Cousin", StringComparison.Ordinal));
+        Assert.Contains(outcome.Refusals, r => r.StartsWith(Minor, StringComparison.Ordinal) && r.Contains("minor", StringComparison.Ordinal));
         Assert.Equal(90, outcome.DurationSeconds);
 
         await using var db = fixture.CreateContext();
-        var minor = await db.FamilyLinks.SingleAsync(l => l.RelativeName == Minor);
-        Assert.True(minor.IsMinor);
-        Assert.Null(minor.RelativeBirthDate);
-        Assert.Null(minor.RelativeBirthYear);
+        Assert.False(await db.FamilyLinks.AnyAsync(l => l.RelativeName == Minor));
 
         var all = await db.FamilyLinks.Where(l => l.RunId == outcome.RunId).ToListAsync();
         Assert.All(all, l => Assert.Equal(EvidenceLevel.D, l.Level));
@@ -116,7 +114,7 @@ public sealed class FamilyTests(DatabaseFixture fixture) : IAsyncLifetime
         // A second run updates the same ties instead of adding them again.
         var again = await ImportAsync();
         Assert.Equal(0, again.Imported);
-        Assert.Equal(5, again.Updated);
+        Assert.Equal(4, again.Updated);
     }
 
     /// <summary>
@@ -163,7 +161,7 @@ public sealed class FamilyTests(DatabaseFixture fixture) : IAsyncLifetime
     {
         var outcome = await ImportAsync(new FixedVerifier(QuoteCheck.Unreachable));
 
-        Assert.Equal(5, outcome.Imported + outcome.Updated);
+        Assert.Equal(4, outcome.Imported + outcome.Updated);
         Assert.Equal(0, outcome.QuotesFound);
     }
 
@@ -251,7 +249,7 @@ public sealed class FamilyTests(DatabaseFixture fixture) : IAsyncLifetime
         Assert.All(mine, f => Assert.Equal(FindingKind.KnownRelative, f.Kind));
         Assert.Contains(mine, f => f.Person.Name == Spouse);
         Assert.Contains(mine, f => f.Person.Name == Sibling && f.LegallyRelevant == true);
-        Assert.Contains(mine, f => f.Person.Name == Minor && f.Explanation.Contains("maloletý", StringComparison.Ordinal));
+        Assert.DoesNotContain(mine, f => f.Person.Name == Minor);
         Assert.DoesNotContain(mine, f => f.Person.Name == Former);
         Assert.Contains("známe pre", family.Note, StringComparison.Ordinal);
     }

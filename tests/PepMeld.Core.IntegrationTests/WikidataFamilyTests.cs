@@ -122,7 +122,7 @@ public sealed class WikidataFamilyTests(DatabaseFixture fixture)
     }
 
     [Fact]
-    public async Task AMinorFromWikidataKeepsNoBirthday()
+    public async Task AMinorFromWikidataIsNotKept()
     {
         await using (var db = fixture.CreateContext())
         {
@@ -133,10 +133,7 @@ public sealed class WikidataFamilyTests(DatabaseFixture fixture)
         }
 
         await using var read = fixture.CreateContext();
-        var child = await read.FamilyLinks.AsNoTracking().SingleAsync(l => l.PepName == Pep && l.Relation == FamilyRelation.Child);
-        Assert.True(child.IsMinor);
-        Assert.Null(child.RelativeBirthDate);
-        Assert.Null(child.RelativeBirthYear);
+        Assert.False(await read.FamilyLinks.AnyAsync(l => l.PepName == Pep && l.Relation == FamilyRelation.Child));
     }
 
     [Fact]

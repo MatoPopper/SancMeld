@@ -288,8 +288,9 @@ public class FamilyResearchRun
 /// A family tie of a PEP: spouse or partner, child, child's spouse, parent, sibling. The
 /// PEP is named by name and date of birth, not by a person row, because the same human is a
 /// row in every list that names them. A relative is a private person: only the name, the
-/// tie, a published date or year of birth and the evidence are kept, and nothing of a minor
-/// but the name and the tie.
+/// tie, a published date or year of birth and the evidence are kept. A minor is not kept at
+/// all: a child under 18 cannot be a client or a counterparty on their own, so the tie adds
+/// nothing to a check and would only hold a child's name.
 /// </summary>
 public class FamilyLink
 {
@@ -308,7 +309,6 @@ public class FamilyLink
     public required string RelativeNameNormalized { get; set; }
     public DateOnly? RelativeBirthDate { get; set; }
     public int? RelativeBirthYear { get; set; }
-    public bool IsMinor { get; set; }
 
     /// <summary>current, former, deceased or unknown. A former spouse is no family member in law.</summary>
     public required string Status { get; set; }

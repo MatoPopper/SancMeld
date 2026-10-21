@@ -214,7 +214,6 @@ public sealed class FamilyStage(PepMeldDbContext db, IOptions<PepMeldOptions> op
     {
         var (relevant, law) = Relevance(link);
         var born = link.RelativeBirthDate is { } d ? $", nar. {d:d. M. yyyy}" : link.RelativeBirthYear is { } y ? $", nar. {y}" : string.Empty;
-        var minor = link.IsMinor ? " (maloletý)" : string.Empty;
 
         return new FindingView(
             FindingKind.KnownRelative,
@@ -225,7 +224,7 @@ public sealed class FamilyStage(PepMeldDbContext db, IOptions<PepMeldOptions> op
             link.PepName,
             null,
             Evidence(link),
-            $"{RelationLabel(link.Relation)}: {link.RelativeName}{born}{minor}. {law} Naposledy dohľadané {link.LastFoundAt:d. M. yyyy}.",
+            $"{RelationLabel(link.Relation)}: {link.RelativeName}{born}. {law} Naposledy dohľadané {link.LastFoundAt:d. M. yyyy}.",
             link.Level == EvidenceLevel.B ? "Podľa Wikidaty; preveriť aj túto osobu." : "Dohľadané agentom vo verejných zdrojoch; preveriť aj túto osobu.",
             Sources(link),
             relevant);

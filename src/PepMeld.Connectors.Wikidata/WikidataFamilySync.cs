@@ -266,13 +266,18 @@ public sealed class WikidataFamilySync(
                 continue;
             }
 
+            // A minor is not kept (see FamilyLink).
+            if (tie.RelativeBirthDate is { } relBorn && relBorn > today.AddYears(-18))
+            {
+                continue;
+            }
+
             var key = (pepNormalized, tie.PepBirthDate, tie.Relation);
             if (!byPep.TryGetValue(key, out var same))
             {
                 byPep[key] = same = [];
             }
 
-            var minor = tie.RelativeBirthDate is { } relBorn && relBorn > today.AddYears(-18);
             var status = tie.RelativeDied ? "deceased" : tie.Ended ? "former" : "current";
             var evidence = new List<Evidence>
             {
@@ -313,9 +318,8 @@ public sealed class WikidataFamilySync(
             // Wikidata's name and date are the register-like form; the agent's stay as evidence.
             link.RelativeName = tie.RelativeLabel;
             link.RelativeNameNormalized = nameNormalized;
-            link.IsMinor = link.IsMinor || minor;
-            link.RelativeBirthDate = link.IsMinor ? null : tie.RelativeBirthDate ?? link.RelativeBirthDate;
-            link.RelativeBirthYear = link.IsMinor ? null : link.RelativeBirthDate?.Year ?? link.RelativeBirthYear;
+            link.RelativeBirthDate = tie.RelativeBirthDate ?? link.RelativeBirthDate;
+            link.RelativeBirthYear = link.RelativeBirthDate?.Year ?? link.RelativeBirthYear;
             link.Status = status == "current" && link.Status is "former" or "deceased" ? link.Status : status;
             link.Level = FamilyLinkMerge.Best(link.Level, EvidenceLevel.B);
             link.EvidenceJson = FamilyLinkMerge.MergeEvidence(link.EvidenceJson, evidence, incomingIsWikidata: true);
