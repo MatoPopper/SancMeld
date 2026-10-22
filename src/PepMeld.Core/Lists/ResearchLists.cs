@@ -23,7 +23,11 @@ public sealed record ResearchList(
     IReadOnlyList<ResearchListPerson> Persons,
     DateTimeOffset? VerifiedAt = null);
 
-/// <summary>A holder: the quote that names them on the official page, and the date of birth with its own quote where one was found.</summary>
+/// <summary>
+/// A holder: the quote that names them on the official page, and the date of birth with its
+/// own quote where one was found. Where none was, the year of birth the official page prints
+/// beside the name ("JUDr. Jan Novák *1974"), with the quote that shows both.
+/// </summary>
 public sealed record ResearchListPerson(
     string Name,
     string? TitleBefore,
@@ -34,10 +38,13 @@ public sealed record ResearchListPerson(
     string FunctionQuote,
     DateOnly? DateOfBirth,
     string? DobUrl,
-    string? DobQuote);
+    string? DobQuote,
+    int? BirthYear = null,
+    string? BirthYearUrl = null,
+    string? BirthYearQuote = null);
 
 /// <summary>What became of one holder of a list.</summary>
-public sealed record ResearchListOutcome(string Name, bool Accepted, bool DateTaken, string Reason);
+public sealed record ResearchListOutcome(string Name, bool Accepted, bool DateTaken, string Reason, bool YearTaken = false);
 
 /// <summary>
 /// The offices no register publishes as data: the members of the Supreme Audit Office,
@@ -112,8 +119,28 @@ public sealed partial class ResearchLists(
                 kept = person with { DateOfBirth = null, DobUrl = null, DobQuote = null };
             }
 
+            // A year is kept only where no date is, and only from a quote that holds both the
+            // name and the year: on a page listing many judges a bare "*1974" proves nothing.
+            var yearTaken = false;
+            if (!dateTaken && person is { BirthYear: { } year, BirthYearUrl: { } yearUrl, BirthYearQuote: { } yearQuote }
+                && NamesPerson(yearQuote, person.Name) && StatesYear(yearQuote, year))
+            {
+                var shown = await quotes.CheckAsync(yearUrl, yearQuote, ct).ConfigureAwait(false);
+                yearTaken = shown is QuoteCheck.Exact or QuoteCheck.Partial;
+            }
+
+            if (!yearTaken)
+            {
+                kept = kept with { BirthYear = null, BirthYearUrl = null, BirthYearQuote = null };
+            }
+
             accepted.Add(kept);
-            outcomes.Add(new(person.Name, true, dateTaken, dateTaken ? $"born {person.DateOfBirth:yyyy-MM-dd}" : person.DateOfBirth is null ? "no date" : "date not confirmed on its page"));
+            var reason = dateTaken ? $"born {person.DateOfBirth:yyyy-MM-dd}"
+                : yearTaken ? $"born in {person.BirthYear}"
+                : person.DateOfBirth is not null ? "date not confirmed on its page"
+                : person.BirthYear is not null ? "year not confirmed on its page"
+                : "no date";
+            outcomes.Add(new(person.Name, true, dateTaken, reason, yearTaken));
         }
 
         if (accepted.Count == 0)
@@ -133,8 +160,10 @@ public sealed partial class ResearchLists(
             throw new InvalidOperationException($"The import of {SourceCode} did not succeed: {outcome.Reason}");
         }
 
-        // The dates, lent as researched: the official page names the office, another the birthday.
-        foreach (var person in accepted.Where(p => p.DateOfBirth is not null))
+        // The dates, lent as researched: the official page names the office, another the
+        // birthday. The year is the list's own and is set again on every run, so one that a
+        // later file no longer confirms is dropped.
+        foreach (var person in accepted)
         {
             var key = ResearchListConnector.PersonKey(list.List, person.Name);
             var stored = await db.Persons.FirstOrDefaultAsync(p => p.Source!.Code == SourceCode && p.SourceKey == key, ct).ConfigureAwait(false);
@@ -143,14 +172,21 @@ public sealed partial class ResearchLists(
                 continue;
             }
 
-            stored.BirthDate = person.DateOfBirth;
-            stored.BirthDateFrom = BirthDateResearch.Researched;
-            stored.BirthDateFromUrl = person.DobUrl;
+            if (person.DateOfBirth is not null)
+            {
+                stored.BirthDate = person.DateOfBirth;
+                stored.BirthDateFrom = BirthDateResearch.Researched;
+                stored.BirthDateFromUrl = person.DobUrl;
+            }
+
+            stored.BirthYearMin = person.BirthYear;
+            stored.BirthYearMax = person.BirthYear;
+            stored.BirthYearNote = person.BirthYear is not null ? $"{person.BirthYearUrl}: „{person.BirthYearQuote}“" : null;
         }
 
         await db.SaveChangesAsync(ct).ConfigureAwait(false);
-        logger.LogInformation("Research list {List}: {Accepted} of {Total} holders kept, {Dates} with a date of birth.",
-            list.List, accepted.Count, list.Persons.Count, accepted.Count(p => p.DateOfBirth is not null));
+        logger.LogInformation("Research list {List}: {Accepted} of {Total} holders kept, {Dates} with a date of birth, {Years} with a year only.",
+            list.List, accepted.Count, list.Persons.Count, accepted.Count(p => p.DateOfBirth is not null), accepted.Count(p => p.BirthYear is not null));
 
         return outcomes;
     }
@@ -161,6 +197,10 @@ public sealed partial class ResearchLists(
         var words = PersonNames.Normalize(quote).Split(' ', StringSplitOptions.RemoveEmptyEntries).ToHashSet(StringComparer.Ordinal);
         return PersonNames.Normalize(name).Split(' ', StringSplitOptions.RemoveEmptyEntries).All(words.Contains);
     }
+
+    /// <summary>The year stands alone in the quote, not inside a longer number such as a case reference.</summary>
+    internal static bool StatesYear(string quote, int year) =>
+        Regex.IsMatch(quote, $@"(?<!\d){year}(?!\d)");
 
     [GeneratedRegex("^[a-z0-9-]{2,60}$")]
     private static partial Regex ListId();

@@ -1,6 +1,7 @@
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
+using PepMeld.Core.Checks;
 using PepMeld.Core.Data;
 using PepMeld.Core.Domain;
 using PepMeld.Core.Family;
@@ -12,7 +13,7 @@ namespace PepMeld.Core.IntegrationTests;
 /// <summary>
 /// A list of office holders from an institution's site: a holder whose name is not in the
 /// quote is refused, a date of birth comes in as researched, and a holder the next run no
-/// longer names has left.
+/// longer names has left. A year printed beside the name rules out namesakes.
 /// </summary>
 [Collection(DatabaseCollection.Name)]
 public sealed class ResearchListsTests(DatabaseFixture fixture)
@@ -75,5 +76,44 @@ public sealed class ResearchListsTests(DatabaseFixture fixture)
             Assert.True(gone.EndedByDisappearance);
             Assert.NotNull(gone.ValidTo);
         }
+    }
+
+    private static string YearJudge(string name, string yearQuote) =>
+        $$"""{ "name": "{{name}}", "role": "soudce", "functionUrl": "https://example.org/s", "functionQuote": "JUDr. {{name}}", "birthYear": 1974, "birthYearUrl": "https://example.org/y", "birthYearQuote": "{{yearQuote}}" }""";
+
+    [Fact]
+    public async Task AYearBesideTheNameIsKeptAndRulesOutANamesakeBornInAnotherYear()
+    {
+        var id = Guid.NewGuid().ToString("N")[..8];
+        var list = "test-" + id;
+        var snapshots = TestServices.TempDirectory();
+        var named = $"Dana Rocnikova{id}";
+        var bare = $"Emil Rocnik{id}";
+
+        var outcomes = await AddAsync(snapshots, Json(list,
+            YearJudge(named, $"Mgr. {named} *1974"),
+            YearJudge(bare, "*1974 Základní informace")));
+
+        Assert.True(Assert.Single(outcomes, o => o.Name == named).YearTaken);
+        Assert.False(Assert.Single(outcomes, o => o.Name == bare).YearTaken);
+
+        await using var db = fixture.CreateContext();
+        var dana = await db.Persons.AsNoTracking().SingleAsync(p => p.SourceKey == ResearchListConnector.PersonKey(list, named));
+        Assert.Equal(1974, dana.BirthYearMin);
+        Assert.Equal(1974, dana.BirthYearMax);
+        Assert.Null(dana.BirthDate);
+        Assert.Null((await db.Persons.AsNoTracking().SingleAsync(p => p.SourceKey == ResearchListConnector.PersonKey(list, bare))).BirthYearMin);
+
+        var options = TestServices.Options(TestServices.TempDirectory());
+        var stage = new ListsStage(new PepListMatcher(db, options), new SourceQueryService(db), options, TimeProvider.System);
+
+        async Task<IReadOnlyList<FindingView>> CheckAsync(DateOnly born) =>
+            (await stage.RunAsync(new PepCheck { Name = named, BirthDate = born, Country = Country.CZ, UserEmail = "t@example.com" }, CancellationToken.None))
+                .Findings.Where(f => f.Sources?.Contains(ResearchLists.SourceCode) == true).ToList();
+
+        var sameYear = Assert.Single(await CheckAsync(new DateOnly(1974, 5, 1)));
+        Assert.Equal(EvidenceLevel.C, sameYear.Level);
+        Assert.Contains("rok narodenia 1974", sameYear.ToVerify, StringComparison.Ordinal);
+        Assert.Empty(await CheckAsync(new DateOnly(1975, 5, 1)));
     }
 }

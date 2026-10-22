@@ -73,7 +73,7 @@ public sealed class ListsStage(
             else if (match.Person is { BirthYearMin: { } earliest, BirthYearMax: { } latest }
                      && (check.BirthDate.Year < earliest || check.BirthDate.Year > latest))
             {
-                // No date, but the age an election register gives rules this one out: a
+                // No date, but the year of birth a source gives rules this one out: a
                 // namesake born in another decade.
                 continue;
             }
@@ -88,7 +88,7 @@ public sealed class ListsStage(
                 level = EvidenceLevel.C;
                 dateMatched = false;
                 toVerify = match.Person.BirthYearNote is { } years
-                    ? $"Zdroj nepublikuje dátum narodenia; rok narodenia {match.Person.BirthYearMin}–{match.Person.BirthYearMax} podľa veku vo voľbách ({years}) sa zhoduje. Overiť dátum v inom zdroji, či ide o tú istú osobu."
+                    ? $"Zdroj nepublikuje dátum narodenia; rok narodenia {Years(match.Person)} ({years}) sa zhoduje. Overiť dátum v inom zdroji, či ide o tú istú osobu."
                     : "Zdroj nepublikuje dátum narodenia. Overiť v inom zdroji (profil, oznámenie funkcionára, zbierka listín), či ide o tú istú osobu.";
             }
 
@@ -188,6 +188,9 @@ public sealed class ListsStage(
         var dates = function.DateNote is { Length: > 0 } note ? $" {note}" : string.Empty;
         return $"{who}: {function.Role}, {function.Institution} ({period}).{ending}{dates}";
     }
+
+    private static string Years(PepPerson person) =>
+        person.BirthYearMin == person.BirthYearMax ? $"{person.BirthYearMin}" : $"{person.BirthYearMin}–{person.BirthYearMax}";
 
     private static string Date(DateOnly? date) => date?.ToString("d. M. yyyy", CultureInfo.InvariantCulture) ?? "neznámeho dátumu";
 
