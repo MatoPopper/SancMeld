@@ -204,12 +204,25 @@ public sealed class PepImportService(
 
             var functions = person.Functions.ToDictionary(f => f.SourceKey, StringComparer.Ordinal);
             var seenFunctions = new HashSet<string>(StringComparer.Ordinal);
+            var fileKeys = item.Functions.Select(f => f.SourceKey).ToHashSet(StringComparer.Ordinal);
 
             foreach (var pf in item.Functions)
             {
                 if (!seenFunctions.Add(pf.SourceKey))
                 {
                     continue;
+                }
+
+                // A connector that changes how it keys a function must not end every one of
+                // them: an office the file no longer carries under its old key, with the same
+                // role, institution and start, is the same office under a new key.
+                if (!functions.ContainsKey(pf.SourceKey)
+                    && person.Functions.FirstOrDefault(f => !fileKeys.Contains(f.SourceKey) && !seenFunctions.Contains(f.SourceKey)
+                        && f.Role == pf.Role && f.Institution == pf.Institution && f.ValidFrom == pf.From) is { } renamed)
+                {
+                    functions.Remove(renamed.SourceKey);
+                    renamed.SourceKey = pf.SourceKey;
+                    functions[pf.SourceKey] = renamed;
                 }
 
                 if (!functions.TryGetValue(pf.SourceKey, out var function))
@@ -261,6 +274,20 @@ public sealed class PepImportService(
                 function.EndedByDisappearance = false;
                 function.DateNote = pf.DateNote;
                 function.SourceUrl = pf.SourceUrl;
+            }
+
+            // What is left under an old key and repeats an office the file still carries (the
+            // same role, institution and start) was one office recorded twice; the row the
+            // file still names stands for it, the copy goes rather than ending today.
+            foreach (var copy in person.Functions
+                         .Where(f => !seenFunctions.Contains(f.SourceKey))
+                         .Where(f => person.Functions.Any(o => seenFunctions.Contains(o.SourceKey) && o.Role == f.Role && o.Institution == f.Institution && o.ValidFrom == f.ValidFrom))
+                         .ToList())
+            {
+                person.Functions.Remove(copy);
+                db.Functions.Remove(copy);
+                logger.LogInformation("{Source}: {Person} had {Role} from {From} twice; the copy under {Key} is removed.",
+                    source.Code, person.DisplayName, copy.Role, copy.ValidFrom, copy.SourceKey);
             }
 
             foreach (var gone in person.Functions.Where(f => !seenFunctions.Contains(f.SourceKey) && f.ValidTo is null))

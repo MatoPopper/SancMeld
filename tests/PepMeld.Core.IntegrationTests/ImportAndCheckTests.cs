@@ -62,12 +62,12 @@ public sealed class ImportAndCheckTests(DatabaseFixture fixture) : IAsyncLifetim
 
         var forced = await importer.RunAsync(CzPspConnector.Code, force: true, CancellationToken.None);
         Assert.Equal(ImportStatus.Success, forced.Status);
-        Assert.Equal(10, forced.PersonsSeen);
+        Assert.Equal(11, forced.PersonsSeen);
         Assert.Equal(0, forced.PersonsInserted);
         Assert.Equal(0, forced.FunctionsInserted);
         Assert.Equal(0, forced.FunctionsEnded);
 
-        Assert.Equal(10, await db.Persons.CountAsync(p => p.SourceId == WellKnownIds.CzPspSource));
+        Assert.Equal(11, await db.Persons.CountAsync(p => p.SourceId == WellKnownIds.CzPspSource));
     }
 
     [Fact]
@@ -113,7 +113,7 @@ public sealed class ImportAndCheckTests(DatabaseFixture fixture) : IAsyncLifetim
         Assert.Equal(StageStatus.Skipped, Assert.Single(check.Stages, s => s.Stage == CheckStage.Boards).Status);
         Assert.Equal(StageStatus.Skipped, Assert.Single(check.Stages, s => s.Stage == CheckStage.Family).Status);
 
-        Assert.Contains(check.Coverage, c => c.Source == CzPspConnector.Code && c.LastImportedAt is not null && c.Persons == 10);
+        Assert.Contains(check.Coverage, c => c.Source == CzPspConnector.Code && c.LastImportedAt is not null && c.Persons == 11);
     }
 
     [Fact]
@@ -144,11 +144,11 @@ public sealed class ImportAndCheckTests(DatabaseFixture fixture) : IAsyncLifetim
         Assert.Contains(findings, f => f.Level == EvidenceLevel.A && f.Function!.Role == "Předseda vlády" && f.Function.To == new DateOnly(2025, 12, 15));
         Assert.Contains(findings, f => f.Level == EvidenceLevel.A && f.Function!.Role == "poslanec" && f.Function.To is null);
 
-        var senator = findings.Where(f => f.Level == EvidenceLevel.C).ToList();
-        Assert.Equal(2, senator.Count);
-        Assert.All(senator, f => Assert.Equal("senátor", f.Function!.Role));
-        Assert.All(senator, f => Assert.False(f.Person.DateOfBirthMatched));
-        Assert.All(senator, f => Assert.NotNull(f.ToVerify));
+        // One mandate, once: the Chamber records it with two start hours.
+        var senator = Assert.Single(findings, f => f.Level == EvidenceLevel.C);
+        Assert.Equal("senátor", senator.Function!.Role);
+        Assert.False(senator.Person.DateOfBirthMatched);
+        Assert.NotNull(senator.ToVerify);
     }
 
     [Fact]

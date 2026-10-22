@@ -18,7 +18,8 @@
        mapper reads plus two political clubs it must ignore, the offices in them, and the
        rows of eleven persons chosen for what can go wrong: two presidents with the
        mandate dates in od_f, one who has died, two namesakes of the prime minister with
-       the 1900 sentinel for an unknown birthday, a senator across eight terms. -->
+       the 1900 sentinel for an unknown birthday, a senator across eight terms, and (added 2026-10-22) a senator not re-elected in 2022
+       whose first-period record the Chamber left open. -->
   <ItemGroup>
     <Content Include="../../fixtures/cz-psp/*.unl" Link="fixtures/cz-psp/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>

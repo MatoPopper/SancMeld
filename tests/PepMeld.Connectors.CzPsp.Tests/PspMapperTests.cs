@@ -17,15 +17,15 @@ public class PspMapperTests
     private static ParsedPerson Person(string key) => Map().Single(p => p.SourceKey == key);
 
     /// <summary>
-    /// Eleven persons in the file, ten with a function this product cares about. The
-    /// eleventh (5536) only ever sat in a body of a type the mapper does not read.
+    /// Twelve persons in the file, eleven with a function this product cares about. The
+    /// other one (5536) only ever sat in a body of a type the mapper does not read.
     /// </summary>
     [Fact]
     public void OnlyPersonsWithARelevantFunctionAreReturned()
     {
         var persons = Map();
 
-        Assert.Equal(10, persons.Count);
+        Assert.Equal(11, persons.Count);
         Assert.DoesNotContain(persons, p => p.SourceKey == "5536");
         Assert.All(persons, p => Assert.NotEmpty(p.Functions));
         Assert.All(persons, p => Assert.All(p.Functions, f => Assert.Equal(Country.CZ, f.Country)));
@@ -112,8 +112,7 @@ public class PspMapperTests
 
         Assert.Equal("Petr Fiala", namesake.DisplayName);
         Assert.Null(namesake.BirthDate);
-        Assert.Equal(2, namesake.Functions.Count);
-        Assert.All(namesake.Functions, f => Assert.Equal("senátor", f.Role));
+        Assert.Equal("senátor", Assert.Single(namesake.Functions).Role);
 
         var primeMinister = Person("6074");
         Assert.Equal(new DateOnly(1964, 9, 1), primeMinister.BirthDate);
@@ -151,6 +150,31 @@ public class PspMapperTests
         Assert.Equal(new DateOnly(2022, 10, 15), terms[1].To);
         Assert.Equal(new DateOnly(2022, 10, 1), terms[2].From);
         Assert.Null(terms[2].To);
+    }
+
+    /// <summary>
+    /// A senator who was not re-elected in 2022: the first period's record of the mandate
+    /// is left open, the two later ones carry the end. Not a sitting senator.
+    /// </summary>
+    [Fact]
+    public void AMandateLeftOpenInOnePeriodButEndedInTheLaterOnesHasEnded()
+    {
+        var term = Assert.Single(Person("6401").Functions, f => f.Role == "senátor");
+        Assert.Equal(new DateOnly(2016, 10, 15), term.From);
+        Assert.Equal(new DateOnly(2022, 10, 15), term.To);
+    }
+
+    /// <summary>
+    /// A sitting senator elected in 2022, recorded in the periods of 2022 and 2024 with the
+    /// start hour 14 in one and 00 in the other: one mandate, still held.
+    /// </summary>
+    [Fact]
+    public void TheSameMandateWithAnotherStartHourIsOneFunction()
+    {
+        var term = Assert.Single(Person("6870").Functions, f => f.Role == "senátor");
+        Assert.Equal(new DateOnly(2022, 9, 24), term.From);
+        Assert.Null(term.To);
+        Assert.Equal("m:senat:2022-09-24", term.SourceKey);
     }
 
     [Fact]

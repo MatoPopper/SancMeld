@@ -66,6 +66,11 @@ internal static class PspMapper
 
         var functions = new Dictionary<int, List<ParsedFunction>>();
 
+        // The newest Senate body each mandate is recorded in, to tell a mandate that goes on
+        // from one the Chamber never closed (see EndLapsedSenateMandates).
+        var senateBodyOf = new Dictionary<(int Person, string Key), DateOnly>();
+        var senateStarts = bodies.Values.Where(b => b.TypeId == SenateType && b.From is not null).Select(b => b.From!.Value).Order().ToList();
+
         foreach (var f in Read(archive, "zarazeni.unl"))
         {
             if (f.Length < 7)
@@ -92,8 +97,22 @@ internal static class PspMapper
                 // mandate is recorded three times with the same dates. One mandate, one
                 // function: keyed by its start, not by the period's body.
                 var senate = body.TypeId == SenateType;
+
+                // Keyed by the day the mandate began: the Chamber writes the same mandate with
+                // the hour 00 in one period and 14 in another ("2022-09-24 00", "... 14"),
+                // which made one mandate two functions, one of them left open.
+                var senateKey = $"m:senat:{f[3][..Math.Min(10, f[3].Length)]}";
+                if (senate && body.From is { } bodyFrom)
+                {
+                    var key = (personId, senateKey);
+                    if (!senateBodyOf.TryGetValue(key, out var newest) || bodyFrom > newest)
+                    {
+                        senateBodyOf[key] = bodyFrom;
+                    }
+                }
+
                 function = new ParsedFunction(
-                    senate ? $"m:senat:{f[3]}" : $"m:{targetId}:{f[3]}",
+                    senate ? senateKey : $"m:{targetId}:{f[3]}",
                     Country.CZ,
                     type.Category,
                     senate ? type.Institution : Institution(type, body),
@@ -157,7 +176,7 @@ internal static class PspMapper
                 BirthDate(f[5]),
                 f.Length > 8 ? Date(f[8]) : null,
                 url,
-                OneMandatePerSenateTerm(list)
+                EndLapsedSenateMandates(OneMandatePerSenateTerm(list, id, senateBodyOf, senateStarts), id, senateBodyOf, senateStarts)
                     .Select(x => x with { SourceUrl = url })
                     .OrderByDescending(x => x.To is null)
                     .ThenByDescending(x => x.From)
@@ -169,13 +188,16 @@ internal static class PspMapper
 
     /// <summary>
     /// The three records of one Senate mandate agree on the start and should agree on the
-    /// end; where one of them is left open and the senator went on to a later mandate,
-    /// the open one is the Chamber's slip and the dated ones are right.
+    /// end. Where one is left open and another has the end, the end is right unless the
+    /// mandate is in the newest Senate body, that is, still held: the Chamber closes the
+    /// records of later periods and forgets the first one (Ladislav Kos, 2016-2022).
     /// </summary>
-    private static IEnumerable<ParsedFunction> OneMandatePerSenateTerm(IReadOnlyList<ParsedFunction> functions)
+    private static IEnumerable<ParsedFunction> OneMandatePerSenateTerm(
+        IReadOnlyList<ParsedFunction> functions,
+        int personId,
+        Dictionary<(int Person, string Key), DateOnly> senateBodyOf,
+        IReadOnlyList<DateOnly> senateStarts)
     {
-        var starts = functions.Where(f => f.SourceKey.StartsWith("m:senat:", StringComparison.Ordinal)).Select(f => f.From).ToList();
-
         foreach (var group in functions.GroupBy(f => f.SourceKey, StringComparer.Ordinal))
         {
             if (group.Count() == 1 || !group.Key.StartsWith("m:senat:", StringComparison.Ordinal))
@@ -186,9 +208,43 @@ internal static class PspMapper
 
             var ended = group.Where(f => f.To is not null).OrderByDescending(f => f.To).FirstOrDefault();
             var open = group.FirstOrDefault(f => f.To is null);
-            var hasLaterMandate = starts.Any(s => s > group.First().From);
+            var held = senateStarts.Count > 0 && senateBodyOf.TryGetValue((personId, group.Key), out var newest) && newest >= senateStarts[^1];
 
-            yield return open is not null && !hasLaterMandate ? open : ended ?? open!;
+            yield return held ? open ?? ended! : ended ?? open!;
+        }
+    }
+
+    /// <summary>
+    /// The Chamber leaves a senator's last mandate open when it ends without re-election:
+    /// on 2026-10-22, 192 open Senate memberships for 81 seats, back to the body of 2016.
+    /// The Senate is one body per two-year period and every sitting senator is a member of
+    /// the newest one, so an open mandate that is not in the newest body has ended: at the
+    /// latest when the period after its last body began. That date is ours, and the finding
+    /// says so.
+    /// </summary>
+    private static IEnumerable<ParsedFunction> EndLapsedSenateMandates(
+        IEnumerable<ParsedFunction> functions,
+        int personId,
+        Dictionary<(int Person, string Key), DateOnly> senateBodyOf,
+        IReadOnlyList<DateOnly> senateStarts)
+    {
+        foreach (var function in functions)
+        {
+            if (function.To is null
+                && senateStarts.Count > 0
+                && senateBodyOf.TryGetValue((personId, function.SourceKey), out var lastBody)
+                && lastBody < senateStarts[^1])
+            {
+                var next = senateStarts.First(s => s > lastBody);
+                yield return function with
+                {
+                    To = next,
+                    DateNote = $"Koniec dopočítaný: psp.cz mandát neuzavrel a senátor nie je členom Senátu vo funkčnom období od {next.ToString("d. M. yyyy", CultureInfo.InvariantCulture)}.",
+                };
+                continue;
+            }
+
+            yield return function;
         }
     }
 

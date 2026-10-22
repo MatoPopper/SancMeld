@@ -79,4 +79,37 @@ public sealed class ImportDiffTests(DatabaseFixture fixture)
         Assert.Equal(1, fourth.FunctionsUpdated);
         Assert.Null((await db.Functions.AsNoTracking().SingleAsync(f => f.Person!.SourceKey == key && f.SourceKey == "a")).ValidTo);
     }
+
+    private static ParsedFunction Seat(string key) =>
+        new(key, Country.SK, PepCategory.MemberOfParliament, "Národná rada SR", "poslanec", new DateOnly(2022, 9, 24), null, null);
+
+    /// <summary>
+    /// A connector that changes how it keys a function: the one office recorded twice under
+    /// the old keys is one row under the new key, still open, nothing ended today.
+    /// </summary>
+    [Fact]
+    public async Task AnOfficeUnderANewKeyKeepsItsRowAndADuplicateCopyGoes()
+    {
+        var key = "rekey-" + Guid.NewGuid().ToString("N")[..8];
+
+        await ImportAsync(Person(key, Seat("m:2022-09-24 00"), Seat("m:2022-09-24 14")));
+
+        await using (var db = fixture.CreateContext())
+        {
+            Assert.Equal(2, await db.Functions.CountAsync(f => f.Person!.SourceKey == key));
+        }
+
+        var rekeyed = await ImportAsync(Person(key, Seat("m:2022-09-24")));
+        Assert.Equal(ImportStatus.Success, rekeyed.Status);
+        Assert.Equal(0, rekeyed.FunctionsInserted);
+        Assert.Equal(0, rekeyed.FunctionsEnded);
+
+        await using (var db = fixture.CreateContext())
+        {
+            var seat = Assert.Single(await db.Functions.Where(f => f.Person!.SourceKey == key).ToListAsync());
+            Assert.Equal("m:2022-09-24", seat.SourceKey);
+            Assert.Null(seat.ValidTo);
+            Assert.False(seat.EndedByDisappearance);
+        }
+    }
 }
