@@ -67,6 +67,8 @@ public static class PepMeldExtensions
         services.AddScoped<BirthDateFill>();
         services.AddScoped<BirthDateResearch>();
         services.AddScoped<ElectionAges>();
+        services.AddScoped<ResearchLists>();
+        services.AddSingleton<IPepListConnector, ResearchListConnector>();
         services.AddHttpClient(ElectionAges.HttpClientName, (provider, client) =>
         {
             var ingest = provider.GetRequiredService<Microsoft.Extensions.Options.IOptions<PepMeldOptions>>().Value.Ingest;

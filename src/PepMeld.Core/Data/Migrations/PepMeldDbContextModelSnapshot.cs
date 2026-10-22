@@ -1009,6 +1009,22 @@ namespace PepMeld.Core.Data.Migrations
                             Publisher = "Digitální a informační agentura",
                             RefreshHours = 24,
                             Url = "https://rpp-opendata.egon.gov.cz/odrpp/datovasada/ovm.json"
+                        },
+                        new
+                        {
+                            Id = new Guid("7b1c2e3a-0001-4c5d-9e8f-000000000008"),
+                            Code = "CZ_RESEARCH",
+                            Country = "c_z",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 22, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            HasBirthDate = false,
+                            IsEnabled = true,
+                            IsOfficial = false,
+                            Licence = "Verejné stránky inštitúcií; citáty v rozsahu potrebnom na overenie",
+                            MinExpectedPersons = 1,
+                            Name = "Zoznamy z webov inštitúcií (NKÚ, Ústavní soud, Nejvyšší soud, Nejvyšší správní soud), overené citátom",
+                            Publisher = "PepMeld – výskum na webe, každý citát overený na citovanej stránke",
+                            RefreshHours = 24,
+                            Url = "https://github.com/MatoPopper/SancMeld"
                         });
                 });
 

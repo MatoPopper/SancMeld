@@ -156,6 +156,25 @@ if (args is ["birthdates", "import", var researchedPath, ..])
     return 0;
 }
 
+// A list of office holders a research agent read off an institution's site, checked
+// quote by quote and imported as CZ_RESEARCH:
+//
+//   dotnet run --project src/PepMeld.Server -- lists add cz-nku.json
+if (args is ["lists", "add", var listPath, ..])
+{
+    using var scope = app.Services.CreateScope();
+    await using var file = File.OpenRead(listPath);
+    var outcomes = await scope.ServiceProvider.GetRequiredService<ResearchLists>().AddAsync(file, CancellationToken.None);
+
+    foreach (var o in outcomes)
+    {
+        Console.WriteLine($"{(o.Accepted ? (o.DateTaken ? "kept+dob" : "kept   ") : "refused")} {o.Name}: {o.Reason}");
+    }
+
+    Console.WriteLine($"{outcomes.Count(o => o.Accepted)} of {outcomes.Count} kept, {outcomes.Count(o => o.DateTaken)} with a date of birth.");
+    return outcomes.Any(o => o.Accepted) ? 0 : 1;
+}
+
 // API keys, printed once:
 //
 //   dotnet run --project src/PepMeld.Server -- apikey create you@example.com --name "my client"

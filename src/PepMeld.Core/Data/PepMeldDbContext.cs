@@ -194,6 +194,27 @@ public class PepMeldDbContext(DbContextOptions<PepMeldDbContext> options) : DbCo
                 RefreshHours = 24,
                 IsEnabled = true,
                 CreatedAt = new DateTimeOffset(2026, 10, 22, 0, 0, 0, TimeSpan.Zero),
+            },
+            new PepSource
+            {
+                Id = WellKnownIds.CzResearchSource,
+                Code = "CZ_RESEARCH",
+                Country = Country.CZ,
+                Name = "Zoznamy z webov inštitúcií (NKÚ, Ústavní soud, Nejvyšší soud, Nejvyšší správní soud), overené citátom",
+                Publisher = "PepMeld – výskum na webe, každý citát overený na citovanej stránke",
+                Url = "https://github.com/MatoPopper/SancMeld",
+
+                // A list names the holders, not their birthdays; a date found elsewhere is
+                // lent as researched (level B), the rest are level C.
+                HasBirthDate = false,
+                IsOfficial = false,
+                Licence = "Verejné stránky inštitúcií; citáty v rozsahu potrebnom na overenie",
+
+                // An empty directory is no list; one holder is.
+                MinExpectedPersons = 1,
+                RefreshHours = 24,
+                IsEnabled = true,
+                CreatedAt = new DateTimeOffset(2026, 10, 22, 0, 0, 0, TimeSpan.Zero),
             });
         });
 
