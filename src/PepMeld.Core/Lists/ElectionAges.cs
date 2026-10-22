@@ -130,7 +130,10 @@ public sealed class ElectionAges(PepMeldDbContext db, IHttpClientFactory httpCli
         stream.Position = 0;
 
         using var zip = new ZipArchive(stream, ZipArchiveMode.Read);
-        var councils = Read(zip, "kvrzcoco.csv").ToDictionary(r => r["KODZASTUP"], r => PersonNames.Normalize(r["NAZEVZAST"]), StringComparer.Ordinal);
+        // One row per electoral ward (COBVODU): a council split into wards appears more than once.
+        var councils = Read(zip, "kvrzcoco.csv")
+            .GroupBy(r => r["KODZASTUP"], StringComparer.Ordinal)
+            .ToDictionary(g => g.Key, g => PersonNames.Normalize(g.First()["NAZEVZAST"]), StringComparer.Ordinal);
 
         var result = new Dictionary<(string, string), List<int>>();
         foreach (var row in Read(zip, "kvrk.csv"))

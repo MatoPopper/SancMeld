@@ -53,7 +53,8 @@ public sealed class ElectionAgesTests(DatabaseFixture fixture)
                 writer.Write(text);
             }
 
-            Write("kvrzcoco.csv", $"KRAJ,OKRES,TYPZASTUP,DRUHZASTUP,KODZASTUP,NAZEVZAST\n1,1,1,1,500001,{town}\n");
+            // A council split into two wards has two rows, as in the real register.
+            Write("kvrzcoco.csv", $"KRAJ,OKRES,TYPZASTUP,DRUHZASTUP,KODZASTUP,NAZEVZAST,COBVODU\n1,1,1,1,500001,{town},1\n1,1,1,1,500001,{town},2\n");
             Write("kvrk.csv",
                 "OKRES,KODZASTUP,COBVODU,POR_STR_HL,OSTRANA,PORCISLO,JMENO,PRIJMENI,TITULPRED,TITULZA,VEK,POVOLANI,BYDLISTEN,PSTRANA,NSTRANA,PLATNOST\n" +
                 $"1,500001,0,1,1,1,{given} Josef,{surname},Ing.,,{age},\"starosta, podnikatel\",{town},1,1,A\n" +
