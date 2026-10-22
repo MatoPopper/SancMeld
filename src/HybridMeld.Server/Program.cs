@@ -83,6 +83,7 @@ var app = builder.Build();
 //   dotnet run --project src/HybridMeld.Server -- hybrid sources fetch [CODE|--due]
 //   dotnet run --project src/HybridMeld.Server -- hybrid aliases sync
 //   dotnet run --project src/HybridMeld.Server -- hybrid import-case <file.json> [--by email]
+//   dotnet run --project src/HybridMeld.Server -- hybrid import-hypothesis <file.json> [--by email]
 //   dotnet run --project src/HybridMeld.Server -- hybrid links verify [--all] [--limit n]
 //   dotnet run --project src/HybridMeld.Server -- hybrid actors forget <id>
 if (args is ["hybrid", var hybridAction, ..])
@@ -115,6 +116,18 @@ if (args is ["hybrid", var hybridAction, ..])
             {
                 var o = await services.GetRequiredService<CaseImportService>().ImportAsync(await File.ReadAllTextAsync(args[2]), Flag(args, "--by") ?? "case-file", CancellationToken.None);
                 Console.WriteLine($"{o.Slug}: campaign {(o.CampaignCreated ? "created" : "updated")}; actors {o.ActorsMatched} matched, {o.ActorsCreated} new; claims {o.ClaimsCreated} new, {o.ClaimsExisting} existing.");
+                foreach (var note in o.Notes)
+                {
+                    Console.WriteLine("  " + note);
+                }
+
+                return 0;
+            }
+
+        case "import-hypothesis" when args.Length > 2 && File.Exists(args[2]):
+            {
+                var o = await services.GetRequiredService<HypothesisImportService>().ImportAsync(await File.ReadAllTextAsync(args[2]), Flag(args, "--by") ?? "hypothesis-file", CancellationToken.None);
+                Console.WriteLine($"{o.Slug}: hypothesis {(o.Created ? "created" : "updated")}; actors {o.ActorsLinked} linked; indicators {o.IndicatorsCreated} new, {o.IndicatorsExisting} existing.");
                 foreach (var note in o.Notes)
                 {
                     Console.WriteLine("  " + note);
@@ -161,7 +174,7 @@ if (args is ["hybrid", var hybridAction, ..])
             }
 
         default:
-            Console.Error.WriteLine("Usage: hybrid seed-regimes [RUSDA CYB] | hybrid sources seed | hybrid sources fetch <CODE>|--due | hybrid aliases sync | hybrid import-case <file.json> [--by email] | hybrid links verify [--all] [--limit n] | hybrid actors forget <id>");
+            Console.Error.WriteLine("Usage: hybrid seed-regimes [RUSDA CYB] | hybrid sources seed | hybrid sources fetch <CODE>|--due | hybrid aliases sync | hybrid import-case <file.json> [--by email] | hybrid import-hypothesis <file.json> [--by email] | hybrid links verify [--all] [--limit n] | hybrid actors forget <id>");
             return 1;
     }
 }

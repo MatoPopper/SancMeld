@@ -86,3 +86,11 @@ public enum FetchKind { Rss, Html, Telegram, Manual }
 public enum SourceItemStatus { New, Triaged, Linked, Ignored }
 
 public enum RunStatus { Running, Success, Failed }
+
+/// <summary>
+/// Open is a question being watched; Promoted means a case was opened from it (the slug
+/// is on the row); Dismissed means the question was closed with a reason. A hypothesis
+/// never becomes a case by changing a flag: the case is written separately, with actors
+/// and claims, and the hypothesis points at it.
+/// </summary>
+public enum HypothesisStatus { Open, Promoted, Dismissed }

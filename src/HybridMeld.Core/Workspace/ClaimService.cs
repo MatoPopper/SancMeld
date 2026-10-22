@@ -2,7 +2,6 @@ using HybridMeld.Core.Data;
 using HybridMeld.Core.Domain;
 using HybridMeld.Core.Sources;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace HybridMeld.Core.Workspace;
 
@@ -11,7 +10,7 @@ namespace HybridMeld.Core.Workspace;
 /// Everything else (the level, who is named, from what source) is the curator's call and
 /// is shown as such; see EvidenceLevel.
 /// </summary>
-public sealed class ClaimService(HybridMeldDbContext db, PageFetcher pages, ISnapshotStore snapshots, TimeProvider clock, ILogger<ClaimService> logger)
+public sealed class ClaimService(HybridMeldDbContext db, PageCapture capture, TimeProvider clock)
 {
     public async Task<ClaimView?> GetAsync(long id, CancellationToken ct) =>
         await Loaded().AsNoTracking().FirstOrDefaultAsync(c => c.Id == id, ct).ConfigureAwait(false) is { } claim
@@ -227,20 +226,11 @@ public sealed class ClaimService(HybridMeldDbContext db, PageFetcher pages, ISna
             AddedBy = by,
         };
 
-        try
+        if (await capture.TryAsync(uri, "evidence", ct).ConfigureAwait(false) is { } page)
         {
-            var page = await pages.FetchAsync(uri, ct).ConfigureAwait(false);
-            if (page is not null)
-            {
-                var (path, sha) = await snapshots.SaveAsync("evidence", page.Bytes, ct).ConfigureAwait(false);
-                evidence.SnapshotPath = path;
-                evidence.Sha256 = sha;
-                evidence.Title ??= page.Title;
-            }
-        }
-        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or IOException)
-        {
-            logger.LogWarning(ex, "Could not keep a copy of {Url}; the quote stands on its own.", uri);
+            evidence.SnapshotPath = page.Path;
+            evidence.Sha256 = page.Sha256;
+            evidence.Title ??= page.Title;
         }
 
         return evidence;

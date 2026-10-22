@@ -97,6 +97,7 @@ public sealed record ActorView(
     IReadOnlyList<AliasView> Aliases,
     IReadOnlyList<CampaignSummary> Campaigns,
     IReadOnlyList<ClaimView> Claims,
+    IReadOnlyList<HypothesisSummary> Hypotheses,
     string CreatedBy,
     DateTimeOffset CreatedAt);
 
@@ -230,3 +231,68 @@ public sealed class WorkspaceException(string code, string message, int status =
     public static WorkspaceException Invalid(string code, string message) => new(code, message);
     public static WorkspaceException Conflict(string code, string message) => new(code, message, 409);
 }
+
+// ---- hypotheses ----
+
+public sealed record IndicatorView(
+    long Id,
+    string Statement,
+    EvidenceLevel Level,
+    DateOnly? ObservedOn,
+    string Url,
+    string? ArchiveUrl,
+    string? Publisher,
+    string? Title,
+    string Quote,
+    DateOnly? PublishedOn,
+    bool HasSnapshot,
+    string? Language,
+    DateTimeOffset RetrievedAt,
+    string AddedBy);
+
+public sealed record HypothesisSummary(
+    Guid Id,
+    string Slug,
+    string Title,
+    string Question,
+    HypothesisStatus Status,
+    IReadOnlyList<string> Countries,
+    int IndicatorCount,
+    int ActorCount,
+    bool TouchesSanctions,
+    bool TouchesPep,
+    string? PromotedToSlug,
+    string CreatedBy,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt,
+    DateTimeOffset? DecidedAt);
+
+public sealed record HypothesisView(
+    HypothesisSummary Hypothesis,
+    string Rationale,
+    IReadOnlyList<string> ConfirmWhen,
+    IReadOnlyList<string> RefuteWhen,
+    string? HandlingNote,
+    IReadOnlyList<IndicatorView> Indicators,
+    IReadOnlyList<ActorRef> Actors,
+    string? DecidedBy,
+    string? DecisionNote);
+
+public sealed record HypothesisInput(
+    string Title,
+    string Question,
+    string Rationale,
+    IReadOnlyList<string>? Countries,
+    IReadOnlyList<string>? ConfirmWhen,
+    IReadOnlyList<string>? RefuteWhen,
+    string? HandlingNote,
+    // Chosen on creation and kept; ignored on update. Derived from the title when empty.
+    string? Slug);
+
+public sealed record IndicatorInput(string Statement, EvidenceLevel Level, DateOnly? ObservedOn, EvidenceInput Evidence);
+
+/// <summary>The whole list, replacing what was there; an empty list clears it.</summary>
+public sealed record HypothesisActorsInput(IReadOnlyList<Guid> ActorIds);
+
+/// <summary>Promoted needs the slug of the case written from it; Dismissed needs a note; Open takes either back.</summary>
+public sealed record HypothesisDecisionInput(HypothesisStatus Decision, string? Note, string? PromotedToSlug);

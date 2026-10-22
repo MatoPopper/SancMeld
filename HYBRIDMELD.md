@@ -45,6 +45,9 @@ PEP screen knows the workspace exists, and a compliance user never sees it.
 | `evidence` | URL, publisher, verbatim quote (mandatory), publication date, snapshot path and hash, archive URL. |
 | `claim_decision` | Every decision taken on a claim, in order. |
 | `source`, `source_run`, `source_item` | Watched sources, their fetches, and the inbox of what they brought, with a snapshot of each item. |
+| `hypothesis` | A question worth watching that is not a case: title, the question, why it is worth asking, what would confirm it and what would refute it (two lists), a handling note (what not to link), status Open, Promoted (with the slug of the case written from it) or Dismissed (with a note). It has no claims, puts no edge in the graph and is not in the feed or the facets; related actors are pointers only, never created here. |
+| `indicator` | One public fact behind a hypothesis: a descriptive statement, level A–D, and its source with a verbatim quote and snapshot, as evidence is. |
+| `hypothesis_actor`, `hypothesis_decision` | The pointers to existing actors, and every change of status in order. |
 
 Levels: **A** an official act (a regulation with its reasons, a ruling, a national security
 authority's report); **B** a state-established body or a major platform, or investigative
@@ -83,7 +86,9 @@ the anchor, so shared terms like "Grizzly Steppe" never chain APT29 onto a GRU u
 to existing ones by exact name or alias, so a sanctioned subject keeps its link; claims
 matched by case, subject, predicate, object and statement, so a re-import adds only what
 is new; each claim goes through the same rule and the same page snapshot as one typed in
-the screen), `hybrid links verify [--all]`, `hybrid actors forget <id>` (the one deletion: a person asks
+the screen), `hybrid import-hypothesis <file.json> [--by email]` (a hypothesis from a file: related
+actors matched to existing ones by exact name or alias and never created, indicators
+matched by statement), `hybrid links verify [--all]`, `hybrid actors forget <id>` (the one deletion: a person asks
 to be removed; their claims go, the decisions stay without the name), `apikey …`, `users …`.
 
 The scheduler fetches due sources every fifteen minutes (a Telegram channel defaults to
@@ -97,7 +102,8 @@ touchesPep, minLevel, confirmedOnly, includeSeed, includeDrafts, includeClosed, 
 `/facets` with the counts each chip would show; create, `{slug}`, `{slug}/graph`,
 `{slug}/editorial`), `/actors`
 (`?q=` search over names and aliases, `{id}`, `{id}/graph`, `{id}/links`), `/claims`
-(`{id}`, `{id}/evidence`, `{id}/decision`), `/feed?since=`, `/sources`
+(`{id}`, `{id}/evidence`, `{id}/decision`), `/feed?since=`, `/hypotheses`
+(`?status=&q=`, `{slug}`, `{slug}/indicators`, `{slug}/actors`, `{slug}/decision`), `/sources`
 (`{code}`, `{code}/fetch`), `/inbox` (`{id}`, `{id}/triage`). The graph endpoints answer
 the same `DesignationGraph` record the sanctions API does, so the front end draws both
 with one component.

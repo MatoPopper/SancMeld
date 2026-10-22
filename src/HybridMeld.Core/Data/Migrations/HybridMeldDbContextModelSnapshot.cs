@@ -628,6 +628,279 @@ namespace HybridMeld.Core.Data.Migrations
                     b.ToTable("evidence", (string)null);
                 });
 
+            modelBuilder.Entity("HybridMeld.Core.Data.Hypothesis", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.PrimitiveCollection<List<string>>("ConfirmWhen")
+                        .IsRequired()
+                        .HasColumnType("text[]")
+                        .HasColumnName("confirm_when");
+
+                    b.PrimitiveCollection<List<string>>("Countries")
+                        .IsRequired()
+                        .HasColumnType("text[]")
+                        .HasColumnName("countries");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTimeOffset?>("DecidedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("decided_at");
+
+                    b.Property<string>("DecidedBy")
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)")
+                        .HasColumnName("decided_by");
+
+                    b.Property<string>("DecisionNote")
+                        .HasColumnType("text")
+                        .HasColumnName("decision_note");
+
+                    b.Property<string>("HandlingNote")
+                        .HasColumnType("text")
+                        .HasColumnName("handling_note");
+
+                    b.Property<string>("PromotedToSlug")
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)")
+                        .HasColumnName("promoted_to_slug");
+
+                    b.Property<string>("Question")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("question");
+
+                    b.Property<string>("Rationale")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("rationale");
+
+                    b.PrimitiveCollection<List<string>>("RefuteWhen")
+                        .IsRequired()
+                        .HasColumnType("text[]")
+                        .HasColumnName("refute_when");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)")
+                        .HasColumnName("slug");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("title");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_hypothesis");
+
+                    b.HasIndex("Slug")
+                        .IsUnique()
+                        .HasDatabaseName("ix_hypothesis_slug");
+
+                    b.HasIndex("Status", "UpdatedAt")
+                        .HasDatabaseName("ix_hypothesis_status_updated_at");
+
+                    b.ToTable("hypothesis", (string)null);
+                });
+
+            modelBuilder.Entity("HybridMeld.Core.Data.HypothesisActor", b =>
+                {
+                    b.Property<Guid>("HypothesisId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("hypothesis_id");
+
+                    b.Property<Guid>("ActorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("actor_id");
+
+                    b.Property<DateTimeOffset>("AddedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("added_at");
+
+                    b.Property<string>("AddedBy")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)")
+                        .HasColumnName("added_by");
+
+                    b.HasKey("HypothesisId", "ActorId")
+                        .HasName("pk_hypothesis_actor");
+
+                    b.HasIndex("ActorId")
+                        .HasDatabaseName("ix_hypothesis_actor_actor_id");
+
+                    b.ToTable("hypothesis_actor", (string)null);
+                });
+
+            modelBuilder.Entity("HybridMeld.Core.Data.HypothesisDecision", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTimeOffset>("DecidedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("decided_at");
+
+                    b.Property<string>("DecidedBy")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)")
+                        .HasColumnName("decided_by");
+
+                    b.Property<string>("Decision")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("decision");
+
+                    b.Property<Guid>("HypothesisId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("hypothesis_id");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("text")
+                        .HasColumnName("note");
+
+                    b.Property<string>("PreviousStatus")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("previous_status");
+
+                    b.Property<string>("PromotedToSlug")
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)")
+                        .HasColumnName("promoted_to_slug");
+
+                    b.HasKey("Id")
+                        .HasName("pk_hypothesis_decision");
+
+                    b.HasIndex("HypothesisId")
+                        .HasDatabaseName("ix_hypothesis_decision_hypothesis_id");
+
+                    b.ToTable("hypothesis_decision", (string)null);
+                });
+
+            modelBuilder.Entity("HybridMeld.Core.Data.Indicator", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("AddedBy")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)")
+                        .HasColumnName("added_by");
+
+                    b.Property<string>("ArchiveUrl")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("archive_url");
+
+                    b.Property<Guid>("HypothesisId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("hypothesis_id");
+
+                    b.Property<string>("Language")
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)")
+                        .HasColumnName("language");
+
+                    b.Property<string>("Level")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("level");
+
+                    b.Property<DateOnly?>("ObservedOn")
+                        .HasColumnType("date")
+                        .HasColumnName("observed_on");
+
+                    b.Property<DateOnly?>("PublishedOn")
+                        .HasColumnType("date")
+                        .HasColumnName("published_on");
+
+                    b.Property<string>("Publisher")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("publisher");
+
+                    b.Property<string>("Quote")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)")
+                        .HasColumnName("quote");
+
+                    b.Property<DateTimeOffset>("RetrievedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("retrieved_at");
+
+                    b.Property<string>("Sha256")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("sha256");
+
+                    b.Property<string>("SnapshotPath")
+                        .HasColumnType("text")
+                        .HasColumnName("snapshot_path");
+
+                    b.Property<string>("Statement")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("statement");
+
+                    b.Property<string>("Title")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("title");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("url");
+
+                    b.HasKey("Id")
+                        .HasName("pk_indicator");
+
+                    b.HasIndex("HypothesisId")
+                        .HasDatabaseName("ix_indicator_hypothesis_id");
+
+                    b.ToTable("indicator", (string)null);
+                });
+
             modelBuilder.Entity("HybridMeld.Core.Data.Source", b =>
                 {
                     b.Property<Guid>("Id")
@@ -900,6 +1173,39 @@ namespace HybridMeld.Core.Data.Migrations
                     b.Navigation("Claim");
                 });
 
+            modelBuilder.Entity("HybridMeld.Core.Data.HypothesisActor", b =>
+                {
+                    b.HasOne("HybridMeld.Core.Data.Actor", "Actor")
+                        .WithMany()
+                        .HasForeignKey("ActorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_hypothesis_actor_actor_actor_id");
+
+                    b.HasOne("HybridMeld.Core.Data.Hypothesis", "Hypothesis")
+                        .WithMany("Actors")
+                        .HasForeignKey("HypothesisId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_hypothesis_actor_hypothesis_hypothesis_id");
+
+                    b.Navigation("Actor");
+
+                    b.Navigation("Hypothesis");
+                });
+
+            modelBuilder.Entity("HybridMeld.Core.Data.Indicator", b =>
+                {
+                    b.HasOne("HybridMeld.Core.Data.Hypothesis", "Hypothesis")
+                        .WithMany("Indicators")
+                        .HasForeignKey("HypothesisId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_indicator_hypothesis_hypothesis_id");
+
+                    b.Navigation("Hypothesis");
+                });
+
             modelBuilder.Entity("HybridMeld.Core.Data.SourceItem", b =>
                 {
                     b.HasOne("HybridMeld.Core.Data.Source", "Source")
@@ -937,6 +1243,13 @@ namespace HybridMeld.Core.Data.Migrations
             modelBuilder.Entity("HybridMeld.Core.Data.Claim", b =>
                 {
                     b.Navigation("Evidence");
+                });
+
+            modelBuilder.Entity("HybridMeld.Core.Data.Hypothesis", b =>
+                {
+                    b.Navigation("Actors");
+
+                    b.Navigation("Indicators");
                 });
 #pragma warning restore 612, 618
         }

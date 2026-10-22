@@ -77,12 +77,23 @@ public sealed class ActorService(HybridMeldDbContext db, LinkResolver links, Tim
             .ToListAsync(ct)
             .ConfigureAwait(false);
 
+        // Hypotheses that point at the actor: shown on the page as pointers, never as ties.
+        var hypotheses = await db.Hypotheses.AsNoTracking()
+            .Include(h => h.Indicators)
+            .Include(h => h.Actors).ThenInclude(a => a.Actor)
+            .Where(h => h.Actors.Any(a => a.ActorId == id))
+            .OrderByDescending(h => h.UpdatedAt)
+            .AsSplitQuery()
+            .ToListAsync(ct)
+            .ConfigureAwait(false);
+
         return new ActorView(
             Mapping.ToRef(actor), actor.Description, Mapping.ParseJson(actor.IdentifiersJson), actor.PublicRoleJustification,
             actor.SanctionCachedName, actor.PepCachedName, actor.LinkVerifiedAt, actor.LinkStaleAt,
             actor.Aliases.OrderBy(a => a.Name).Select(Mapping.ToView).ToList(),
             campaigns.OrderByDescending(c => c.UpdatedAt).Select(Mapping.ToSummary).ToList(),
             claims.Select(Mapping.ToView).ToList(),
+            hypotheses.Select(Mapping.ToSummary).ToList(),
             actor.CreatedBy, actor.CreatedAt);
     }
 

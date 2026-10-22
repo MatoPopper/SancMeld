@@ -290,3 +290,98 @@ public class ApiKey
     public DateTimeOffset? LastUsedAt { get; set; }
     public DateTimeOffset? RevokedAt { get; set; }
 }
+
+/// <summary>
+/// A question worth watching that is not a case: no actor is accused of anything, there
+/// are public facts (indicators) and two lists saying what would confirm and what would
+/// refute it. Kept apart from campaigns on purpose (user's decision of 2026-10-22): a
+/// hypothesis has no claims, puts no edge in the graph and names related actors only as
+/// a soft list, so a water utility whose contract is public never appears next to a GRU
+/// unit as if something were established.
+/// </summary>
+public class Hypothesis
+{
+    public Guid Id { get; set; }
+    public required string Slug { get; set; }
+    public required string Title { get; set; }
+
+    /// <summary>One sentence, a question: "Do published technical annexes make mapping the resilience of water utilities easier?"</summary>
+    public required string Question { get; set; }
+
+    /// <summary>Why it is worth asking, in a few sentences, and what is explicitly not claimed.</summary>
+    public required string Rationale { get; set; }
+
+    public List<string> Countries { get; set; } = [];
+    public HypothesisStatus Status { get; set; } = HypothesisStatus.Open;
+
+    /// <summary>What an analyst waits for: each line one observation that would turn the question into a case.</summary>
+    public List<string> ConfirmWhen { get; set; } = [];
+    public List<string> RefuteWhen { get; set; } = [];
+
+    /// <summary>Editorial care: what not to link or reproduce (technical annexes of critical infrastructure, private persons).</summary>
+    public string? HandlingNote { get; set; }
+
+    public string? PromotedToSlug { get; set; }
+    public string? DecisionNote { get; set; }
+    public string? DecidedBy { get; set; }
+    public DateTimeOffset? DecidedAt { get; set; }
+
+    public required string CreatedBy { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
+
+    public List<Indicator> Indicators { get; set; } = [];
+    public List<HypothesisActor> Actors { get; set; } = [];
+}
+
+/// <summary>
+/// One public fact behind a hypothesis, with its source and verbatim quote: the same
+/// discipline as evidence on a claim, but the statement is descriptive ("a contract was
+/// published", "an authority warned"), never a verb between two actors.
+/// </summary>
+public class Indicator
+{
+    public long Id { get; set; }
+    public Guid HypothesisId { get; set; }
+    public Hypothesis? Hypothesis { get; set; }
+
+    public required string Statement { get; set; }
+    public EvidenceLevel Level { get; set; }
+    public DateOnly? ObservedOn { get; set; }
+
+    public required string Url { get; set; }
+    public string? ArchiveUrl { get; set; }
+    public string? Publisher { get; set; }
+    public string? Title { get; set; }
+    public required string Quote { get; set; }
+    public DateOnly? PublishedOn { get; set; }
+    public string? Language { get; set; }
+    public DateTimeOffset RetrievedAt { get; set; }
+    public string? SnapshotPath { get; set; }
+    public string? Sha256 { get; set; }
+    public required string AddedBy { get; set; }
+}
+
+/// <summary>An actor a hypothesis is about, as a pointer only: no claim, no edge, no attribution.</summary>
+public class HypothesisActor
+{
+    public Guid HypothesisId { get; set; }
+    public Hypothesis? Hypothesis { get; set; }
+    public Guid ActorId { get; set; }
+    public Actor? Actor { get; set; }
+    public required string AddedBy { get; set; }
+    public DateTimeOffset AddedAt { get; set; }
+}
+
+/// <summary>Every change of a hypothesis' status, in order, as ClaimDecision keeps a claim's.</summary>
+public class HypothesisDecision
+{
+    public long Id { get; set; }
+    public Guid HypothesisId { get; set; }
+    public HypothesisStatus PreviousStatus { get; set; }
+    public HypothesisStatus Decision { get; set; }
+    public string? Note { get; set; }
+    public string? PromotedToSlug { get; set; }
+    public required string DecidedBy { get; set; }
+    public DateTimeOffset DecidedAt { get; set; }
+}

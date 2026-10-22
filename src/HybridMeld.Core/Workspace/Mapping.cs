@@ -40,6 +40,26 @@ internal static class Mapping
 
     public static AliasView ToView(ActorAlias a) => new(a.Id, a.Name, a.Origin, a.SourceUrl);
 
+    public static IndicatorView ToView(Indicator i) => new(
+        i.Id, i.Statement, i.Level, i.ObservedOn, i.Url, i.ArchiveUrl, i.Publisher, i.Title, i.Quote, i.PublishedOn,
+        i.SnapshotPath is not null, i.Language, i.RetrievedAt, i.AddedBy);
+
+    /// <summary>Needs Indicators and Actors with Actor loaded.</summary>
+    public static HypothesisSummary ToSummary(Hypothesis h)
+    {
+        var actors = h.Actors.Where(a => a.Actor is not null).Select(a => a.Actor!).ToList();
+        return new HypothesisSummary(
+            h.Id, h.Slug, h.Title, h.Question, h.Status, h.Countries, h.Indicators.Count, actors.Count,
+            actors.Any(a => a.SanctionDesignationId is not null), actors.Any(a => a.PepPersonId is not null),
+            h.PromotedToSlug, h.CreatedBy, h.CreatedAt, h.UpdatedAt, h.DecidedAt);
+    }
+
+    public static HypothesisView ToView(Hypothesis h) => new(
+        ToSummary(h), h.Rationale, h.ConfirmWhen, h.RefuteWhen, h.HandlingNote,
+        h.Indicators.OrderBy(i => i.ObservedOn ?? DateOnly.MinValue).ThenBy(i => i.Id).Select(ToView).ToList(),
+        h.Actors.Where(a => a.Actor is not null).OrderBy(a => a.Actor!.Name).Select(a => ToRef(a.Actor!)).ToList(),
+        h.DecidedBy, h.DecisionNote);
+
     public static JsonElement? ParseJson(string? json)
     {
         if (string.IsNullOrWhiteSpace(json))

@@ -65,11 +65,13 @@ public static class HybridMeldExtensions
         services.AddScoped<SourceSeeder>();
         services.AddScoped<MispAliasSync>();
         services.AddScoped<CaseImportService>();
+        services.AddScoped<HypothesisImportService>();
 
         services.AddScoped<CampaignService>();
         services.AddScoped<ActorService>();
         services.AddScoped<ClaimService>();
         services.AddScoped<FeedService>();
+        services.AddScoped<HypothesisService>();
         services.AddScoped<HybridGraphBuilder>();
 
         services.AddScoped<SourceService>();
@@ -78,6 +80,7 @@ public static class HybridMeldExtensions
         services.AddScoped<ISourceFetcher, TelegramFetcher>();
         services.AddScoped<ISourceFetcher, HtmlFetcher>();
         services.AddScoped<PageFetcher>();
+        services.AddScoped<PageCapture>();
         services.AddHttpClient(PageFetcher.HttpClientName, (provider, client) =>
         {
             var ingest = provider.GetRequiredService<IOptions<HybridMeldOptions>>().Value.Ingest;
@@ -101,6 +104,7 @@ public static class HybridMeldExtensions
 
         endpoints.MapGet("/health", () => Results.Ok(new { status = "ok" })).WithName("Health");
         endpoints.MapWorkspace();
+        endpoints.MapHypotheses();
         endpoints.MapSources();
         return endpoints;
     }

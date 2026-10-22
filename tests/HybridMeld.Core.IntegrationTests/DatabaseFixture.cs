@@ -82,12 +82,14 @@ public sealed class DatabaseFixture : IAsyncLifetime
         var links = new LinkResolver(configuration, NullLogger<LinkResolver>.Instance);
         var snapshots = new FileSystemSnapshotStore(options);
         var pages = new PageFetcher(new StubClientFactory(), options);
+        var capture = new PageCapture(pages, snapshots, NullLogger<PageCapture>.Instance);
 
         return new Services(
             db,
             new CampaignService(db, clock),
             new ActorService(db, links, clock),
-            new ClaimService(db, pages, snapshots, clock, NullLogger<ClaimService>.Instance),
+            new ClaimService(db, capture, clock),
+            new HypothesisService(db, capture, clock),
             new FeedService(db, clock),
             new HybridGraphBuilder(db, options),
             new SourceService(db, clock),
@@ -99,6 +101,7 @@ public sealed class DatabaseFixture : IAsyncLifetime
         CampaignService Campaigns,
         ActorService Actors,
         ClaimService Claims,
+        HypothesisService Hypotheses,
         FeedService Feed,
         HybridGraphBuilder Graphs,
         SourceService Sources,

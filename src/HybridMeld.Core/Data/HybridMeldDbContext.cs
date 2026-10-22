@@ -21,6 +21,11 @@ public class HybridMeldDbContext(DbContextOptions<HybridMeldDbContext> options) 
     public DbSet<Evidence> Evidence => Set<Evidence>();
     public DbSet<ClaimDecision> ClaimDecisions => Set<ClaimDecision>();
 
+    public DbSet<Hypothesis> Hypotheses => Set<Hypothesis>();
+    public DbSet<Indicator> Indicators => Set<Indicator>();
+    public DbSet<HypothesisActor> HypothesisActors => Set<HypothesisActor>();
+    public DbSet<HypothesisDecision> HypothesisDecisions => Set<HypothesisDecision>();
+
     public DbSet<Source> Sources => Set<Source>();
     public DbSet<SourceRun> SourceRuns => Set<SourceRun>();
     public DbSet<SourceItem> SourceItems => Set<SourceItem>();
@@ -43,6 +48,7 @@ public class HybridMeldDbContext(DbContextOptions<HybridMeldDbContext> options) 
         b.Properties<FetchKind>().HaveConversion<EnumAsSnakeCaseText<FetchKind>>();
         b.Properties<SourceItemStatus>().HaveConversion<EnumAsSnakeCaseText<SourceItemStatus>>();
         b.Properties<RunStatus>().HaveConversion<EnumAsSnakeCaseText<RunStatus>>();
+        b.Properties<HypothesisStatus>().HaveConversion<EnumAsSnakeCaseText<HypothesisStatus>>();
     }
 
     protected override void OnModelCreating(ModelBuilder b)
@@ -124,6 +130,58 @@ public class HybridMeldDbContext(DbContextOptions<HybridMeldDbContext> options) 
         {
             e.ToTable("claim_decision");
             e.HasIndex(x => x.ClaimId);
+            e.Property(x => x.DecidedBy).HasMaxLength(320);
+        });
+
+        b.Entity<Hypothesis>(e =>
+        {
+            e.ToTable("hypothesis");
+            e.HasIndex(x => x.Slug).IsUnique();
+            e.HasIndex(x => new { x.Status, x.UpdatedAt });
+            e.Property(x => x.Slug).HasMaxLength(120);
+            e.Property(x => x.Title).HasMaxLength(300);
+            e.Property(x => x.Question).HasMaxLength(1000);
+            e.Property(x => x.Countries).HasColumnType("text[]");
+            e.Property(x => x.ConfirmWhen).HasColumnType("text[]");
+            e.Property(x => x.RefuteWhen).HasColumnType("text[]");
+            e.Property(x => x.PromotedToSlug).HasMaxLength(120);
+            e.Property(x => x.CreatedBy).HasMaxLength(320);
+            e.Property(x => x.DecidedBy).HasMaxLength(320);
+            e.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
+        });
+
+        b.Entity<Indicator>(e =>
+        {
+            e.ToTable("indicator");
+            e.HasIndex(x => x.HypothesisId);
+            e.Property(x => x.Statement).HasMaxLength(2000);
+            e.Property(x => x.Url).HasMaxLength(2000);
+            e.Property(x => x.ArchiveUrl).HasMaxLength(2000);
+            e.Property(x => x.Publisher).HasMaxLength(300);
+            e.Property(x => x.Title).HasMaxLength(500);
+            e.Property(x => x.Quote).HasMaxLength(4000);
+            e.Property(x => x.Sha256).HasMaxLength(64);
+            e.Property(x => x.Language).HasMaxLength(8);
+            e.Property(x => x.AddedBy).HasMaxLength(320);
+            e.HasOne(x => x.Hypothesis).WithMany(h => h.Indicators).HasForeignKey(x => x.HypothesisId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        b.Entity<HypothesisActor>(e =>
+        {
+            e.ToTable("hypothesis_actor");
+            e.HasKey(x => new { x.HypothesisId, x.ActorId });
+            e.HasIndex(x => x.ActorId);
+            e.Property(x => x.AddedBy).HasMaxLength(320);
+            e.HasOne(x => x.Hypothesis).WithMany(h => h.Actors).HasForeignKey(x => x.HypothesisId).OnDelete(DeleteBehavior.Cascade);
+            // An actor that is forgotten takes its pointers with it; the hypothesis stays.
+            e.HasOne(x => x.Actor).WithMany().HasForeignKey(x => x.ActorId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        b.Entity<HypothesisDecision>(e =>
+        {
+            e.ToTable("hypothesis_decision");
+            e.HasIndex(x => x.HypothesisId);
+            e.Property(x => x.PromotedToSlug).HasMaxLength(120);
             e.Property(x => x.DecidedBy).HasMaxLength(320);
         });
 
