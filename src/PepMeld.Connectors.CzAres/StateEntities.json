@@ -20,5 +20,15 @@
   { "ico": "44848943", "name": "Národní rozvojová banka, a.s.", "why": "jediný akcionář Ministerstvo financí; ověřeno v ARES 2026-10-20" },
   { "ico": "46355901", "name": "PRISKO a.s.", "why": "jediný akcionář Ministerstvo financí; ověřeno v ARES 2026-10-20" },
   { "ico": "25291581", "name": "Explosia a.s.", "why": "jediný akcionář Ministerstvo průmyslu a obchodu; ověřeno v ARES 2026-10-20" },
-  { "ico": "25401726", "name": "THERMAL-F, a.s.", "why": "jediný akcionář Ministerstvo financí; ověřeno v ARES 2026-10-20" }
+  { "ico": "25401726", "name": "THERMAL-F, a.s.", "why": "jediný akcionář Ministerstvo financí; ověřeno v ARES 2026-10-20" },
+
+  // Not companies of the state, but named in FAÚ's list of Czech PEP functions beside them:
+  // the director and the boards of the employee health insurers. The VZP is not in the
+  // commercial register at all and is not here.
+  { "ico": "47114975", "name": "Vojenská zdravotní pojišťovna České republiky", "why": "zaměstnanecká zdravotní pojišťovna: ředitel a dozorčí rada jsou PEP podle přílohy 1 metodického pokynu FAÚ č. 7 (17. 7. 2024); správní rada v rejstříku není; ověřeno v ARES 2026-10-22" },
+  { "ico": "47114304", "name": "Zdravotní pojišťovna ministerstva vnitra České republiky", "why": "zaměstnanecká zdravotní pojišťovna: ředitel a dozorčí rada jsou PEP podle přílohy 1 metodického pokynu FAÚ č. 7 (17. 7. 2024); správní rada v rejstříku není; ověřeno v ARES 2026-10-22" },
+  { "ico": "47114321", "name": "Oborová zdravotní pojišťovna zaměstnanců bank, pojišťoven a stavebnictví", "why": "zaměstnanecká zdravotní pojišťovna: ředitel a dozorčí rada jsou PEP podle přílohy 1 metodického pokynu FAÚ č. 7 (17. 7. 2024); správní rada v rejstříku není; ověřeno v ARES 2026-10-22" },
+  { "ico": "46354182", "name": "Zaměstnanecká pojišťovna Škoda", "why": "zaměstnanecká zdravotní pojišťovna: ředitel a dozorčí rada jsou PEP podle přílohy 1 metodického pokynu FAÚ č. 7 (17. 7. 2024); správní rada v rejstříku není; ověřeno v ARES 2026-10-22" },
+  { "ico": "47673036", "name": "RBP, zdravotní pojišťovna", "why": "zaměstnanecká zdravotní pojišťovna: ředitel a dozorčí rada jsou PEP podle přílohy 1 metodického pokynu FAÚ č. 7 (17. 7. 2024); správní rada v rejstříku není; ověřeno v ARES 2026-10-22" },
+  { "ico": "47672234", "name": "Česká průmyslová zdravotní pojišťovna", "why": "zaměstnanecká zdravotní pojišťovna: ředitel a dozorčí rada jsou PEP podle přílohy 1 metodického pokynu FAÚ č. 7 (17. 7. 2024); správní rada v rejstříku není; ověřeno v ARES 2026-10-22" }
 ]
