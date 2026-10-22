@@ -70,8 +70,12 @@ Replace `{NAME}`, `{DATE_OF_BIRTH}`, `{COUNTRY}`, `{FUNCTIONS}` and `{OUTPUT_PAT
 >    addresses, phone numbers, social media, photos. Minors (under 18) are not recorded at
 >    all, not even under "unverified". Record a child or grandchild only when a source shows
 >    they are an adult (a date or year of birth 18+ years ago, a stated age of 18 or more, or
->    an adult role such as a job, an office or their own marriage); otherwise leave them out
->    and say in "notes" how many were left out. "isMinor" is always false.
+>    an adult role such as a job, an office or their own marriage). When the PEP themselves
+>    was born before 1990, their children count as adults unless the source suggests
+>    otherwise (a later marriage, "little", a school, an age under 18); a grandchild still
+>    needs its own evidence.
+>    Otherwise leave them out and say in "notes" how many were left out. "isMinor" is
+>    always false.
 > 5. No rumours, alleged partners or speculation; leads you could not confirm go under
 >    "unverified".
 > 6. At most ~15 searches and ~20 page fetches.
