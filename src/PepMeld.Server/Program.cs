@@ -119,6 +119,35 @@ if (args is ["birthdates", "fill", ..])
     return 0;
 }
 
+// Persons in office, or out of it for less than two years, whom no list gives a date of
+// birth, as JSON for a research agent; and the import of what it found, every quote
+// checked against its page:
+//
+//   dotnet run --project src/PepMeld.Server -- birthdates missing
+//   dotnet run --project src/PepMeld.Server -- birthdates import found.json
+if (args is ["birthdates", "missing", ..])
+{
+    using var scope = app.Services.CreateScope();
+    var missing = await scope.ServiceProvider.GetRequiredService<BirthDateResearch>().MissingAsync(CancellationToken.None);
+    Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(missing, PepMeld.Core.Checks.PepMeldJson.Options));
+    return 0;
+}
+
+if (args is ["birthdates", "import", var researchedPath, ..])
+{
+    using var scope = app.Services.CreateScope();
+    await using var file = File.OpenRead(researchedPath);
+    var outcomes = await scope.ServiceProvider.GetRequiredService<BirthDateResearch>().ImportAsync(file, CancellationToken.None);
+
+    foreach (var o in outcomes)
+    {
+        Console.WriteLine($"{(o.Accepted ? "taken  " : "refused")} {o.Name}: {o.Reason}");
+    }
+
+    Console.WriteLine($"{outcomes.Count(o => o.Accepted)} of {outcomes.Count} dates taken.");
+    return 0;
+}
+
 // API keys, printed once:
 //
 //   dotnet run --project src/PepMeld.Server -- apikey create you@example.com --name "my client"

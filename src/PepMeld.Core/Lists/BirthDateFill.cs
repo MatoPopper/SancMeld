@@ -33,6 +33,10 @@ public sealed class BirthDateFill(PepMeldDbContext db, ILogger<BirthDateFill> lo
         var borrowers = await db.Persons
             .Include(p => p.Functions)
             .Where(p => p.BirthDate == null || p.BirthDateFrom != null)
+
+            // A date found on the open web and checked against its page is a person's work;
+            // a lender would be no better (level B either way) and must not undo it.
+            .Where(p => p.BirthDateFrom == null || p.BirthDateFrom != BirthDateResearch.Researched)
             .ToListAsync(ct)
             .ConfigureAwait(false);
 

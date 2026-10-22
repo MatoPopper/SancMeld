@@ -67,6 +67,8 @@ dotnet run --project src/PepMeld.Server -- import CZ_PSP    # first fill, ~1 650
 dotnet run --project src/PepMeld.Server -- import SK_NRSR   # ~700 profiles; the site answers in 1-4 s, so the first fill takes about 45 min, later runs ~10 min (profiles cached 30 days)
 dotnet run --project src/PepMeld.Server -- import SK_NRSR_VNF   # ~1 650 declarations at 1-20 s each, one lane, pausing on 429: the first fill runs overnight, later runs read the cache
 dotnet run --project src/PepMeld.Server -- birthdates fill   # lend dates of birth across lists now; also runs after every import
+dotnet run --project src/PepMeld.Server -- birthdates missing   # who is still without a date, as JSON for a research agent
+dotnet run --project src/PepMeld.Server -- birthdates import found.json   # the dates it found; a quote stating the date must be on its page (level B)
 dotnet run --project src/PepMeld.Server -- apikey create you@example.com --name dev
 dotnet run --project src/PepMeld.Server                     # http://localhost:63463/swagger
 ```

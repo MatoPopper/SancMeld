@@ -54,7 +54,9 @@ public sealed class ListsStage(
                 {
                     // The office is the source's, the date another list's: no better than the lender.
                     level = EvidenceLevel.B;
-                    toVerify = $"Dátum narodenia zdroj nepublikuje; prevzatý z {lender} pri rovnakom mene a funkcii. Overiť dátum v úradnom zdroji.";
+                    toVerify = lender == BirthDateResearch.Researched
+                        ? "Dátum narodenia zdroj nepublikuje; dohľadaný na verejnom webe s overeným citátom. Overiť dátum v úradnom zdroji."
+                        : $"Dátum narodenia zdroj nepublikuje; prevzatý z {lender} pri rovnakom mene a funkcii. Overiť dátum v úradnom zdroji.";
                 }
                 else if (match.Source.IsOfficial)
                 {
@@ -154,6 +156,7 @@ public sealed class ListsStage(
     {
         var who = (dateMatched, person.BirthDateFrom) switch
         {
+            (true, BirthDateResearch.Researched) => $"{source.Name} uvádza osobu s rovnakým menom; zhodný dátum narodenia uvádza verejná stránka citovaná v dôkazoch",
             (true, { } lender) => $"{source.Name} uvádza osobu s rovnakým menom; zhodný dátum narodenia uvádza {lender} pri tej istej funkcii",
             (true, null) => $"{source.Name} uvádza osobu s rovnakým menom a dátumom narodenia{(source.IsOfficial ? string.Empty : " (neúradný zdroj)")}",
             _ => $"{source.Name} uvádza osobu s rovnakým menom, dátum narodenia zdroj nepublikuje",

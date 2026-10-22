@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using PepMeld.Core.Checks;
 using PepMeld.Core.Data;
 using PepMeld.Core.Domain;
+using PepMeld.Core.Family;
 using PepMeld.Core.Lists;
 using Xunit;
 
@@ -101,5 +102,53 @@ public sealed class BirthDateFillTests(DatabaseFixture fixture)
         var withdrawn = await BorrowerAsync("b-" + id);
         Assert.Null(withdrawn.BirthDate);
         Assert.Null(withdrawn.BirthDateFrom);
+    }
+
+    private sealed class FixedVerifier(QuoteCheck answer) : IQuoteVerifier
+    {
+        public Task<QuoteCheck> CheckAsync(string url, string quote, CancellationToken ct) => Task.FromResult(answer);
+    }
+
+    private async Task<IReadOnlyList<ResearchedBirthDateOutcome>> ResearchAsync(QuoteCheck answer, string json)
+    {
+        await using var db = fixture.CreateContext();
+        var research = new BirthDateResearch(db, new FixedVerifier(answer), TimeProvider.System, NullLogger<BirthDateResearch>.Instance);
+        return await research.ImportAsync(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(json)), CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task AResearchedDateIsTakenOnlyWithAQuoteOnItsPageAndLendingLeavesItAlone()
+    {
+        var id = Guid.NewGuid().ToString("N")[..8];
+        var name = $"Researched Senatorova{id}";
+        await ImportAsync(Borrower, Person("r-" + id, name, null, "senátor", new DateOnly(2022, 10, 1)));
+
+        Assert.Null((await BorrowerAsync("r-" + id)).BirthDate);
+
+        var json = $$"""
+            [{ "source": "{{Borrower}}", "sourceKey": "r-{{id}}", "name": "{{name}}", "dateOfBirth": "1966-06-12",
+               "evidence": [{ "url": "https://example.org/{{id}}", "quote": "Narodila se 12. června 1966 v Kladně." }] }]
+            """;
+
+        // The page does not have the quote: refused, the person stays without a date.
+        var refused = Assert.Single(await ResearchAsync(QuoteCheck.NotFound, json));
+        Assert.False(refused.Accepted);
+        Assert.Null((await BorrowerAsync("r-" + id)).BirthDate);
+
+        // A quote that names no day is no evidence of a date, whatever the page says.
+        var vague = Assert.Single(await ResearchAsync(QuoteCheck.Exact, json.Replace("12. června 1966", "v roce 1966", StringComparison.Ordinal)));
+        Assert.False(vague.Accepted);
+
+        var taken = Assert.Single(await ResearchAsync(QuoteCheck.Exact, json));
+        Assert.True(taken.Accepted);
+
+        var person = await BorrowerAsync("r-" + id);
+        Assert.Equal(new DateOnly(1966, 6, 12), person.BirthDate);
+        Assert.Equal(BirthDateResearch.Researched, person.BirthDateFrom);
+        Assert.Equal("https://example.org/" + id, person.BirthDateFromUrl);
+
+        // No lender exists, and lending must not withdraw what research found.
+        await FillAsync();
+        Assert.Equal(new DateOnly(1966, 6, 12), (await BorrowerAsync("r-" + id)).BirthDate);
     }
 }
