@@ -12,10 +12,11 @@ public sealed record FamilyResearchTask(string Name, DateOnly DateOfBirth, Count
 /// <summary>
 /// Who is next. One identity per name and date of birth, however many lists name them;
 /// only those with a date of birth, because without it an agent cannot tell the PEP from a
-/// namesake either. Ordered by what the obliged entity meets first: a current function
-/// before an ended one, the head of state before a board member, and among equals the one
-/// researched longest ago. A function that ended more than two years ago no longer puts a
-/// person in the queue.
+/// namesake either. Ordered by what the obliged entity meets first: a current function,
+/// then one that ended within twelve months (the person is still a PEP for at least that
+/// long, AMLD art. 22), then one that ended earlier; within each the head of state before a
+/// board member, and among equals the one researched longest ago. A function that ended
+/// more than two years ago no longer puts a person in the queue.
 ///
 /// At 100 a day the 4 000 or so identities with a date of birth are covered in about six
 /// weeks; with a year's refresh interval each is then looked at again once a year.
@@ -59,7 +60,7 @@ public sealed class FamilyResearchQueue(PepMeldDbContext db, TimeProvider clock)
             .GroupBy(r => (r.NameNormalized, r.BirthDate))
             .Select(g =>
             {
-                var current = g.Where(r => r.ValidTo is null).ToList();
+                var current = g.Where(r => r.ValidTo is null || r.ValidTo >= today).ToList();
                 var lead = (current.Count > 0 ? current : g.ToList()).OrderBy(r => Outcomes.Prominence(r.Category)).First();
                 last.TryGetValue(g.Key, out var lastAt);
                 return new
@@ -74,12 +75,12 @@ public sealed class FamilyResearchQueue(PepMeldDbContext db, TimeProvider clock)
                             .Take(5)
                             .ToList(),
                         lastAt == default ? null : lastAt),
-                    Current = current.Count > 0,
+                    Standing = Standing(current.Count > 0, g.Max(r => r.ValidTo), today),
                     Prominence = Outcomes.Prominence(lead.Category),
                 };
             })
             .Where(x => x.Task.LastResearchedAt is null || x.Task.LastResearchedAt < cutoff)
-            .OrderByDescending(x => x.Current)
+            .OrderBy(x => x.Standing)
             .ThenBy(x => x.Prominence)
             .ThenBy(x => x.Task.LastResearchedAt ?? DateTimeOffset.MinValue)
             .ThenBy(x => x.Task.Name, StringComparer.Ordinal)
@@ -87,4 +88,12 @@ public sealed class FamilyResearchQueue(PepMeldDbContext db, TimeProvider clock)
             .Select(x => x.Task)
             .ToList();
     }
+
+    /// <summary>
+    /// 0 for a current function, 1 for one that ended within twelve months, 2 for one that
+    /// ended earlier. By prominence alone a member of parliament who left last month would wait
+    /// behind every minister who left two years ago.
+    /// </summary>
+    internal static int Standing(bool current, DateOnly? lastEnded, DateOnly today) =>
+        current ? 0 : lastEnded >= today.AddMonths(-12) ? 1 : 2;
 }
