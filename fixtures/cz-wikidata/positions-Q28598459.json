@@ -1,0 +1,95 @@
+{
+ "head": {
+  "vars": [
+   "p",
+   "pLabel",
+   "dob",
+   "dobPrecision",
+   "start",
+   "end",
+   "death"
+  ]
+ },
+ "results": {
+  "bindings": [
+   {
+    "p": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q900000001"
+    },
+    "pLabel": {
+     "xml:lang": "cs",
+     "type": "literal",
+     "value": "Adam Lapsed"
+    },
+    "dob": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "1970-01-15T00:00:00Z"
+    },
+    "dobPrecision": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#integer",
+     "type": "literal",
+     "value": "11"
+    },
+    "start": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "2016-07-01T00:00:00Z"
+    }
+   },
+   {
+    "p": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q900000002"
+    },
+    "pLabel": {
+     "xml:lang": "cs",
+     "type": "literal",
+     "value": "Bára Governor"
+    },
+    "dob": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "1980-02-20T00:00:00Z"
+    },
+    "dobPrecision": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#integer",
+     "type": "literal",
+     "value": "11"
+    },
+    "start": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "2018-12-01T00:00:00Z"
+    }
+   },
+   {
+    "p": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q900000003"
+    },
+    "pLabel": {
+     "xml:lang": "cs",
+     "type": "literal",
+     "value": "Cyril Sitting"
+    },
+    "dob": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "1985-03-25T00:00:00Z"
+    },
+    "dobPrecision": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#integer",
+     "type": "literal",
+     "value": "11"
+    },
+    "start": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "2024-12-01T00:00:00Z"
+    }
+   }
+  ]
+ }
+}

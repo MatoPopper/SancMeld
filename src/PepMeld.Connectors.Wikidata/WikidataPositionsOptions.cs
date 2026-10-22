@@ -32,6 +32,16 @@ public sealed class WikidataPosition
     /// <summary>The role shown. Empty means the position's own label ("ministr financí České republiky").</summary>
     public string? Role { get; set; }
 
+    /// <summary>
+    /// The length of a term fixed by law, in years, when there is one. Wikidata often leaves
+    /// a term open after it ended: on 2026-10-22 it had eleven members of the ČNB board open
+    /// for seven seats, back to 2016. An open term older than this ends after it, and a
+    /// later term of the same person in the same institution ends it earlier (a member
+    /// appointed governor).
+    /// </summary>
+    [Range(1, 20)]
+    public int? TermYears { get; set; }
+
     /// <summary>What names the snapshot entry and the function key: the item, and the filters when there are any.</summary>
     public string Key =>
         Item + (Jurisdiction is { Length: > 0 } j ? "-j" + j : string.Empty) + (Citizenship is { Length: > 0 } c ? "-c" + c : string.Empty);
@@ -66,12 +76,12 @@ public sealed class WikidataPositionsOptions
     [
         new() { Item = "Q1819381", Category = PepCategory.HeadOfState, Institution = "Prezident České republiky", Role = "prezident republiky" },
         new() { Item = "Q83307", Jurisdiction = "Q213", Category = PepCategory.GovernmentMember, Institution = "Vláda České republiky" },
-        new() { Item = "Q18941264", Category = PepCategory.MemberOfParliament, Institution = "Senát Parlamentu ČR", Role = "senátor" },
-        new() { Item = "Q59773473", Category = PepCategory.SeniorJudge, Institution = "Ústavní soud ČR", Role = "soudce Ústavního soudu" },
+        new() { Item = "Q18941264", Category = PepCategory.MemberOfParliament, Institution = "Senát Parlamentu ČR", Role = "senátor", TermYears = 6 },
+        new() { Item = "Q59773473", Category = PepCategory.SeniorJudge, Institution = "Ústavní soud ČR", Role = "soudce Ústavního soudu", TermYears = 10 },
         new() { Item = "Q140913203", Category = PepCategory.SeniorJudge, Institution = "Nejvyšší soud ČR", Role = "soudce Nejvyššího soudu" },
         new() { Item = "Q140913206", Category = PepCategory.SeniorJudge, Institution = "Nejvyšší správní soud ČR", Role = "soudce Nejvyššího správního soudu" },
-        new() { Item = "Q28598459", Category = PepCategory.CentralBankBoard, Institution = "Česká národní banka", Role = "člen bankovní rady" },
-        new() { Item = "Q25505764", Category = PepCategory.CentralBankBoard, Institution = "Česká národní banka", Role = "guvernér" },
+        new() { Item = "Q28598459", Category = PepCategory.CentralBankBoard, Institution = "Česká národní banka", Role = "člen bankovní rady", TermYears = 6 },
+        new() { Item = "Q25505764", Category = PepCategory.CentralBankBoard, Institution = "Česká národní banka", Role = "guvernér", TermYears = 6 },
         new() { Item = "Q26197430", Category = PepCategory.Prosecutor, Institution = "Nejvyšší státní zastupitelství", Role = "nejvyšší státní zástupce" },
         new() { Item = "Q1787679", IncludeSubclasses = true, Category = PepCategory.RegionalLeader, Institution = "kraj" },
         new() { Item = "Q64421048", IncludeSubclasses = true, Category = PepCategory.RegionalLeader, Institution = "statutární město" },

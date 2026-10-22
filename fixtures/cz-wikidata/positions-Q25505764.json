@@ -1,0 +1,43 @@
+{
+ "head": {
+  "vars": [
+   "p",
+   "pLabel",
+   "dob",
+   "dobPrecision",
+   "start",
+   "end",
+   "death"
+  ]
+ },
+ "results": {
+  "bindings": [
+   {
+    "p": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q900000002"
+    },
+    "pLabel": {
+     "xml:lang": "cs",
+     "type": "literal",
+     "value": "Bára Governor"
+    },
+    "dob": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "1980-02-20T00:00:00Z"
+    },
+    "dobPrecision": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#integer",
+     "type": "literal",
+     "value": "11"
+    },
+    "start": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "2022-07-01T00:00:00Z"
+    }
+   }
+  ]
+ }
+}

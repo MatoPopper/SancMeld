@@ -174,4 +174,49 @@ public class WikidataPositionsConnectorTests
         Assert.Contains(options.Sources[WikidataPositionsConnector.CzechCode], p => p.Item == "Q18941264");
         Assert.Contains(options.Sources[WikidataPositionsConnector.SlovakCode], p => p.Jurisdiction == "Q214");
     }
+
+    /// <summary>
+    /// The ČNB board as Wikidata left it: a member's term open ten years on, a member's term
+    /// open after they were appointed governor. Six-year terms: the first ends by its length,
+    /// the second when the governorship began, a term from 2024 stays open.
+    /// </summary>
+    [Fact]
+    public async Task AnOpenTermOfAFixedLengthEndsWhenItRunsOutOrALaterOneBegins()
+    {
+        var handler = new FixtureHandler();
+        var options = new WikidataPositionsOptions { DelayMilliseconds = 0 };
+        options.Sources[WikidataPositionsConnector.CzechCode] =
+        [
+            new() { Item = "Q28598459", Category = PepCategory.CentralBankBoard, Institution = "Česká národní banka", Role = "člen bankovní rady", TermYears = 6 },
+            new() { Item = "Q25505764", Category = PepCategory.CentralBankBoard, Institution = "Česká národní banka", Role = "guvernér", TermYears = 6 },
+        ];
+
+        var connector = new WikidataPositionsConnector(
+            WikidataPositionsConnector.CzechCode, Country.CZ, new Factory(handler), Options.Create(options),
+            new FixedClock(new DateTimeOffset(2026, 10, 22, 0, 0, 0, TimeSpan.Zero)), NullLogger<WikidataPositionsConnector>.Instance);
+
+        IReadOnlyList<ParsedPerson> persons;
+        using (var download = await connector.DownloadAsync(CancellationToken.None))
+        {
+            var copy = new MemoryStream();
+            await download.Content.CopyToAsync(copy);
+            copy.Position = 0;
+            persons = connector.Parse(copy);
+        }
+
+        var lapsed = Assert.Single(Assert.Single(persons, p => p.SourceKey == "Q900000001").Functions);
+        Assert.Equal(new DateOnly(2022, 7, 1), lapsed.To);
+        Assert.Contains("6 rokov", lapsed.DateNote, StringComparison.Ordinal);
+
+        var governor = Assert.Single(persons, p => p.SourceKey == "Q900000002").Functions;
+        Assert.Equal(new DateOnly(2022, 7, 1), Assert.Single(governor, f => f.Role == "člen bankovní rady").To);
+        Assert.Null(Assert.Single(governor, f => f.Role == "guvernér").To);
+
+        Assert.Null(Assert.Single(Assert.Single(persons, p => p.SourceKey == "Q900000003").Functions).To);
+    }
+
+    private sealed class FixedClock(DateTimeOffset now) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => now;
+    }
 }

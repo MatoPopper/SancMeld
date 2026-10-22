@@ -84,6 +84,9 @@ public sealed class WikidataPositionsConnector(
         using var archive = new ZipArchive(content, ZipArchiveMode.Read, leaveOpen: true);
         var byPerson = new Dictionary<string, (string Label, DateOnly Born, DateOnly? Died, List<ParsedFunction> Functions)>(StringComparer.Ordinal);
 
+        // Open terms of positions with a term fixed by law, by person and function key.
+        var termYears = new Dictionary<(string Person, string Key), (int Years, string Institution)>();
+
         foreach (var position in Positions)
         {
             var entry = archive.GetEntry($"positions-{position.Key}.json");
@@ -128,6 +131,11 @@ public sealed class WikidataPositionsConnector(
                 var end = SparqlResults.Date(row, "end") ?? died;
                 var role = position.Role is { Length: > 0 } fixedRole ? fixedRole : SparqlResults.Value(row, "posLabel") ?? positionItem;
 
+                if (end is null && start is not null && position.TermYears is { } years)
+                {
+                    termYears[(item, $"{positionItem}:{start.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}")] = (years, position.Institution);
+                }
+
                 person.Functions.Add(new ParsedFunction(
                     $"{positionItem}:{start?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? "?"}",
                     country,
@@ -148,6 +156,8 @@ public sealed class WikidataPositionsConnector(
             }
         }
 
+        var today = DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
+
         return byPerson
             .OrderBy(x => x.Key, StringComparer.Ordinal)
             .Select(x =>
@@ -162,13 +172,63 @@ public sealed class WikidataPositionsConnector(
                     x.Value.Born,
                     x.Value.Died,
                     $"https://www.wikidata.org/wiki/{x.Key}",
-                    x.Value.Functions
+                    EndLapsedTerms(x.Key, x.Value.Functions, termYears, today)
                         .DistinctBy(f => f.SourceKey, StringComparer.Ordinal)
                         .OrderByDescending(f => f.To is null)
                         .ThenByDescending(f => f.From)
                         .ToList());
             })
             .ToList();
+    }
+
+    /// <summary>
+    /// An open term of a position with a fixed length (<see cref="WikidataPosition.TermYears"/>)
+    /// ends when the same person began a later term in the same institution, or else when
+    /// its length has run out. A term that runs out today or later stays open. The date is
+    /// ours, and the finding says so.
+    /// </summary>
+    private static IEnumerable<ParsedFunction> EndLapsedTerms(
+        string person,
+        IReadOnlyList<ParsedFunction> functions,
+        Dictionary<(string Person, string Key), (int Years, string Institution)> termYears,
+        DateOnly today)
+    {
+        foreach (var function in functions)
+        {
+            if (function.To is not null || function.From is not { } from || !termYears.TryGetValue((person, function.SourceKey), out var term))
+            {
+                yield return function;
+                continue;
+            }
+
+            var successor = functions
+                .Where(f => f.Institution == term.Institution && f.From > from && f.SourceKey != function.SourceKey)
+                .Select(f => f.From)
+                .Min();
+
+            if (successor is { } next)
+            {
+                yield return function with
+                {
+                    To = next,
+                    DateNote = $"{function.DateNote} Koniec dopočítaný: Wikidata funkciu neuzavrela, od {next.ToString("d. M. yyyy", CultureInfo.InvariantCulture)} má osoba v tej istej inštitúcii inú funkciu.",
+                };
+                continue;
+            }
+
+            var lapse = from.AddYears(term.Years);
+            if (lapse < today)
+            {
+                yield return function with
+                {
+                    To = lapse,
+                    DateNote = $"{function.DateNote} Koniec dopočítaný: Wikidata funkciu neuzavrela, funkčné obdobie je zo zákona {term.Years} rokov.",
+                };
+                continue;
+            }
+
+            yield return function;
+        }
     }
 
     /// <summary>
