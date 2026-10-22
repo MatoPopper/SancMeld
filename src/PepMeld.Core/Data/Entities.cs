@@ -161,7 +161,10 @@ public class PepFunction
     public Guid LastSeenRunId { get; set; }
 }
 
-/// <summary>Everyone who may run a check, with a request budget. The same shape as SancMeld's api_user, in this database, until the two share an account.</summary>
+/// <summary>
+/// Everyone who has signed in here. Only who and when: the grant, the block and the
+/// budget are the SancMeld account of the same address (see PepAccess).
+/// </summary>
 public class ApiUser
 {
     public Guid Id { get; set; }
@@ -170,14 +173,6 @@ public class ApiUser
     public required string Email { get; set; }
     public string? DisplayName { get; set; }
     public string? GoogleSubject { get; set; }
-
-    /// <summary>Checks this address may start in total. Raised by hand in the database or with the CLI.</summary>
-    public int RequestLimit { get; set; }
-    public int RequestsUsed { get; set; }
-
-    public bool IsBlocked { get; set; }
-    public string? BlockedBy { get; set; }
-    public DateTimeOffset? BlockedAt { get; set; }
 
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? LastSeenAt { get; set; }

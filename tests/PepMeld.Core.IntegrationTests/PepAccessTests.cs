@@ -92,5 +92,37 @@ public sealed class PepAccessTests : IAsyncLifetime
         var access = Access("Host=127.0.0.1;Port=1;Database=none;Username=x;Password=x;Timeout=2");
 
         Assert.False(await access.IsAllowedAsync(allowed, CancellationToken.None));
+        Assert.Null(await access.TryConsumeAsync(allowed, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task AChecksSpendsTheSancMeldBudgetAndStopsAtItsEnd()
+    {
+        var access = Access(connectionString);
+
+        // Ten in the row made above; the last one is taken by exactly one of ten at once.
+        var states = await Task.WhenAll(Enumerable.Range(0, 10).Select(_ => access.TryConsumeAsync(allowed.ToUpperInvariant(), CancellationToken.None)));
+        Assert.All(states, s => Assert.True(s!.Allowed));
+        Assert.Equal(10, states.Max(s => s!.Used));
+
+        var refused = await access.TryConsumeAsync(allowed, CancellationToken.None);
+        Assert.NotNull(refused);
+        Assert.False(refused.Allowed);
+        Assert.Equal((10, 10, 0), (refused.Limit, refused.Used, refused.Remaining));
+
+        await using var connection = new NpgsqlConnection(connectionString);
+        await connection.OpenAsync();
+        await using var used = new NpgsqlCommand("SELECT requests_used FROM api_user WHERE email = @email", connection);
+        used.Parameters.AddWithValue("email", allowed);
+        Assert.Equal(10, await used.ExecuteScalarAsync());
+
+        var blockedState = await access.TryConsumeAsync(blocked, CancellationToken.None);
+        Assert.False(blockedState!.Allowed);
+        Assert.Equal(0, blockedState.Used);
+
+        var unknown = await access.TryConsumeAsync("never.seen@example.org", CancellationToken.None);
+        Assert.False(unknown!.Allowed);
+
+        Assert.True((await Access(null).TryConsumeAsync(notGranted, CancellationToken.None))!.Allowed);
     }
 }

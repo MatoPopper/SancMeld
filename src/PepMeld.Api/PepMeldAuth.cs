@@ -34,10 +34,6 @@ public sealed class PepMeldAuthOptions
     [Range(0, 300)]
     public int ClockSkewSeconds { get; set; } = 30;
 
-    /// <summary>Checks a newly seen address may start in total. Raised per user in api_user, with the CLI.</summary>
-    [Range(0, int.MaxValue)]
-    public int DefaultRequestLimit { get; set; } = ApiUserDirectory.DefaultLimit;
-
     public bool GoogleEnabled => !string.IsNullOrWhiteSpace(GoogleClientId);
 }
 
@@ -205,14 +201,13 @@ public static class PepMeldAuthExtensions
 internal sealed class VerifiedUserRequirement : IAuthorizationRequirement;
 
 /// <summary>
-/// Lets a verified address in and makes sure it has a row, and with it a budget, in
-/// api_user. Against the table on every request: blocking someone has to take effect
-/// now, not when their token expires.
+/// Lets a verified address in when its SancMeld account grants PEP screening, and notes
+/// it in api_user. Against the accounts on every request (cached a minute): blocking
+/// someone has to take effect now, not when their token expires.
 /// </summary>
 internal sealed class VerifiedUserHandler(
     ApiUserDirectory users,
     PepAccess access,
-    IOptions<PepMeldAuthOptions> options,
     ILogger<VerifiedUserHandler> logger) : AuthorizationHandler<VerifiedUserRequirement>
 {
     protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, VerifiedUserRequirement requirement)
@@ -231,29 +226,23 @@ internal sealed class VerifiedUserHandler(
             return;
         }
 
-        var user = await users.EnsureAsync(email, PepMeldClaims.NameOf(context.User), PepMeldClaims.SubjectOf(context.User),
-            options.Value.DefaultRequestLimit).ConfigureAwait(false);
-
-        if (user.IsBlocked)
-        {
-            logger.LogWarning("Rejected {Email}: blocked by {BlockedBy} on {BlockedAt}.", email, user.BlockedBy, user.BlockedAt);
-            return;
-        }
-
-        // The grant on the SancMeld account, API keys included: a key acts as its owner.
+        // The grant on the SancMeld account, blocks included; an API key acts as its owner.
         if (!await access.IsAllowedAsync(email, CancellationToken.None).ConfigureAwait(false))
         {
             logger.LogWarning("Rejected {Email}: PEP screening is not granted to this account in SancMeld.", email);
             return;
         }
 
+        await users.EnsureAsync(email, PepMeldClaims.NameOf(context.User), PepMeldClaims.SubjectOf(context.User)).ConfigureAwait(false);
         context.Succeed(requirement);
     }
 }
 
 /// <summary>
-/// Spends one request of the caller's budget before the endpoint runs, and answers 429
-/// once it is gone. Only on POST /checks: reading a result one already paid for is free.
+/// Spends one request of the caller's SancMeld budget before the endpoint runs, and
+/// answers 429 once it is gone. Only on POST /checks: reading a result one already paid
+/// for is free. With the accounts database unreachable it answers 503 rather than a free
+/// check or a false "limit reached".
 /// </summary>
 public sealed class RequestBudgetFilter : IEndpointFilter
 {
@@ -269,8 +258,13 @@ public sealed class RequestBudgetFilter : IEndpointFilter
             return Results.Unauthorized();
         }
 
-        var users = http.RequestServices.GetRequiredService<ApiUserDirectory>();
-        var state = await users.TryConsumeAsync(email, http.RequestAborted).ConfigureAwait(false);
+        var access = http.RequestServices.GetRequiredService<PepAccess>();
+        var state = await access.TryConsumeAsync(email, http.RequestAborted).ConfigureAwait(false);
+        if (state is null)
+        {
+            return Results.Json(new ApiError("accounts_unavailable", "The account database cannot be reached; try again in a moment."),
+                statusCode: StatusCodes.Status503ServiceUnavailable);
+        }
 
         http.Response.Headers["X-Request-Limit"] = state.Limit.ToString(CultureInfo.InvariantCulture);
         http.Response.Headers["X-Requests-Remaining"] = state.Remaining.ToString(CultureInfo.InvariantCulture);
@@ -279,7 +273,7 @@ public sealed class RequestBudgetFilter : IEndpointFilter
         {
             return Results.Json(new ApiError(
                 "request_limit_reached",
-                $"You have used all {state.Limit} checks of your account. Ask the operator for a bigger budget."),
+                $"You have used all {state.Limit} requests of your account. Ask the operator for a bigger budget."),
                 statusCode: StatusCodes.Status429TooManyRequests);
         }
 

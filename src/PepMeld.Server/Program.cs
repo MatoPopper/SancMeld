@@ -1,6 +1,5 @@
 using System.Globalization;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using Microsoft.OpenApi;
 using PepMeld.Api;
 using PepMeld.Core.Access;
@@ -163,11 +162,10 @@ if (args is ["apikey", var keyAction, ..])
         case "create" when args.Length > 2 && Flag(args, "--name") is { Length: > 0 } keyName:
             {
                 var users = scope.ServiceProvider.GetRequiredService<ApiUserDirectory>();
-                var limit = scope.ServiceProvider.GetRequiredService<IOptions<PepMeldAuthOptions>>().Value.DefaultRequestLimit;
-                var owner = await users.EnsureAsync(args[2], null, null, limit, CancellationToken.None);
+                var owner = await users.EnsureAsync(args[2], null, null, CancellationToken.None);
                 var (key, record) = await keys.CreateAsync(owner.Email, keyName, CancellationToken.None);
 
-                Console.WriteLine($"API key '{record.Name}' for {record.OwnerEmail} (budget {owner.RequestLimit - owner.RequestsUsed:N0} of {owner.RequestLimit:N0} checks left):");
+                Console.WriteLine($"API key '{record.Name}' for {record.OwnerEmail} (grant and budget: the SancMeld account of that address):");
                 Console.WriteLine();
                 Console.WriteLine($"  {key}");
                 Console.WriteLine();
@@ -198,11 +196,10 @@ if (args is ["apikey", var keyAction, ..])
     }
 }
 
-// Users and budgets. No screen for any of this, so nobody raises their own:
+// Who has signed in here. Budgets, blocks and the PEP grant are the SancMeld account:
+// SancMeld's users screen or "SancMeld.Server users ...".
 //
 //   dotnet run --project src/PepMeld.Server -- users list
-//   dotnet run --project src/PepMeld.Server -- users limit you@example.com 500
-//   dotnet run --project src/PepMeld.Server -- users block you@example.com on|off
 if (args is ["users", var userAction, ..])
 {
     using var scope = app.Services.CreateScope();
@@ -213,27 +210,13 @@ if (args is ["users", var userAction, ..])
         case "list":
             foreach (var u in await users.ListAsync(CancellationToken.None))
             {
-                Console.WriteLine($"{u.Email,-36} {u.RequestsUsed,7:N0}/{u.RequestLimit,-9:N0}" + (u.IsBlocked ? $" BLOCKED by {u.BlockedBy}" : string.Empty));
+                Console.WriteLine($"{u.Email,-36} {u.DisplayName,-28} last seen {(u.LastSeenAt is { } s ? s.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture) : "never")}");
             }
 
             return 0;
 
-        case "limit" when args.Length > 3 && int.TryParse(args[3], NumberStyles.Integer, CultureInfo.InvariantCulture, out var limit):
-            {
-                var user = await users.SetLimitAsync(args[2], limit, CancellationToken.None);
-                Console.WriteLine($"{user.Email}: budget {user.RequestsUsed:N0}/{user.RequestLimit:N0}.");
-                return 0;
-            }
-
-        case "block" when args.Length > 3 && args[3] is "on" or "off":
-            {
-                var user = await users.SetBlockedAsync(args[2], args[3] == "on", "cli", CancellationToken.None);
-                Console.WriteLine($"{user.Email}: {(user.IsBlocked ? "BLOCKED" : "not blocked")}.");
-                return 0;
-            }
-
         default:
-            Console.Error.WriteLine("Usage: users list | users limit <email> <n> | users block <email> on|off");
+            Console.Error.WriteLine("Usage: users list   (budgets, blocks and the PEP grant live in SancMeld)");
             return 1;
     }
 }

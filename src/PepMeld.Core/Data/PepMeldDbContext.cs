@@ -210,7 +210,7 @@ public class PepMeldDbContext(DbContextOptions<PepMeldDbContext> options) : DbCo
 
         b.Entity<ApiUser>(e =>
         {
-            e.ToTable("api_user", t => t.HasCheckConstraint("api_user_budget_ck", "request_limit >= 0 AND requests_used >= 0"));
+            e.ToTable("api_user");
             e.HasIndex(x => x.Email).IsUnique();
             e.Property(x => x.Email).HasMaxLength(320);
             e.Property(x => x.CreatedAt).HasDefaultValueSql("now()");

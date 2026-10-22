@@ -88,14 +88,6 @@ namespace PepMeld.Core.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<DateTimeOffset?>("BlockedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("blocked_at");
-
-                    b.Property<string>("BlockedBy")
-                        .HasColumnType("text")
-                        .HasColumnName("blocked_by");
-
                     b.Property<DateTimeOffset>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
@@ -116,21 +108,9 @@ namespace PepMeld.Core.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("google_subject");
 
-                    b.Property<bool>("IsBlocked")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_blocked");
-
                     b.Property<DateTimeOffset?>("LastSeenAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("last_seen_at");
-
-                    b.Property<int>("RequestLimit")
-                        .HasColumnType("integer")
-                        .HasColumnName("request_limit");
-
-                    b.Property<int>("RequestsUsed")
-                        .HasColumnType("integer")
-                        .HasColumnName("requests_used");
 
                     b.HasKey("Id")
                         .HasName("pk_api_user");
@@ -139,10 +119,7 @@ namespace PepMeld.Core.Data.Migrations
                         .IsUnique()
                         .HasDatabaseName("ix_api_user_email");
 
-                    b.ToTable("api_user", null, t =>
-                        {
-                            t.HasCheckConstraint("api_user_budget_ck", "request_limit >= 0 AND requests_used >= 0");
-                        });
+                    b.ToTable("api_user", (string)null);
                 });
 
             modelBuilder.Entity("PepMeld.Core.Data.FamilyLink", b =>

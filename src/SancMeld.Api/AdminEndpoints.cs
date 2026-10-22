@@ -199,7 +199,7 @@ internal static class AdminEndpoints
             TypedResults.Ok(await users.ListAsync(ct)))
         .WithName("GetUsers")
         .WithSummary("Everyone who signed in, with their request counts, blocks and grants.")
-        .WithDescription("User administrators only. requestsUsed counts checks, screenings and register lookups in total.");
+        .WithDescription("User administrators only. requestsUsed counts checks, screenings, register lookups and PEP checks in total: PepMeld spends from this row.");
 
         group.MapPost("/{id:guid}/blocked", async Task<Results<Ok<UserView>, NotFound, Conflict<string>>> (
             ApiUserDirectory users, Guid id, UserFlagRequest request, ClaimsPrincipal user, ILoggerFactory logs, CancellationToken ct) =>
