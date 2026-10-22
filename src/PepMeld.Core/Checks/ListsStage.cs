@@ -70,6 +70,13 @@ public sealed class ListsStage(
                     toVerify = "Zdroj nie je úradný (Wikidata). Overiť funkciu na stránke inštitúcie alebo v úradnom zozname.";
                 }
             }
+            else if (match.Person is { BirthYearMin: { } earliest, BirthYearMax: { } latest }
+                     && (check.BirthDate.Year < earliest || check.BirthDate.Year > latest))
+            {
+                // No date, but the age an election register gives rules this one out: a
+                // namesake born in another decade.
+                continue;
+            }
             else if (match.Score < options.Value.Matching.SimilarityThreshold)
             {
                 // A surname alone, in a source that cannot confirm or exclude by date:
@@ -80,7 +87,9 @@ public sealed class ListsStage(
             {
                 level = EvidenceLevel.C;
                 dateMatched = false;
-                toVerify = "Zdroj nepublikuje dátum narodenia. Overiť v inom zdroji (profil, oznámenie funkcionára, zbierka listín), či ide o tú istú osobu.";
+                toVerify = match.Person.BirthYearNote is { } years
+                    ? $"Zdroj nepublikuje dátum narodenia; rok narodenia {match.Person.BirthYearMin}–{match.Person.BirthYearMax} podľa veku vo voľbách ({years}) sa zhoduje. Overiť dátum v inom zdroji, či ide o tú istú osobu."
+                    : "Zdroj nepublikuje dátum narodenia. Overiť v inom zdroji (profil, oznámenie funkcionára, zbierka listín), či ide o tú istú osobu.";
             }
 
             var quote = Quote(match.Person);

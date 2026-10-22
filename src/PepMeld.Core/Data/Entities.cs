@@ -108,6 +108,19 @@ public class PepPerson
 
     /// <summary>The lender's page for <see cref="BirthDate"/>, cited next to the source's own.</summary>
     public string? BirthDateFromUrl { get; set; }
+
+    /// <summary>
+    /// The earliest and latest year of birth an election register's age allows, when no
+    /// date is known: a candidate list gives "52" and not a birthday. Not enough to confirm
+    /// a match, enough to rule out a namesake born in another decade. See ElectionAges.
+    /// </summary>
+    public int? BirthYearMin { get; set; }
+
+    /// <summary>See <see cref="BirthYearMin"/>.</summary>
+    public int? BirthYearMax { get; set; }
+
+    /// <summary>What the years rest on, quoted with a finding: the register, the name, the age and the council.</summary>
+    public string? BirthYearNote { get; set; }
     public DateOnly? DeathDate { get; set; }
     public string? BirthPlace { get; set; }
     public string? Residence { get; set; }

@@ -124,6 +124,15 @@ if (args is ["birthdates", "fill", ..])
 //
 //   dotnet run --project src/PepMeld.Server -- birthdates missing
 //   dotnet run --project src/PepMeld.Server -- birthdates import found.json
+//   dotnet run --project src/PepMeld.Server -- birthdates election-ages   years of birth of mayors from the 2026 candidate lists
+if (args is ["birthdates", "election-ages", ..])
+{
+    using var scope = app.Services.CreateScope();
+    var years = await scope.ServiceProvider.GetRequiredService<ElectionAges>().RunAsync(ElectionAges.Kv2026, force: true, CancellationToken.None);
+    Console.WriteLine($"Mayors {years.Heads}: years of birth set {years.Set}, ambiguous {years.Ambiguous}, not found {years.NotFound}.");
+    return 0;
+}
+
 if (args is ["birthdates", "missing", ..])
 {
     using var scope = app.Services.CreateScope();

@@ -740,6 +740,18 @@ namespace PepMeld.Core.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("birth_place");
 
+                    b.Property<int?>("BirthYearMax")
+                        .HasColumnType("integer")
+                        .HasColumnName("birth_year_max");
+
+                    b.Property<int?>("BirthYearMin")
+                        .HasColumnType("integer")
+                        .HasColumnName("birth_year_min");
+
+                    b.Property<string>("BirthYearNote")
+                        .HasColumnType("text")
+                        .HasColumnName("birth_year_note");
+
                     b.Property<DateOnly?>("DeathDate")
                         .HasColumnType("date")
                         .HasColumnName("death_date");

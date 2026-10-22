@@ -61,3 +61,21 @@ public sealed class BirthDateFillRulesTests
         Assert.False(BirthDateFill.SameOffice([register], [F("hejtman", null, null, PepMeld.Core.Domain.PepCategory.GovernmentMember)], Today));
     }
 }
+
+public sealed class ElectionAgesRulesTests
+{
+    [Fact]
+    public void ACsvLineKeepsACommaInsideQuotes() =>
+        Assert.Equal(["1", "Ing.", "starosta, podnikatel", "a \"b\""], ElectionAges.Csv.Split("1,Ing.,\"starosta, podnikatel\",\"a \"\"b\"\"\""));
+
+    [Theory]
+    [InlineData("Město Chrudim", "starosta obce s rozšířenou působností", "chrudim")]
+    [InlineData("Městská část Praha 17", "starosta městské části", "praha 17")]
+    [InlineData("Statutární Město Liberec", "primátor", "liberec")]
+    [InlineData("Jihomoravský kraj", "hejtman", null)]
+    public void TheCouncilIsTheTownOfTheOffice(string institution, string role, string? town)
+    {
+        var f = new Data.PepFunction { SourceKey = "k", LegalBasis = "x", Institution = institution, Role = role, Category = PepMeld.Core.Domain.PepCategory.RegionalLeader };
+        Assert.Equal(town, ElectionAges.Town([f]));
+    }
+}

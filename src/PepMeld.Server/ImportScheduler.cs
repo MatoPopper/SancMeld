@@ -74,6 +74,10 @@ internal sealed class ImportScheduler(IServiceScopeFactory scopes, TimeProvider 
         if (imported)
         {
             await scope.ServiceProvider.GetRequiredService<BirthDateFill>().RunAsync(ct);
+
+            // A new mayor in the register of authorities gets years of birth from the
+            // election; with nobody new it does not download anything.
+            await scope.ServiceProvider.GetRequiredService<ElectionAges>().RunAsync(ElectionAges.Kv2026, force: false, ct);
         }
 
         // Family ties from Wikidata, once a day, after the lists.

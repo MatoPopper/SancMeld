@@ -66,6 +66,13 @@ public static class PepMeldExtensions
         services.AddScoped<PepImportService>();
         services.AddScoped<BirthDateFill>();
         services.AddScoped<BirthDateResearch>();
+        services.AddScoped<ElectionAges>();
+        services.AddHttpClient(ElectionAges.HttpClientName, (provider, client) =>
+        {
+            var ingest = provider.GetRequiredService<Microsoft.Extensions.Options.IOptions<PepMeldOptions>>().Value.Ingest;
+            client.Timeout = TimeSpan.FromSeconds(ingest.DownloadTimeoutSeconds);
+            client.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", ingest.UserAgent);
+        });
         services.AddScoped<SourceQueryService>();
 
         services.AddSingleton<CheckQueue>();
