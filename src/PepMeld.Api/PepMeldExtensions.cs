@@ -63,6 +63,7 @@ public static class PepMeldExtensions
 
         services.AddSingleton<ISnapshotStore, FileSystemSnapshotStore>();
         services.AddScoped<PepImportService>();
+        services.AddScoped<BirthDateFill>();
         services.AddScoped<SourceQueryService>();
 
         services.AddSingleton<CheckQueue>();

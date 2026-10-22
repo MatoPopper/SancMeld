@@ -136,6 +136,11 @@ public sealed class PepImportService(
 
         foreach (var item in parsed)
         {
+            // A date another list lent stays until this source publishes one of its own;
+            // BirthDateFill decides whether the loan still holds.
+            var borrowed = existing.TryGetValue(item.SourceKey, out var known) && known.BirthDateFrom is not null && item.BirthDate is null;
+            var birthDate = borrowed ? known!.BirthDate : item.BirthDate;
+
             if (!seenPersons.Add(item.SourceKey))
             {
                 // Two records under one key would violate the unique index; the first wins,
@@ -167,7 +172,7 @@ public sealed class PepImportService(
                     || person.FamilyName != item.FamilyName
                     || person.TitleBefore != item.TitleBefore
                     || person.TitleAfter != item.TitleAfter
-                    || person.BirthDate != item.BirthDate
+                    || person.BirthDate != birthDate
                     || person.DeathDate != item.DeathDate
                     || person.Residence != item.Residence
                     || person.SourceUrl != item.SourceUrl;
@@ -186,7 +191,13 @@ public sealed class PepImportService(
             person.FamilyName = item.FamilyName;
             person.TitleBefore = item.TitleBefore;
             person.TitleAfter = item.TitleAfter;
-            person.BirthDate = item.BirthDate;
+            person.BirthDate = birthDate;
+            if (!borrowed)
+            {
+                person.BirthDateFrom = null;
+                person.BirthDateFromUrl = null;
+            }
+
             person.DeathDate = item.DeathDate;
             person.Residence = item.Residence;
             person.SourceUrl = item.SourceUrl;

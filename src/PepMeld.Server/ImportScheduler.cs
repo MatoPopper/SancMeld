@@ -52,6 +52,7 @@ internal sealed class ImportScheduler(IServiceScopeFactory scopes, TimeProvider 
         var now = clock.GetUtcNow();
 
         var sources = await db.Sources.AsNoTracking().Where(s => s.IsEnabled).ToListAsync(ct);
+        var imported = false;
 
         foreach (var source in sources)
         {
@@ -66,6 +67,13 @@ internal sealed class ImportScheduler(IServiceScopeFactory scopes, TimeProvider 
 
             logger.LogInformation("Importing {Source}: last successful run {Last}.", source.Code, last?.ToString("u") ?? "never");
             await importer.RunAsync(source.Code, force: false, ct);
+            imported = true;
+        }
+
+        // After the lists, so a date published since or a lender gone is seen the same tick.
+        if (imported)
+        {
+            await scope.ServiceProvider.GetRequiredService<BirthDateFill>().RunAsync(ct);
         }
 
         // Family ties from Wikidata, once a day, after the lists.

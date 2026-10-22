@@ -50,7 +50,13 @@ public sealed class ListsStage(
                 }
 
                 dateMatched = true;
-                if (match.Source.IsOfficial)
+                if (match.Person.BirthDateFrom is { } lender)
+                {
+                    // The office is the source's, the date another list's: no better than the lender.
+                    level = EvidenceLevel.B;
+                    toVerify = $"Dátum narodenia zdroj nepublikuje; prevzatý z {lender} pri rovnakom mene a funkcii. Overiť dátum v úradnom zdroji.";
+                }
+                else if (match.Source.IsOfficial)
                 {
                     level = EvidenceLevel.A;
                     toVerify = null;
@@ -76,6 +82,7 @@ public sealed class ListsStage(
             }
 
             var quote = Quote(match.Person);
+            var lent = Lent(match.Person, match.RetrievedAt);
 
             foreach (var function in match.Functions)
             {
@@ -101,8 +108,10 @@ public sealed class ListsStage(
                     Relation: null,
                     RelatedTo: null,
                     months,
-                    [new Evidence(function.SourceUrl ?? match.Person.SourceUrl, match.RetrievedAt, quote)],
-                    Explain(match.Source, function, dateMatched, months, options.Value.Matching.FormerPepMonths),
+                    lent is null
+                        ? [new Evidence(function.SourceUrl ?? match.Person.SourceUrl, match.RetrievedAt, quote)]
+                        : [new Evidence(function.SourceUrl ?? match.Person.SourceUrl, match.RetrievedAt, quote), lent],
+                    Explain(match.Source, match.Person, function, dateMatched, months, options.Value.Matching.FormerPepMonths),
                     toVerify,
                     [match.Source.Code]));
             }
@@ -130,16 +139,25 @@ public sealed class ListsStage(
     private static string? Quote(PepPerson person)
     {
         var name = string.Join(' ', new[] { person.TitleBefore, person.DisplayName, person.TitleAfter }.Where(s => !string.IsNullOrWhiteSpace(s)));
-        return person.BirthDate is { } dob
+        // A borrowed date is not on the source's page; it is quoted from the lender's.
+        return person.BirthDate is { } dob && person.BirthDateFrom is null
             ? $"{name}, nar. {dob.ToString("d. M. yyyy", CultureInfo.InvariantCulture)}"
             : name;
     }
 
-    private static string Explain(PepSource source, PepFunction function, bool dateMatched, int? monthsSinceEnd, int formerMonths)
+    private static Evidence? Lent(PepPerson person, DateTimeOffset? retrievedAt) =>
+        person is { BirthDate: { } dob, BirthDateFrom: not null, BirthDateFromUrl: { } url }
+            ? new Evidence(url, retrievedAt, $"{person.DisplayName}, nar. {dob.ToString("d. M. yyyy", CultureInfo.InvariantCulture)}")
+            : null;
+
+    private static string Explain(PepSource source, PepPerson person, PepFunction function, bool dateMatched, int? monthsSinceEnd, int formerMonths)
     {
-        var who = dateMatched
-            ? $"{source.Name} uvádza osobu s rovnakým menom a dátumom narodenia{(source.IsOfficial ? string.Empty : " (neúradný zdroj)")}"
-            : $"{source.Name} uvádza osobu s rovnakým menom, dátum narodenia zdroj nepublikuje";
+        var who = (dateMatched, person.BirthDateFrom) switch
+        {
+            (true, { } lender) => $"{source.Name} uvádza osobu s rovnakým menom; zhodný dátum narodenia uvádza {lender} pri tej istej funkcii",
+            (true, null) => $"{source.Name} uvádza osobu s rovnakým menom a dátumom narodenia{(source.IsOfficial ? string.Empty : " (neúradný zdroj)")}",
+            _ => $"{source.Name} uvádza osobu s rovnakým menom, dátum narodenia zdroj nepublikuje",
+        };
 
         var period = function.ValidTo is { } to
             ? $"od {Date(function.ValidFrom)} do {Date(to)}"
@@ -186,7 +204,7 @@ public sealed class ListsStage(
 
         // Honest about the gaps, per source country. These shrink as connectors land;
         // keep the sentence in step with the seeded sources.
-        const string cz = "ČR: súdy, ČNB, NKÚ, veľvyslanci, orgány strán, regionálna samospráva; senátori sú bez dátumu narodenia; z firiem so štátnou účasťou len štátne podniky a firmy v zozname CZ_ARES_STATE";
+        const string cz = "ČR: súdy, ČNB, NKÚ, veľvyslanci, orgány strán, regionálna samospráva; dátum narodenia, ktorý psp.cz pri väčšine senátorov neuvádza, je prevzatý z Wikidata (úroveň B), ak sa zhoduje meno aj funkcia, inak osoba ostáva bez dátumu; z firiem so štátnou účasťou len štátne podniky a firmy v zozname CZ_ARES_STATE";
         const string sk = "SR: veľvyslanci, orgány politických strán, sudcovia a prokurátori nižších súdov; verejní funkcionári vrátane orgánov štátnych firiem sú bez dátumu narodenia";
 
         note += country switch

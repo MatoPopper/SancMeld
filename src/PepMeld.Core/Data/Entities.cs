@@ -91,8 +91,23 @@ public class PepPerson
     public string? TitleBefore { get; set; }
     public string? TitleAfter { get; set; }
 
-    /// <summary>Null when the source does not publish it or marks it unknown.</summary>
+    /// <summary>
+    /// Null when the source does not publish it or marks it unknown, unless another list
+    /// supplied it: then <see cref="BirthDateFrom"/> says which.
+    /// </summary>
     public DateOnly? BirthDate { get; set; }
+
+    /// <summary>
+    /// The code of the list <see cref="BirthDate"/> was taken from, when this source does not
+    /// publish it; null when the date is the source's own. psp.cz marks the date of birth of
+    /// most senators as unknown, Wikidata has it for the same person in the same office, and
+    /// a date the client must give is worth little against a record that has none. A
+    /// borrowed date is never better than its lender: a match on it is level B at most.
+    /// </summary>
+    public string? BirthDateFrom { get; set; }
+
+    /// <summary>The lender's page for <see cref="BirthDate"/>, cited next to the source's own.</summary>
+    public string? BirthDateFromUrl { get; set; }
     public DateOnly? DeathDate { get; set; }
     public string? BirthPlace { get; set; }
     public string? Residence { get; set; }

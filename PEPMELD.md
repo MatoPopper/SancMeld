@@ -47,7 +47,7 @@ sees the lists within seconds while a later stage still runs:
 
 | Code | Country | What | Date of birth | Status |
 |---|---|---|---|---|
-| `CZ_PSP` | CZ | Chamber of Deputies open data (`poslanci.zip`): every deputy since 1993, senators, members of government, presidents, with the dates of each mandate | **yes**, except senators: the Chamber records them without a birthday (the 1900 sentinel), so a senator is a level C finding until senat.cz is read | **implemented** |
+| `CZ_PSP` | CZ | Chamber of Deputies open data (`poslanci.zip`): every deputy since 1993, senators, members of government, presidents, with the dates of each mandate | **yes**, except most senators: the Chamber records them without a birthday (the 1900 sentinel). Such a record borrows the date from another list's record with the same name and the same office at the same time (in practice `CZ_WIKIDATA`), and a match on it is level B; without a lender it stays level C | **implemented** |
 | `SK_NRSR` | SK | nrsr.sk: the alphabetical list of deputies per term (3rd term, 2002, onwards) and each deputy's profile, with the date of birth and the town of residence. No mandate dates per person: a membership carries the term's bounds and says so | **yes** | **implemented** |
 | `SK_NRSR_VNF` | SK | nrsr.sk register of public officials (ústavný zákon 357/2004): the alphabetical list (one form post) and each official's latest declaration, which names every function with the organisation. Government and state secretaries, constitutional and supreme court judges, the prosecutor general, the central bank's board, mayors and regional chairs, regulators, and the boards of state enterprises and state-owned companies (letter g), ~900 persons). No dates of office: a function carries the declaration year and ends when the person leaves the list | no | **implemented** |
 | `CZ_ARES_STATE` | CZ | ARES public register: the statutory bodies and supervisory boards of every state enterprise (legal forms 301, 302, found by the register's search) and of the state-owned companies listed by hand in `StateEntities.json` (ČEZ, ČEPS, ČEPRO, MERO, České dráhy, Letiště Praha, EGAP, ČEB, NRB, PRISKO, Explosia, Thermal-F). Every member with the date of birth and the dates of the seat; seats ended more than ten years ago are left out. Letter g) with level A evidence | **yes** | **implemented** |
@@ -66,6 +66,7 @@ dotnet ef database update --project src/PepMeld.Core       # creates "pepmeld" a
 dotnet run --project src/PepMeld.Server -- import CZ_PSP    # first fill, ~1 650 persons, seconds
 dotnet run --project src/PepMeld.Server -- import SK_NRSR   # ~700 profiles; the site answers in 1-4 s, so the first fill takes about 45 min, later runs ~10 min (profiles cached 30 days)
 dotnet run --project src/PepMeld.Server -- import SK_NRSR_VNF   # ~1 650 declarations at 1-20 s each, one lane, pausing on 429: the first fill runs overnight, later runs read the cache
+dotnet run --project src/PepMeld.Server -- birthdates fill   # lend dates of birth across lists now; also runs after every import
 dotnet run --project src/PepMeld.Server -- apikey create you@example.com --name dev
 dotnet run --project src/PepMeld.Server                     # http://localhost:63463/swagger
 ```

@@ -93,7 +93,30 @@ if (args is ["import", var sourceCode, ..])
         Console.WriteLine($"  {outcome.Reason}");
     }
 
+    if (outcome.Status is PepMeld.Core.Domain.ImportStatus.Success)
+    {
+        var lent = await scope.ServiceProvider.GetRequiredService<BirthDateFill>().RunAsync(CancellationToken.None);
+        Console.WriteLine($"  birth dates lent {lent.Filled}, kept {lent.Kept}, withdrawn {lent.Withdrawn}, ambiguous {lent.Ambiguous.Count}");
+    }
+
     return outcome.Status is PepMeld.Core.Domain.ImportStatus.Success or PepMeld.Core.Domain.ImportStatus.SkippedUnchanged ? 0 : 1;
+}
+
+// Lend dates of birth across lists now, without waiting for the next import:
+//
+//   dotnet run --project src/PepMeld.Server -- birthdates fill
+if (args is ["birthdates", "fill", ..])
+{
+    using var scope = app.Services.CreateScope();
+    var lent = await scope.ServiceProvider.GetRequiredService<BirthDateFill>().RunAsync(CancellationToken.None);
+
+    Console.WriteLine($"Birth dates lent {lent.Filled}, kept {lent.Kept}, withdrawn {lent.Withdrawn}, without a lender {lent.Missing}.");
+    foreach (var name in lent.Ambiguous)
+    {
+        Console.WriteLine($"  ambiguous, lenders disagree: {name}");
+    }
+
+    return 0;
 }
 
 // API keys, printed once:

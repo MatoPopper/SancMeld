@@ -751,6 +751,14 @@ namespace PepMeld.Core.Data.Migrations
                         .HasColumnType("date")
                         .HasColumnName("birth_date");
 
+                    b.Property<string>("BirthDateFrom")
+                        .HasColumnType("text")
+                        .HasColumnName("birth_date_from");
+
+                    b.Property<string>("BirthDateFromUrl")
+                        .HasColumnType("text")
+                        .HasColumnName("birth_date_from_url");
+
                     b.Property<string>("BirthPlace")
                         .HasColumnType("text")
                         .HasColumnName("birth_place");
