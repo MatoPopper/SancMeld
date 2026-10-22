@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/PepMeld.Connectors.CzRpp/PepMeld.Connectors.CzRpp.csproj" />
+  </ItemGroup>
+
+  <!-- Cut from ovm.json as published on 2026-10-22, the heads' addresses of residence
+       removed: a small municipality the list must skip, a region, Prague, a statutory city,
+       a municipality with extended powers, Praha 1, two ministries (one without a head),
+       a central office, a head with a double surname, and an authority that has ended
+       (made up, the file had none of the kinds read). -->
+  <ItemGroup>
+    <Content Include="../../fixtures/cz-rpp/ovm.json" Link="fixtures/cz-rpp/ovm.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,1813 @@
+{
+ "položky": [
+  {
+   "type": "orgán-veřejné-moci",
+   "id": "orgán-veřejné-moci/00288543",
+   "identifikátor": "00288543",
+   "název": {
+    "cs": "Obec Ohrozim"
+   },
+   "ičo": "00288543",
+   "seznam-kategorií": [
+    {
+     "kategorie": "kategorie-ovm/KO14",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO101",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO108",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO137",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO171",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO177",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO193",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO197",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO199",
+     "zařazení-od": "2023-11-12",
+     "přímé-zařazení": false
+    },
+    {
+     "kategorie": "kategorie-ovm/KO200",
+     "zařazení-od": "2012-08-14",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO221",
+     "zařazení-od": "2012-09-26",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO261",
+     "zařazení-od": "2013-03-12",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO341",
+     "zařazení-od": "2013-08-05",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO342",
+     "zařazení-od": "2013-08-05",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO382",
+     "zařazení-od": "2013-11-18",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO421",
+     "zařazení-od": "2014-02-18",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO541",
+     "zařazení-od": "2023-05-05",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO544",
+     "zařazení-od": "2023-11-12",
+     "přímé-zařazení": true
+    }
+   ],
+   "osoba-v-čele": [
+    {
+     "type": "osoba",
+     "jméno": "MICHAL LUKEŠ"
+    }
+   ],
+   "zahájení": "2011-01-01"
+  },
+  {
+   "type": "orgán-veřejné-moci",
+   "id": "orgán-veřejné-moci/00007064",
+   "identifikátor": "00007064",
+   "název": {
+    "cs": "Ministerstvo vnitra"
+   },
+   "ičo": "00007064",
+   "seznam-kategorií": [
+    {
+     "kategorie": "kategorie-ovm/KO100",
+     "zařazení-od": "2019-08-27",
+     "přímé-zařazení": false
+    },
+    {
+     "kategorie": "kategorie-ovm/KO129",
+     "zařazení-od": "2019-08-27",
+     "přímé-zařazení": false
+    },
+    {
+     "kategorie": "kategorie-ovm/KO131",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO140",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO145",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO151",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO152",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO166",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO182",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO187",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO188",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO191",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO192",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": false
+    },
+    {
+     "kategorie": "kategorie-ovm/KO193",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO197",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO198",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO199",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO302",
+     "zařazení-od": "2013-06-12",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO341",
+     "zařazení-od": "2013-08-05",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO342",
+     "zařazení-od": "2013-08-05",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO383",
+     "zařazení-od": "2013-11-18",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO421",
+     "zařazení-od": "2014-02-18",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO441",
+     "zařazení-od": "2014-04-23",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO481",
+     "zařazení-od": "2015-04-21",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO524",
+     "zařazení-od": "2015-04-21",
+     "přímé-zařazení": false
+    },
+    {
+     "kategorie": "kategorie-ovm/KO526",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": false
+    },
+    {
+     "kategorie": "kategorie-ovm/KO525",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": false
+    },
+    {
+     "kategorie": "kategorie-ovm/KO527",
+     "zařazení-od": "2019-08-27",
+     "přímé-zařazení": false
+    },
+    {
+     "kategorie": "kategorie-ovm/KO528",
+     "zařazení-od": "2019-08-27",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO534",
+     "zařazení-od": "2021-11-05",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO536",
+     "zařazení-od": "2025-02-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO540",
+     "zařazení-od": "2022-12-07",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO541",
+     "zařazení-od": "2023-05-05",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO545",
+     "zařazení-od": "2024-08-13",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO550",
+     "zařazení-od": "2019-08-27",
+     "přímé-zařazení": false
+    },
+    {
+     "kategorie": "kategorie-ovm/KO551",
+     "zařazení-od": "2025-04-28",
+     "přímé-zařazení": true
+    }
+   ],
+   "zahájení": "2011-01-01",
+   "osoba-v-čele": []
+  },
+  {
+   "type": "orgán-veřejné-moci",
+   "id": "orgán-veřejné-moci/00025593",
+   "identifikátor": "00025593",
+   "název": {
+    "cs": "Český statistický úřad"
+   },
+   "ičo": "00025593",
+   "seznam-kategorií": [
+    {
+     "kategorie": "kategorie-ovm/KO100",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": false
+    },
+    {
+     "kategorie": "kategorie-ovm/KO104",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO129",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": false
+    },
+    {
+     "kategorie": "kategorie-ovm/KO187",
+     "zařazení-od": "2020-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO191",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO193",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO197",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO198",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO199",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO302",
+     "zařazení-od": "2013-06-12",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO341",
+     "zařazení-od": "2013-08-05",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO342",
+     "zařazení-od": "2013-08-05",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO421",
+     "zařazení-od": "2014-02-18",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO481",
+     "zařazení-od": "2015-04-21",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO524",
+     "zařazení-od": "2015-04-21",
+     "přímé-zařazení": false
+    },
+    {
+     "kategorie": "kategorie-ovm/KO527",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": false
+    },
+    {
+     "kategorie": "kategorie-ovm/KO540",
+     "zařazení-od": "2022-12-09",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO541",
+     "zařazení-od": "2023-05-05",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO550",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": false
+    },
+    {
+     "kategorie": "kategorie-ovm/KO551",
+     "zařazení-od": "2025-04-28",
+     "přímé-zařazení": true
+    }
+   ],
+   "osoba-v-čele": [
+    {
+     "type": "osoba",
+     "jméno": "MAREK ROJÍČEK"
+    }
+   ],
+   "zahájení": "2011-01-01"
+  },
+  {
+   "type": "orgán-veřejné-moci",
+   "id": "orgán-veřejné-moci/00236195",
+   "identifikátor": "00236195",
+   "název": {
+    "cs": "Město Kutná Hora"
+   },
+   "ičo": "00236195",
+   "seznam-kategorií": [
+    {
+     "kategorie": "kategorie-ovm/KO11",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO13",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO14",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO16",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO17",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO101",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO108",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": false
+    },
+    {
+     "kategorie": "kategorie-ovm/KO126",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO136",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO137",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO157",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO163",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO167",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO171",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO177",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO180",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO193",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO197",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO199",
+     "zařazení-od": "2024-01-01",
+     "přímé-zařazení": false
+    },
+    {
+     "kategorie": "kategorie-ovm/KO200",
+     "zařazení-od": "2012-08-14",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO242",
+     "zařazení-od": "2013-02-27",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO261",
+     "zařazení-od": "2013-03-12",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO281",
+     "zařazení-od": "2013-04-23",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO341",
+     "zařazení-od": "2013-08-05",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO342",
+     "zařazení-od": "2013-08-05",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO382",
+     "zařazení-od": "2013-11-18",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO421",
+     "zařazení-od": "2014-02-18",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO423",
+     "zařazení-od": "2014-02-18",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO424",
+     "zařazení-od": "2014-02-18",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO541",
+     "zařazení-od": "2023-05-05",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO544",
+     "zařazení-od": "2024-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO547",
+     "zařazení-od": "2024-04-25",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO552",
+     "zařazení-od": "2026-01-01",
+     "přímé-zařazení": true
+    }
+   ],
+   "osoba-v-čele": [
+    {
+     "type": "osoba",
+     "jméno": "LUKÁŠ SEIFERT"
+    }
+   ],
+   "zahájení": "2011-01-01"
+  },
+  {
+   "type": "orgán-veřejné-moci",
+   "id": "orgán-veřejné-moci/00063410",
+   "identifikátor": "00063410",
+   "název": {
+    "cs": "Městská část Praha 1"
+   },
+   "ičo": "00063410",
+   "seznam-kategorií": [
+    {
+     "kategorie": "kategorie-ovm/KO101",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO108",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": false
+    },
+    {
+     "kategorie": "kategorie-ovm/KO126",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO132",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO136",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO137",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO153",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO157",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO161",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO167",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO197",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO199",
+     "zařazení-od": "2024-01-01",
+     "přímé-zařazení": false
+    },
+    {
+     "kategorie": "kategorie-ovm/KO200",
+     "zařazení-od": "2013-11-18",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO241",
+     "zařazení-od": "2013-02-27",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO242",
+     "zařazení-od": "2013-02-27",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO244",
+     "zařazení-od": "2013-02-27",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO261",
+     "zařazení-od": "2013-03-12",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO281",
+     "zařazení-od": "2013-04-23",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO301",
+     "zařazení-od": "2013-05-06",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO385",
+     "zařazení-od": "2013-02-27",
+     "přímé-zařazení": false
+    },
+    {
+     "kategorie": "kategorie-ovm/KO423",
+     "zařazení-od": "2014-02-18",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO519",
+     "zařazení-od": "2017-12-18",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO541",
+     "zařazení-od": "2023-05-05",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO544",
+     "zařazení-od": "2024-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO546",
+     "zařazení-od": "2023-12-14",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO547",
+     "zařazení-od": "2024-04-25",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO552",
+     "zařazení-od": "2026-01-01",
+     "přímé-zařazení": true
+    }
+   ],
+   "osoba-v-čele": [
+    {
+     "type": "osoba",
+     "jméno": "TEREZIE RADOMĚŘSKÁ"
+    }
+   ],
+   "zahájení": "2011-01-01"
+  },
+  {
+   "type": "orgán-veřejné-moci",
+   "id": "orgán-veřejné-moci/00006947",
+   "identifikátor": "00006947",
+   "název": {
+    "cs": "Ministerstvo financí"
+   },
+   "ičo": "00006947",
+   "seznam-kategorií": [
+    {
+     "kategorie": "kategorie-ovm/KO100",
+     "zařazení-od": "2019-08-27",
+     "přímé-zařazení": false
+    },
+    {
+     "kategorie": "kategorie-ovm/KO129",
+     "zařazení-od": "2019-08-27",
+     "přímé-zařazení": false
+    },
+    {
+     "kategorie": "kategorie-ovm/KO187",
+     "zařazení-od": "2020-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO191",
+     "zařazení-od": "2014-03-27",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO197",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO198",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO199",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO302",
+     "zařazení-od": "2013-06-12",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO341",
+     "zařazení-od": "2013-08-05",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO342",
+     "zařazení-od": "2013-08-05",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO383",
+     "zařazení-od": "2013-11-18",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO421",
+     "zařazení-od": "2014-02-18",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO481",
+     "zařazení-od": "2015-04-21",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO524",
+     "zařazení-od": "2015-04-21",
+     "přímé-zařazení": false
+    },
+    {
+     "kategorie": "kategorie-ovm/KO527",
+     "zařazení-od": "2019-08-27",
+     "přímé-zařazení": false
+    },
+    {
+     "kategorie": "kategorie-ovm/KO528",
+     "zařazení-od": "2019-08-27",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO534",
+     "zařazení-od": "2021-11-05",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO536",
+     "zařazení-od": "2026-04-16",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO540",
+     "zařazení-od": "2022-12-09",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO541",
+     "zařazení-od": "2023-05-05",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO550",
+     "zařazení-od": "2019-08-27",
+     "přímé-zařazení": false
+    },
+    {
+     "kategorie": "kategorie-ovm/KO551",
+     "zařazení-od": "2025-04-28",
+     "přímé-zařazení": true
+    }
+   ],
+   "osoba-v-čele": [
+    {
+     "type": "osoba",
+     "jméno": "ALENA SCHILLEROVÁ"
+    }
+   ],
+   "zahájení": "2011-01-01"
+  },
+  {
+   "type": "orgán-veřejné-moci",
+   "id": "orgán-veřejné-moci/00064581",
+   "identifikátor": "00064581",
+   "název": {
+    "cs": "HLAVNÍ MĚSTO PRAHA"
+   },
+   "ičo": "00064581",
+   "seznam-kategorií": [
+    {
+     "kategorie": "kategorie-ovm/KO12",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO13",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO14",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO16",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO106",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": false
+    },
+    {
+     "kategorie": "kategorie-ovm/KO108",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": false
+    },
+    {
+     "kategorie": "kategorie-ovm/KO121",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO126",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO137",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO148",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO157",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO163",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO164",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO171",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO177",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO180",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO189",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO192",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": false
+    },
+    {
+     "kategorie": "kategorie-ovm/KO193",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO197",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO199",
+     "zařazení-od": "2024-01-01",
+     "přímé-zařazení": false
+    },
+    {
+     "kategorie": "kategorie-ovm/KO200",
+     "zařazení-od": "2012-08-14",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO341",
+     "zařazení-od": "2013-08-05",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO342",
+     "zařazení-od": "2013-08-05",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO381",
+     "zařazení-od": "2013-11-18",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO382",
+     "zařazení-od": "2013-11-18",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO383",
+     "zařazení-od": "2013-11-18",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO421",
+     "zařazení-od": "2014-02-18",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO423",
+     "zařazení-od": "2014-02-18",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO424",
+     "zařazení-od": "2014-02-18",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO536",
+     "zařazení-od": "2024-10-25",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO539",
+     "zařazení-od": "2022-11-15",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO541",
+     "zařazení-od": "2023-05-05",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO544",
+     "zařazení-od": "2024-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO547",
+     "zařazení-od": "2024-04-25",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO550",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": false
+    }
+   ],
+   "osoba-v-čele": [
+    {
+     "type": "osoba",
+     "jméno": "BOHUSLAV SVOBODA"
+    }
+   ],
+   "zahájení": "2011-01-01"
+  },
+  {
+   "type": "orgán-veřejné-moci",
+   "id": "orgán-veřejné-moci/70888337",
+   "identifikátor": "70888337",
+   "název": {
+    "cs": "Jihomoravský kraj"
+   },
+   "ičo": "70888337",
+   "seznam-kategorií": [
+    {
+     "kategorie": "kategorie-ovm/KO12",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO106",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": false
+    },
+    {
+     "kategorie": "kategorie-ovm/KO108",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": false
+    },
+    {
+     "kategorie": "kategorie-ovm/KO121",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO148",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO163",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO164",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO193",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO197",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO199",
+     "zařazení-od": "2024-01-01",
+     "přímé-zařazení": false
+    },
+    {
+     "kategorie": "kategorie-ovm/KO244",
+     "zařazení-od": "2013-02-27",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO341",
+     "zařazení-od": "2013-08-05",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO342",
+     "zařazení-od": "2013-08-05",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO343",
+     "zařazení-od": "2013-08-15",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO383",
+     "zařazení-od": "2013-11-18",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO385",
+     "zařazení-od": "2013-08-15",
+     "přímé-zařazení": false
+    },
+    {
+     "kategorie": "kategorie-ovm/KO421",
+     "zařazení-od": "2014-02-18",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO423",
+     "zařazení-od": "2014-02-18",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO424",
+     "zařazení-od": "2014-02-18",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO541",
+     "zařazení-od": "2023-05-05",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO544",
+     "zařazení-od": "2024-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO550",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": false
+    }
+   ],
+   "osoba-v-čele": [
+    {
+     "type": "osoba",
+     "jméno": "JAN GROLICH"
+    }
+   ],
+   "zahájení": "2011-01-01"
+  },
+  {
+   "type": "orgán-veřejné-moci",
+   "id": "orgán-veřejné-moci/44992785",
+   "identifikátor": "44992785",
+   "název": {
+    "cs": "Statutární město Brno"
+   },
+   "ičo": "44992785",
+   "seznam-kategorií": [
+    {
+     "kategorie": "kategorie-ovm/KO11",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO13",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO14",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO16",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO17",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO101",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO103",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO106",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO108",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO126",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO136",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO137",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO157",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO161",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO163",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO164",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO171",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO177",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO180",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO189",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO192",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": false
+    },
+    {
+     "kategorie": "kategorie-ovm/KO193",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO197",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO199",
+     "zařazení-od": "2023-11-12",
+     "přímé-zařazení": false
+    },
+    {
+     "kategorie": "kategorie-ovm/KO200",
+     "zařazení-od": "2012-08-14",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO242",
+     "zařazení-od": "2013-02-27",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO261",
+     "zařazení-od": "2013-03-12",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO281",
+     "zařazení-od": "2013-04-23",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO341",
+     "zařazení-od": "2013-08-05",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO342",
+     "zařazení-od": "2013-08-05",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO381",
+     "zařazení-od": "2013-11-18",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO382",
+     "zařazení-od": "2013-11-18",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO421",
+     "zařazení-od": "2014-02-18",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO423",
+     "zařazení-od": "2014-02-18",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO424",
+     "zařazení-od": "2014-02-18",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO519",
+     "zařazení-od": "2017-12-18",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO527",
+     "zařazení-od": "2019-07-29",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO536",
+     "zařazení-od": "2026-01-22",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO539",
+     "zařazení-od": "2022-11-15",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO541",
+     "zařazení-od": "2023-05-05",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO544",
+     "zařazení-od": "2023-11-12",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO547",
+     "zařazení-od": "2024-04-25",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO552",
+     "zařazení-od": "2026-01-01",
+     "přímé-zařazení": true
+    }
+   ],
+   "osoba-v-čele": [
+    {
+     "type": "osoba",
+     "jméno": "MARKÉTA VAŇKOVÁ"
+    }
+   ],
+   "zahájení": "2011-01-01"
+  },
+  {
+   "type": "orgán-veřejné-moci",
+   "id": "orgán-veřejné-moci/00297488",
+   "identifikátor": "00297488",
+   "název": {
+    "cs": "Statutární město Havířov"
+   },
+   "ičo": "00297488",
+   "seznam-kategorií": [
+    {
+     "kategorie": "kategorie-ovm/KO11",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO13",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO14",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO16",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO17",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO101",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO103",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO108",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": false
+    },
+    {
+     "kategorie": "kategorie-ovm/KO126",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO136",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO137",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO157",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO163",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO167",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO171",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO177",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO180",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO193",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO197",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO199",
+     "zařazení-od": "2024-01-01",
+     "přímé-zařazení": false
+    },
+    {
+     "kategorie": "kategorie-ovm/KO200",
+     "zařazení-od": "2012-08-14",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO242",
+     "zařazení-od": "2013-02-27",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO261",
+     "zařazení-od": "2013-03-12",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO341",
+     "zařazení-od": "2013-08-05",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO342",
+     "zařazení-od": "2013-08-05",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO382",
+     "zařazení-od": "2013-11-18",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO421",
+     "zařazení-od": "2014-02-18",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO423",
+     "zařazení-od": "2014-02-18",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO424",
+     "zařazení-od": "2014-02-18",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO541",
+     "zařazení-od": "2023-05-05",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO544",
+     "zařazení-od": "2024-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO547",
+     "zařazení-od": "2024-04-25",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO552",
+     "zařazení-od": "2026-01-01",
+     "přímé-zařazení": true
+    }
+   ],
+   "osoba-v-čele": [
+    {
+     "type": "osoba",
+     "jméno": "IVETA KOČÍ PALKOVSKÁ"
+    }
+   ],
+   "zahájení": "2011-01-01"
+  },
+  {
+   "type": "orgán-veřejné-moci",
+   "id": "orgán-veřejné-moci/99999999",
+   "identifikátor": "99999999",
+   "název": {
+    "cs": "Město Zrušené (test)"
+   },
+   "ičo": "99999999",
+   "seznam-kategorií": [
+    {
+     "kategorie": "kategorie-ovm/KO11",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO13",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO14",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO16",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO17",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO101",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO108",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": false
+    },
+    {
+     "kategorie": "kategorie-ovm/KO126",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO136",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO137",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO157",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO163",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO167",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO171",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO177",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO180",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO193",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO197",
+     "zařazení-od": "2011-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO199",
+     "zařazení-od": "2024-01-01",
+     "přímé-zařazení": false
+    },
+    {
+     "kategorie": "kategorie-ovm/KO200",
+     "zařazení-od": "2012-08-14",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO242",
+     "zařazení-od": "2013-02-27",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO261",
+     "zařazení-od": "2013-03-12",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO281",
+     "zařazení-od": "2013-04-23",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO341",
+     "zařazení-od": "2013-08-05",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO342",
+     "zařazení-od": "2013-08-05",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO382",
+     "zařazení-od": "2013-11-18",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO421",
+     "zařazení-od": "2014-02-18",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO423",
+     "zařazení-od": "2014-02-18",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO424",
+     "zařazení-od": "2014-02-18",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO541",
+     "zařazení-od": "2023-05-05",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO544",
+     "zařazení-od": "2024-01-01",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO547",
+     "zařazení-od": "2024-04-25",
+     "přímé-zařazení": true
+    },
+    {
+     "kategorie": "kategorie-ovm/KO552",
+     "zařazení-od": "2026-01-01",
+     "přímé-zařazení": true
+    }
+   ],
+   "osoba-v-čele": [
+    {
+     "type": "osoba",
+     "jméno": "ZRUŠENÝ STAROSTA"
+    }
+   ],
+   "zahájení": "2011-01-01",
+   "ukončení": "2020-01-01"
+  }
+ ]
+}

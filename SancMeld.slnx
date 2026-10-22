@@ -5,6 +5,7 @@
     <Project Path="src/HybridMeld.Server/HybridMeld.Server.csproj" />
     <Project Path="src/PepMeld.Api/PepMeld.Api.csproj" />
     <Project Path="src/PepMeld.Connectors.CzAres/PepMeld.Connectors.CzAres.csproj" />
+    <Project Path="src/PepMeld.Connectors.CzRpp/PepMeld.Connectors.CzRpp.csproj" />
     <Project Path="src/PepMeld.Connectors.CzPsp/PepMeld.Connectors.CzPsp.csproj" />
     <Project Path="src/PepMeld.Connectors.SkNrsr/PepMeld.Connectors.SkNrsr.csproj" />
     <Project Path="src/PepMeld.Connectors.SkNrsrVnf/PepMeld.Connectors.SkNrsrVnf.csproj" />
@@ -34,6 +35,7 @@
     <Project Path="tests/HybridMeld.Core.IntegrationTests/HybridMeld.Core.IntegrationTests.csproj" />
     <Project Path="tests/HybridMeld.Core.Tests/HybridMeld.Core.Tests.csproj" />
     <Project Path="tests/PepMeld.Connectors.CzAres.Tests/PepMeld.Connectors.CzAres.Tests.csproj" />
+    <Project Path="tests/PepMeld.Connectors.CzRpp.Tests/PepMeld.Connectors.CzRpp.Tests.csproj" />
     <Project Path="tests/PepMeld.Connectors.CzPsp.Tests/PepMeld.Connectors.CzPsp.Tests.csproj" />
     <Project Path="tests/PepMeld.Connectors.SkNrsr.Tests/PepMeld.Connectors.SkNrsr.Tests.csproj" />
     <Project Path="tests/PepMeld.Connectors.SkNrsrVnf.Tests/PepMeld.Connectors.SkNrsrVnf.Tests.csproj" />

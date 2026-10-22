@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using PepMeld.Connectors.CzAres;
 using PepMeld.Connectors.CzPsp;
+using PepMeld.Connectors.CzRpp;
 using PepMeld.Connectors.SkNrsr;
 using PepMeld.Connectors.SkNrsrVnf;
 using PepMeld.Connectors.Wikidata;
@@ -98,6 +99,7 @@ public static class PepMeldExtensions
         services.AddSkNrsrConnector(configuration);
         services.AddSkNrsrVnfConnector(configuration);
         services.AddCzAresConnector(configuration);
+        services.AddCzRppConnector(configuration);
         services.AddWikidataPositionsConnector(configuration);
         return services;
     }

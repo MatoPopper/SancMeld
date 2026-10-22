@@ -46,7 +46,7 @@ public sealed class BirthDateFillTests(DatabaseFixture fixture)
     private async Task<BirthDateFillOutcome> FillAsync()
     {
         await using var db = fixture.CreateContext();
-        return await new BirthDateFill(db, NullLogger<BirthDateFill>.Instance).RunAsync(CancellationToken.None);
+        return await new BirthDateFill(db, TimeProvider.System, NullLogger<BirthDateFill>.Instance).RunAsync(CancellationToken.None);
     }
 
     private async Task<PepPerson> BorrowerAsync(string key)

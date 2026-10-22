@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>PepMeld.Connectors.CzRpp</RootNamespace>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="PepMeld.Connectors.CzRpp.Tests" />
+    <InternalsVisibleTo Include="PepMeld.Core.IntegrationTests" />
+  </ItemGroup>
+
+  <!-- One JSON file over HTTPS; the framework covers both. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.4" />
+    <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="10.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../PepMeld.Core/PepMeld.Core.csproj" />
+  </ItemGroup>
+
+</Project>

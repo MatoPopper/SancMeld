@@ -9,4 +9,5 @@ public static class WellKnownIds
     public static readonly Guid CzAresStateSource = new("7b1c2e3a-0001-4c5d-9e8f-000000000004");
     public static readonly Guid CzWikidataSource = new("7b1c2e3a-0001-4c5d-9e8f-000000000005");
     public static readonly Guid SkWikidataSource = new("7b1c2e3a-0001-4c5d-9e8f-000000000006");
+    public static readonly Guid CzRppOvmSource = new("7b1c2e3a-0001-4c5d-9e8f-000000000007");
 }

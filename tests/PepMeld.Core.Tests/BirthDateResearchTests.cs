@@ -30,3 +30,34 @@ public sealed class BirthDateResearchTests
         Assert.False(BirthDateResearch.StatesDate("narozen 3. 1970", new DateOnly(1970, 3, 3)));
     }
 }
+
+public sealed class BirthDateFillRulesTests
+{
+    private static readonly DateOnly Today = new(2026, 10, 22);
+
+    private static Data.PepFunction F(string role, DateOnly? from, DateOnly? to, PepMeld.Core.Domain.PepCategory category = PepMeld.Core.Domain.PepCategory.RegionalLeader) =>
+        new() { SourceKey = "k", LegalBasis = "x", Institution = "i", Role = role, Country = PepMeld.Core.Domain.Country.CZ, Category = category, ValidFrom = from, ValidTo = to };
+
+    [Theory]
+    [InlineData("primátor", "primátor Brna", true)]
+    [InlineData("hejtman", "hejtman Plzeňského kraje", true)]
+    [InlineData("ministr", "ministr financí České republiky", true)]
+    [InlineData("senátor", "senátor", true)]
+    [InlineData("senátor", "poslanec", false)]
+    [InlineData("starosta obce s rozšířenou působností", "primátor Brna", false)]
+    public void ARoleIsTheSameTitle(string a, string b, bool same)
+    {
+        Assert.Equal(same, BirthDateFill.SameRole(a, b));
+        Assert.Equal(same, BirthDateFill.SameRole(b, a));
+    }
+
+    [Fact]
+    public void AnOfficeWithNoDatesIsHeldNowAndMeetsOnlyACurrentTerm()
+    {
+        var register = F("hejtman", null, null);
+
+        Assert.True(BirthDateFill.SameOffice([register], [F("hejtman Jihomoravského kraje", new DateOnly(2024, 10, 30), null)], Today));
+        Assert.False(BirthDateFill.SameOffice([register], [F("hejtman Jihomoravského kraje", new DateOnly(2004, 11, 20), new DateOnly(2008, 11, 19))], Today));
+        Assert.False(BirthDateFill.SameOffice([register], [F("hejtman", null, null, PepMeld.Core.Domain.PepCategory.GovernmentMember)], Today));
+    }
+}

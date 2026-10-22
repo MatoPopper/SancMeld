@@ -174,6 +174,26 @@ public class PepMeldDbContext(DbContextOptions<PepMeldDbContext> options) : DbCo
                 RefreshHours = 24,
                 IsEnabled = true,
                 CreatedAt = new DateTimeOffset(2026, 10, 21, 0, 0, 0, TimeSpan.Zero),
+            },
+            new PepSource
+            {
+                Id = WellKnownIds.CzRppOvmSource,
+                Code = "CZ_RPP_OVM",
+                Country = Country.CZ,
+                Name = "Rejstřík OVM (Registr práv a povinností) – osoby v čele krajů, statutárních měst, ORP, městských částí Praha 1–22, ministerstev a ústředních úřadů",
+                Publisher = "Digitální a informační agentura",
+                Url = "https://rpp-opendata.egon.gov.cz/odrpp/datovasada/ovm.json",
+
+                // The register names the head and where they live, never the birthday: a
+                // match is level C until another list lends the date.
+                HasBirthDate = false,
+                Licence = "Otevřená data RPP (https://rpp-opendata.egon.gov.cz/odrpp/)",
+
+                // 272 authorities of these kinds on 2026-10-22, 267 of them with a head.
+                MinExpectedPersons = 200,
+                RefreshHours = 24,
+                IsEnabled = true,
+                CreatedAt = new DateTimeOffset(2026, 10, 22, 0, 0, 0, TimeSpan.Zero),
             });
         });
 

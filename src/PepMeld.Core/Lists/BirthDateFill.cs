@@ -16,8 +16,10 @@ public sealed record BirthDateFillOutcome(int Filled, int Kept, int Withdrawn, I
 /// Lends a date of birth to a person whose source has none, from another list's record of
 /// the same person.
 ///
-/// The same person means the same normalised name and the same office: country, category
-/// and role equal, periods overlapping. A name alone would not do, there are two Jan
+/// The same person means the same normalised name and the same office: country and
+/// category equal, the role the same title (<see cref="SameRole"/>), periods overlapping;
+/// a function with no dates at all (the register of authorities knows only who is in
+/// office today) overlaps only what is current. A name alone would not do, there are two Jan
 /// Sobotkas in the Czech lists, a deputy born in 1978 and a senator born in 1961; the senate
 /// seat tells them apart. When lenders disagree on the date nothing is lent. Only a
 /// source's own date is lent, never one it borrowed itself.
@@ -26,7 +28,7 @@ public sealed record BirthDateFillOutcome(int Filled, int Kept, int Withdrawn, I
 /// than two years without a date (all from psp.cz, mostly senators), 57 have a Wikidata
 /// record with the same name and a function in that time.
 /// </summary>
-public sealed class BirthDateFill(PepMeldDbContext db, ILogger<BirthDateFill> logger)
+public sealed class BirthDateFill(PepMeldDbContext db, TimeProvider clock, ILogger<BirthDateFill> logger)
 {
     public async Task<BirthDateFillOutcome> RunAsync(CancellationToken ct)
     {
@@ -50,13 +52,14 @@ public sealed class BirthDateFill(PepMeldDbContext db, ILogger<BirthDateFill> lo
                 .ConfigureAwait(false))
             .ToLookup(p => p.NameNormalized, StringComparer.Ordinal);
 
+        var today = DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
         int filled = 0, kept = 0, withdrawn = 0, missing = 0;
         var ambiguous = new List<string>();
 
         foreach (var person in borrowers)
         {
             var matches = lenders[person.NameNormalized]
-                .Where(l => l.SourceId != person.SourceId && SameOffice(person.Functions, l.Functions))
+                .Where(l => l.SourceId != person.SourceId && SameOffice(person.Functions, l.Functions, today))
                 .ToList();
 
             var dates = matches.Select(l => l.BirthDate!.Value).Distinct().ToList();
@@ -105,12 +108,35 @@ public sealed class BirthDateFill(PepMeldDbContext db, ILogger<BirthDateFill> lo
         return new BirthDateFillOutcome(filled, kept, withdrawn, ambiguous, missing);
     }
 
+    /// <summary>
+    /// The same title, or one list's title is the first word of the other's: Wikidata names
+    /// the office ("primátor Brna", "hejtman Plzeňského kraje", "ministr financí České
+    /// republiky"), the register of authorities only the title ("primátor", "hejtman",
+    /// "ministr"). A senator and a deputy still differ.
+    /// </summary>
+    internal static bool SameRole(string a, string b)
+    {
+        var x = Words(a);
+        var y = Words(b);
+        return x.SequenceEqual(y) || (x.Length > 0 && y.Contains(x[0])) || (y.Length > 0 && x.Contains(y[0]));
+    }
+
+    private static string[] Words(string role) =>
+        role.ToLowerInvariant().Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
     /// <summary>One function of each in the same office at the same time.</summary>
-    internal static bool SameOffice(IEnumerable<PepFunction> mine, IEnumerable<PepFunction> theirs) =>
+    internal static bool SameOffice(IEnumerable<PepFunction> mine, IEnumerable<PepFunction> theirs, DateOnly today) =>
         mine.Any(a => theirs.Any(b =>
             a.Country == b.Country
             && a.Category == b.Category
-            && string.Equals(a.Role.Trim(), b.Role.Trim(), StringComparison.OrdinalIgnoreCase)
-            && (a.ValidFrom ?? DateOnly.MinValue) <= (b.ValidTo ?? DateOnly.MaxValue)
-            && (b.ValidFrom ?? DateOnly.MinValue) <= (a.ValidTo ?? DateOnly.MaxValue)));
+            && SameRole(a.Role, b.Role)
+            && Start(a, today) <= (b.ValidTo ?? DateOnly.MaxValue)
+            && Start(b, today) <= (a.ValidTo ?? DateOnly.MaxValue)));
+
+    /// <summary>
+    /// The start, or the earliest it could be. With neither date the source says only that
+    /// the office is held now: a hejtman of that name twenty years ago is another matter.
+    /// </summary>
+    private static DateOnly Start(PepFunction f, DateOnly today) =>
+        f.ValidFrom ?? (f.ValidTo is null ? today : DateOnly.MinValue);
 }

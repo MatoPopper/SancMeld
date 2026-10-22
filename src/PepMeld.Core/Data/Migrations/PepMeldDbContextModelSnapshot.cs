@@ -981,6 +981,22 @@ namespace PepMeld.Core.Data.Migrations
                             Publisher = "Wikidata (Wikimedia Foundation), CC0",
                             RefreshHours = 24,
                             Url = "https://query.wikidata.org/"
+                        },
+                        new
+                        {
+                            Id = new Guid("7b1c2e3a-0001-4c5d-9e8f-000000000007"),
+                            Code = "CZ_RPP_OVM",
+                            Country = "c_z",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 22, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            HasBirthDate = false,
+                            IsEnabled = true,
+                            IsOfficial = true,
+                            Licence = "Otevřená data RPP (https://rpp-opendata.egon.gov.cz/odrpp/)",
+                            MinExpectedPersons = 200,
+                            Name = "Rejstřík OVM (Registr práv a povinností) – osoby v čele krajů, statutárních měst, ORP, městských částí Praha 1–22, ministerstev a ústředních úřadů",
+                            Publisher = "Digitální a informační agentura",
+                            RefreshHours = 24,
+                            Url = "https://rpp-opendata.egon.gov.cz/odrpp/datovasada/ovm.json"
                         });
                 });
 

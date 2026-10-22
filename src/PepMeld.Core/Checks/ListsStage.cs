@@ -207,7 +207,7 @@ public sealed class ListsStage(
 
         // Honest about the gaps, per source country. These shrink as connectors land;
         // keep the sentence in step with the seeded sources.
-        const string cz = "ČR: súdy, ČNB, NKÚ, veľvyslanci, orgány strán, regionálna samospráva; dátum narodenia, ktorý psp.cz pri väčšine senátorov neuvádza, je prevzatý z Wikidata (úroveň B), ak sa zhoduje meno aj funkcia, inak osoba ostáva bez dátumu; z firiem so štátnou účasťou len štátne podniky a firmy v zozname CZ_ARES_STATE";
+        const string cz = "ČR: súdy, ČNB, NKÚ, veľvyslanci, orgány strán; náměstci hejtmanov a primátorov, tajemníci magistrátov, ředitelé krajských úřadů a náměstci ministrov a ústredných úradov; hejtmani, primátori, starostovia ORP a MČ Praha 1–22 a vedúci ústredných úradov (CZ_RPP_OVM) sú bez dátumu narodenia, kým ho nepožičia iný zoznam; dátum narodenia, ktorý psp.cz pri väčšine senátorov neuvádza, je prevzatý z Wikidata (úroveň B), ak sa zhoduje meno aj funkcia, inak osoba ostáva bez dátumu; z firiem so štátnou účasťou len štátne podniky a firmy v zozname CZ_ARES_STATE";
         const string sk = "SR: veľvyslanci, orgány politických strán, sudcovia a prokurátori nižších súdov; verejní funkcionári vrátane orgánov štátnych firiem sú bez dátumu narodenia";
 
         note += country switch
