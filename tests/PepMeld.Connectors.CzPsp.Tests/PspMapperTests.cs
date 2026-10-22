@@ -7,11 +7,14 @@ namespace PepMeld.Connectors.CzPsp.Tests;
 
 public class PspMapperTests
 {
-    private static IReadOnlyList<ParsedPerson> Map()
+    /// <summary>The day the fixture was cut, so a six-year term does not run out under the tests.</summary>
+    private static readonly DateOnly Cut = new(2026, 10, 22);
+
+    private static IReadOnlyList<ParsedPerson> Map(DateOnly? today = null)
     {
         using var stream = FixtureArchive.Zip();
         using var archive = new ZipArchive(stream, ZipArchiveMode.Read);
-        return PspMapper.Map(archive);
+        return PspMapper.Map(archive, today ?? Cut);
     }
 
     private static ParsedPerson Person(string key) => Map().Single(p => p.SourceKey == key);
@@ -175,6 +178,20 @@ public class PspMapperTests
         Assert.Equal(new DateOnly(2022, 9, 24), term.From);
         Assert.Null(term.To);
         Assert.Equal("m:senat:2022-09-24", term.SourceKey);
+    }
+
+    /// <summary>
+    /// Six years after the election a mandate the Chamber has not closed yet has ended: the
+    /// Chamber opens the next period's body weeks after the election.
+    /// </summary>
+    [Fact]
+    public void ASenateMandateOpenPastSixYearsHasEnded()
+    {
+        var term = Map(new DateOnly(2029, 1, 1)).Single(p => p.SourceKey == "4775").Functions
+            .Single(f => f.Role == "senátor" && f.From == new DateOnly(2022, 10, 1));
+
+        Assert.Equal(new DateOnly(2028, 10, 1), term.To);
+        Assert.Contains("šesť rokov", term.DateNote, StringComparison.Ordinal);
     }
 
     [Fact]

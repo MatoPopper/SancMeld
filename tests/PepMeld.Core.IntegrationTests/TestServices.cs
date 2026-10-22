@@ -49,7 +49,9 @@ internal sealed class FixtureConnector(string directory = "fixtures/cz-psp") : I
     public IReadOnlyList<ParsedPerson> Parse(Stream content)
     {
         using var archive = new ZipArchive(content, ZipArchiveMode.Read, leaveOpen: true);
-        return PspMapper.Map(archive);
+
+        // The day the fixture was cut: a senator elected in 2022 stays in office under the tests.
+        return PspMapper.Map(archive, new DateOnly(2026, 10, 22));
     }
 }
 

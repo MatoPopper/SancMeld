@@ -42,9 +42,12 @@ internal static class PspMapper
 
     private sealed record Person(int Id, string TitleBefore, string FamilyName, string GivenName, string TitleAfter, DateOnly? Born, DateOnly? Died);
 
-    public static IReadOnlyList<ParsedPerson> Map(ZipArchive archive)
+    /// <param name="archive">The publisher's zip.</param>
+    /// <param name="today">The day of the import: a Senate mandate open past its six years has ended by then.</param>
+    public static IReadOnlyList<ParsedPerson> Map(ZipArchive archive, DateOnly? today = null)
     {
         ArgumentNullException.ThrowIfNull(archive);
+        var asOf = today ?? DateOnly.FromDateTime(DateTime.UtcNow);
 
         var bodies = Read(archive, "organy.unl")
             .Where(f => f.Length >= 8)
@@ -167,6 +170,7 @@ internal static class PspMapper
             }
 
             var url = $"https://www.psp.cz/sqw/detail.sqw?id={id}";
+            var died = f.Length > 8 ? Date(f[8]) : null;
             persons.Add(new ParsedPerson(
                 id.ToString(CultureInfo.InvariantCulture),
                 f[3].Trim(),
@@ -174,9 +178,9 @@ internal static class PspMapper
                 Null(f[1]),
                 Null(f[4]),
                 BirthDate(f[5]),
-                f.Length > 8 ? Date(f[8]) : null,
+                died,
                 url,
-                EndLapsedSenateMandates(OneMandatePerSenateTerm(list, id, senateBodyOf, senateStarts), id, senateBodyOf, senateStarts)
+                EndLapsedSenateMandates(OneMandatePerSenateTerm(list, id, senateBodyOf, senateStarts), id, senateBodyOf, senateStarts, died, asOf)
                     .Select(x => x with { SourceUrl = url })
                     .OrderByDescending(x => x.To is null)
                     .ThenByDescending(x => x.From)
@@ -215,6 +219,9 @@ internal static class PspMapper
     }
 
     /// <summary>
+    /// Ends what the Chamber leaves open: an office of a person who has died, a Senate
+    /// mandate past its six years, and one the newest Senate body no longer holds.
+    ///
     /// The Chamber leaves a senator's last mandate open when it ends without re-election:
     /// on 2026-10-22, 192 open Senate memberships for 81 seats, back to the body of 2016.
     /// The Senate is one body per two-year period and every sitting senator is a member of
@@ -226,10 +233,33 @@ internal static class PspMapper
         IEnumerable<ParsedFunction> functions,
         int personId,
         Dictionary<(int Person, string Key), DateOnly> senateBodyOf,
-        IReadOnlyList<DateOnly> senateStarts)
+        IReadOnlyList<DateOnly> senateStarts,
+        DateOnly? died,
+        DateOnly today)
     {
         foreach (var function in functions)
         {
+            // An office ends with its holder: Roman Kraus died in 2024 with his mandate open.
+            if (function.To is null && died is { } death)
+            {
+                yield return function with { To = death, DateNote = "Koniec dopočítaný: psp.cz funkciu neuzavrel, osoba zomrela." };
+                continue;
+            }
+
+            // A senator is elected for six years (čl. 16 Ústavy). Until the Chamber opens the
+            // body of the next period it leaves the outgoing third open: on 2026-10-22, the 27
+            // senators elected in October 2020 a fortnight after their term ended.
+            if (function.To is null && function.SourceKey.StartsWith("m:senat:", StringComparison.Ordinal)
+                && function.From is { } elected && elected.AddYears(6) < today)
+            {
+                yield return function with
+                {
+                    To = elected.AddYears(6),
+                    DateNote = "Koniec dopočítaný: psp.cz mandát neuzavrel, funkčné obdobie senátora je šesť rokov (čl. 16 Ústavy).",
+                };
+                continue;
+            }
+
             if (function.To is null
                 && senateStarts.Count > 0
                 && senateBodyOf.TryGetValue((personId, function.SourceKey), out var lastBody)
