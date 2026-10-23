@@ -170,4 +170,30 @@ public class FamilyRulesTests
 
         Assert.Null(FamilyLinkMerge.FindExisting([link], "jana novakova"));
     }
+
+    private sealed class Cp1250Handler : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            // "Plíšek" in windows-1250 written out byte by byte, so the test does not itself
+            // register the code pages the verifier must register.
+            byte[] body = [.. "<p><b>Mgr. Martin Pl"u8, 0xED, 0x9A, .. "ek</b></p>"u8];
+            var content = new ByteArrayContent(body);
+            content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/html") { CharSet = "Windows-1250" };
+            return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK) { Content = content });
+        }
+    }
+
+    private sealed class Cp1250Clients : IHttpClientFactory
+    {
+        public HttpClient CreateClient(string name) => new(new Cp1250Handler());
+    }
+
+    /// <summary>psp.cz serves windows-1250: the page is read, not thrown on.</summary>
+    [Fact]
+    public async Task APageInWindows1250IsRead()
+    {
+        var check = await new HttpQuoteVerifier(new Cp1250Clients()).CheckAsync("https://www.psp.cz/sqw/hp.sqw?k=35", "Mgr. Martin Plíšek", CancellationToken.None);
+        Assert.Equal(QuoteCheck.Exact, check);
+    }
 }

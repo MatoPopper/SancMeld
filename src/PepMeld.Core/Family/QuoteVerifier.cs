@@ -40,6 +40,10 @@ public sealed partial class HttpQuoteVerifier(IHttpClientFactory httpClients) : 
 
     private readonly Dictionary<string, string?> pages = new(StringComparer.Ordinal);
 
+    // psp.cz and other Czech sites still serve windows-1250, which .NET reads only with the
+    // code-page provider; without it reading the page throws and the import stops.
+    static HttpQuoteVerifier() => Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
     [GeneratedRegex(@"<(script|style)[^>]*>.*?</\1>", RegexOptions.Singleline | RegexOptions.IgnoreCase)]
     private static partial Regex Scripts();
 
@@ -118,7 +122,7 @@ public sealed partial class HttpQuoteVerifier(IHttpClientFactory httpClients) : 
             var html = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
             return Fold(Tags().Replace(Scripts().Replace(html, " "), " "));
         }
-        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or UriFormatException)
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or UriFormatException or InvalidOperationException)
         {
             return null;
         }
